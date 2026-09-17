@@ -1,0 +1,801 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Obfuscar.2.2.50\build\obfuscar.props" Condition="Exists('..\packages\Obfuscar.2.2.50\build\obfuscar.props')" />
+  <Import Project="..\packages\Costura.Fody.6.2.0\build\Costura.Fody.props" Condition="Exists('..\packages\Costura.Fody.6.2.0\build\Costura.Fody.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1740BABD-9FA7-433C-919E-D6C148E5F265}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Pangya_Modern_Editor</RootNamespace>
+    <AssemblyName>Pangya Modern Editor</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>IDE1006,IDE0075, IDE0051,IDE0019,IDE0060,IDE0031, IDE0059,IDE0017</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\Bongdari.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>Pangya_Modern_Editor.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Extensions\DATFile.cs" />
+    <Compile Include="Extensions\MyProject.cs" />
+    <Compile Include="Extensions\UpdateNotifier.cs" />
+    <Compile Include="Extensions\Util.cs" />
+    <Compile Include="Forms\DlgSetItemID.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\DlgSetItemID.Designer.cs">
+      <DependentUpon>DlgSetItemID.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\DlgItemID.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\DlgItemID.Designer.cs">
+      <DependentUpon>DlgItemID.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmClub.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmClub.Designer.cs">
+      <DependentUpon>FrmClub.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmCharacter.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmCharacter.Designer.cs">
+      <DependentUpon>FrmCharacter.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmGrandPrixRankReward.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmGrandPrixRankReward.Designer.cs">
+      <DependentUpon>FrmGrandPrixRankReward.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmLanguageEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmLanguageEditor.Designer.cs">
+      <DependentUpon>FrmLanguageEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmErrorCodeInfo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmErrorCodeInfo.Designer.cs">
+      <DependentUpon>FrmErrorCodeInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmMatch.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmMatch.Designer.cs">
+      <DependentUpon>FrmMatch.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmSkin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmSkin.Designer.cs">
+      <DependentUpon>FrmSkin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmHairStyle.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmHairStyle.Designer.cs">
+      <DependentUpon>FrmHairStyle.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmCaddieItem.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmCaddieItem.Designer.cs">
+      <DependentUpon>FrmCaddieItem.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmDesc.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmDesc.Designer.cs">
+      <DependentUpon>FrmDesc.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\AboutBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\AboutBox.Designer.cs">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmBall.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmBall.Designer.cs">
+      <DependentUpon>FrmBall.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmGrandPrixData.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmGrandPrixData.Designer.cs">
+      <DependentUpon>FrmGrandPrixData.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmSetEffectTable.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmSetEffectTable.Designer.cs">
+      <DependentUpon>FrmSetEffectTable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmCadieMagicBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmCadieMagicBox.designer.cs">
+      <DependentUpon>FrmCadieMagicBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmCard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmCard.Designer.cs">
+      <DependentUpon>FrmCard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmClubSet.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmClubSet.Designer.cs">
+      <DependentUpon>FrmClubSet.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmCaddie.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmCaddie.Designer.cs">
+      <DependentUpon>FrmCaddie.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmItem.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmItem.Designer.cs">
+      <DependentUpon>FrmItem.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmMascot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmMascot.Designer.cs">
+      <DependentUpon>FrmMascot.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmPart.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmPart.Designer.cs">
+      <DependentUpon>FrmPart.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmAuxPart.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmAuxPart.Designer.cs">
+      <DependentUpon>FrmAuxPart.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmSetItem.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\FrmSetItem.Designer.cs">
+      <DependentUpon>FrmSetItem.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmCadieMagicBoxRandom.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmCadieMagicBoxRandom.Designer.cs">
+      <DependentUpon>FrmCadieMagicBoxRandom.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmAbility.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmAbility.Designer.cs">
+      <DependentUpon>FrmAbility.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmMemorialShopRare.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmMemorialShopRare.Designer.cs">
+      <DependentUpon>FrmMemorialShopRare.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmMemorialShopCoin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmMemorialShopCoin.Designer.cs">
+      <DependentUpon>FrmMemorialShopCoin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmLevelUpPrizeItem.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmLevelUpPrizeItem.Designer.cs">
+      <DependentUpon>FrmLevelUpPrizeItem.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmPointShop.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Editors\Special\FrmPointShop.Designer.cs">
+      <DependentUpon>FrmPointShop.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmMain.Designer.cs">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmMenu.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmMenu.Designer.cs">
+      <DependentUpon>FrmMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Extensions\DTime.cs" />
+    <EmbeddedResource Include="Forms\DlgSetItemID.resx">
+      <DependentUpon>DlgSetItemID.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\DlgItemID.resx">
+      <DependentUpon>DlgItemID.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\AboutBox.resx">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmBall.resx">
+      <DependentUpon>FrmBall.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmClub.resx">
+      <DependentUpon>FrmClub.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmCharacter.resx">
+      <DependentUpon>FrmCharacter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmGrandPrixRankReward.resx">
+      <DependentUpon>FrmGrandPrixRankReward.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmLanguageEditor.resx">
+      <DependentUpon>FrmLanguageEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmErrorCodeInfo.resx">
+      <DependentUpon>FrmErrorCodeInfo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmMatch.resx">
+      <DependentUpon>FrmMatch.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmSkin.resx">
+      <DependentUpon>FrmSkin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmHairStyle.resx">
+      <DependentUpon>FrmHairStyle.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmCaddieItem.resx">
+      <DependentUpon>FrmCaddieItem.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmGrandPrixData.resx">
+      <DependentUpon>FrmGrandPrixData.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmSetEffectTable.resx">
+      <DependentUpon>FrmSetEffectTable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmCadieMagicBox.resx">
+      <DependentUpon>FrmCadieMagicBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmCard.resx">
+      <DependentUpon>FrmCard.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmClubSet.resx">
+      <DependentUpon>FrmClubSet.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmCaddie.resx">
+      <DependentUpon>FrmCaddie.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmDesc.resx">
+      <DependentUpon>FrmDesc.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmItem.resx">
+      <DependentUpon>FrmItem.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmMascot.resx">
+      <DependentUpon>FrmMascot.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmPart.resx">
+      <DependentUpon>FrmPart.cs</DependentUpon>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FrmPart1.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmAuxPart.resx">
+      <DependentUpon>FrmAuxPart.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\FrmSetItem.resx">
+      <DependentUpon>FrmSetItem.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmCadieMagicBoxRandom.resx">
+      <DependentUpon>FrmCadieMagicBoxRandom.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmAbility.resx">
+      <DependentUpon>FrmAbility.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmMemorialShopRare.resx">
+      <DependentUpon>FrmMemorialShopRare.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmMemorialShopCoin.resx">
+      <DependentUpon>FrmMemorialShopCoin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmLevelUpPrizeItem.resx">
+      <DependentUpon>FrmLevelUpPrizeItem.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Editors\Special\FrmPointShop.resx">
+      <DependentUpon>FrmPointShop.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmMain.resx">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmMenu.resx">
+      <DependentUpon>FrmMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="app.manifest" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ajax_loader.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bg_transparent.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btnIron.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\key.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\list_arthur.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\money_delete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pang.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\plugin.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\plugin_add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\plugin_delete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\points.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\search_plus.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\textfield_key.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\to_do_list.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\to_do_list_cheked_all.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\winrar_add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\winrar_extract.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zoom.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\arin.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cecilia.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hana.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\kaz.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\kooh.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\lucia.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\max.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nell.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nuri.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnAbility.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnAuxPart.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnCaddieItem.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnClubSet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnSkin.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\application_put.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\asterisk_yellow.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnHairStyle.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\building_edit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bullet_arrow_down.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\chart_organisation.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\compress.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\computer_key.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\data_sort.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\document_editing.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BntBox_closed.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BntBox_open.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BntOpenFile.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BntPackage_Go.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnActive_Item.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnAlterPrice.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnApply.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnApply_Mini.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnBackup.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnBall.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnCaddie.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnCauldron.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnClone.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnClub.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnConfig.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnDeleteAll_Item.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnDisconnect.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnDisk.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnExplorer.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnGeneric.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnGP.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnItem.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnMascot.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnMatch.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnMemo_C.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnMemo_R.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnNew.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnNew_Mini.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnPackage_Add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnPart.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnRemove.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnRemove_Mini.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnSearch.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnSearchFolder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnSet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\change_mark.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\database.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Disable.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ErrorImage.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\FanArt.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\flag.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HandDown.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HandUp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Level_Min.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\none.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\remove_mark.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\googletradutorv2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\item_no_preview.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\item_preview_bg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NoIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon_009.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ch_cadie.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnMenuSave.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Bongdari.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\item1_365.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\item1_366.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\item1_367.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GZ_New_Logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnExcel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnPoint.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnExit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnGrandPrix.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnHide.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\lucia_renew.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnMagicBox.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.8">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.8 %28x86 e x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnDesc.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnSetEffect.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnLevel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Display.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\map_bck.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PangyaSetup.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\event_error.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnSaveCSV.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.IFF.JP\PangyaAPI.IFF.JP.csproj">
+      <Project>{c940cfc3-ba95-4406-8163-08e17111e3db}</Project>
+      <Name>PangyaAPI.IFF.JP</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

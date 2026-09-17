@@ -1,0 +1,821 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{44AE7209-01C5-4A7B-B969-28E5EAD6A11F}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>PangyaSuiteFiles</RootNamespace>
+    <AssemblyName>Pangya Suite Tools</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="System">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DBConnection.cs" />
+    <Compile Include="DTime.cs" />
+    <Compile Include="Forms\DlgMassaDesconto.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\DlgMassaDesconto.Designer.cs">
+      <DependentUpon>DlgMassaDesconto.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\DlgPartTypeID.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\DlgPartTypeID.Designer.cs">
+      <DependentUpon>DlgPartTypeID.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmAboutBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmAboutBox.Designer.cs">
+      <DependentUpon>FrmAboutBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmGGEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmGGEditor.Designer.cs">
+      <DependentUpon>FrmGGEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmGrandPrixDataEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmGrandPrixDataEditor.Designer.cs">
+      <DependentUpon>FrmGrandPrixDataEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmDescEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmDescEditor.Designer.cs">
+      <DependentUpon>FrmDescEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmItemEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmItemEditor.Designer.cs">
+      <DependentUpon>FrmItemEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmPakEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmPakEditor.Designer.cs">
+      <DependentUpon>FrmPakEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmSDConvert.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmSDConvert.Designer.cs">
+      <DependentUpon>FrmSDConvert.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmTalkEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmTalkEditor.Designer.cs">
+      <DependentUpon>FrmTalkEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmLanguageEditor .cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmLanguageEditor .Designer.cs">
+      <DependentUpon>FrmLanguageEditor .cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmBinEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmBinEditor.Designer.cs">
+      <DependentUpon>FrmBinEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmConfigShitList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmConfigShitList.Designer.cs">
+      <DependentUpon>FrmConfigShitList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmGenericDumperView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmGenericDumperView.Designer.cs">
+      <DependentUpon>FrmGenericDumperView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmHairStyleEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmHairStyleEditor.Designer.cs">
+      <DependentUpon>FrmHairStyleEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmBallEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmBallEditor.Designer.cs">
+      <DependentUpon>FrmBallEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmAuxPartEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmAuxPartEditor.Designer.cs">
+      <DependentUpon>FrmAuxPartEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmAbilityEditor .cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmAbilityEditor .Designer.cs">
+      <DependentUpon>FrmAbilityEditor .cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmMemorialShopRareEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmMemorialShopRareEditor.Designer.cs">
+      <DependentUpon>FrmMemorialShopRareEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmMemorialShopCoinEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmMemorialShopCoinEditor.Designer.cs">
+      <DependentUpon>FrmMemorialShopCoinEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmCardEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmCardEditor.Designer.cs">
+      <DependentUpon>FrmCardEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmCaddieEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmCaddieEditor.Designer.cs">
+      <DependentUpon>FrmCaddieEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmCaddieItemEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmCaddieItemEditor.Designer.cs">
+      <DependentUpon>FrmCaddieItemEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmCadieMagicBoxEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmCadieMagicBoxEditor.Designer.cs">
+      <DependentUpon>FrmCadieMagicBoxEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmCadieMagicBoxRandomEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmCadieMagicBoxRandomEditor.Designer.cs">
+      <DependentUpon>FrmCadieMagicBoxRandomEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmClubEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmClubEditor.Designer.cs">
+      <DependentUpon>FrmClubEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmClubSetEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmClubSetEditor.Designer.cs">
+      <DependentUpon>FrmClubSetEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmItemCopy.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmItemCopy.Designer.cs">
+      <DependentUpon>FrmItemCopy.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmMascotEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmMascotEditor.Designer.cs">
+      <DependentUpon>FrmMascotEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmCharacterEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmCharacterEditor.Designer.cs">
+      <DependentUpon>FrmCharacterEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmPartEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmPartEditor.Designer.cs">
+      <DependentUpon>FrmPartEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmSetItemEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmSetItemEditor.Designer.cs">
+      <DependentUpon>FrmSetItemEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmSkinEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmSkinEditor.Designer.cs">
+      <DependentUpon>FrmSkinEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmViewTGA.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmViewTGA.Designer.cs">
+      <DependentUpon>FrmViewTGA.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmAcessLogin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmAcessLogin.Designer.cs">
+      <DependentUpon>FrmAcessLogin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmMain.Designer.cs">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="My\MyProject.cs" />
+    <Compile Include="My\MySettings.cs" />
+    <Compile Include="My\MySettingsProperty.cs" />
+    <Compile Include="My\Utils.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="User.cs" />
+    <EmbeddedResource Include="Forms\DlgMassaDesconto.resx">
+      <DependentUpon>DlgMassaDesconto.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\DlgPartTypeID.resx">
+      <DependentUpon>DlgPartTypeID.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmAboutBox.resx">
+      <DependentUpon>FrmAboutBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmGGEditor.resx">
+      <DependentUpon>FrmGGEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmGrandPrixDataEditor.resx">
+      <DependentUpon>FrmGrandPrixDataEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmDescEditor.resx">
+      <DependentUpon>FrmDescEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmItemEditor.resx">
+      <DependentUpon>FrmItemEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmPakEditor.resx">
+      <DependentUpon>FrmPakEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmSDConvert.resx">
+      <DependentUpon>FrmSDConvert.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmTalkEditor.resx">
+      <DependentUpon>FrmTalkEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmLanguageEditor .resx">
+      <DependentUpon>FrmLanguageEditor .cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmBinEditor.resx">
+      <DependentUpon>FrmBinEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmConfigShitList.resx">
+      <DependentUpon>FrmConfigShitList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmGenericDumperView.resx">
+      <DependentUpon>FrmGenericDumperView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmHairStyleEditor.resx">
+      <DependentUpon>FrmHairStyleEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmBallEditor.resx">
+      <DependentUpon>FrmBallEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmAuxPartEditor.resx">
+      <DependentUpon>FrmAuxPartEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmAbilityEditor .resx">
+      <DependentUpon>FrmAbilityEditor .cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmMemorialShopRareEditor.resx">
+      <DependentUpon>FrmMemorialShopRareEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmMemorialShopCoinEditor.resx">
+      <DependentUpon>FrmMemorialShopCoinEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmCardEditor.resx">
+      <DependentUpon>FrmCardEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmCaddieEditor.resx">
+      <DependentUpon>FrmCaddieEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmCaddieItemEditor.resx">
+      <DependentUpon>FrmCaddieItemEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmCadieMagicBoxEditor.resx">
+      <DependentUpon>FrmCadieMagicBoxEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmCadieMagicBoxRandomEditor.resx">
+      <DependentUpon>FrmCadieMagicBoxRandomEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmClubEditor.resx">
+      <DependentUpon>FrmClubEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmClubSetEditor.resx">
+      <DependentUpon>FrmClubSetEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmItemCopy.resx">
+      <DependentUpon>FrmItemCopy.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmMascotEditor.resx">
+      <DependentUpon>FrmMascotEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmCharacterEditor.resx">
+      <DependentUpon>FrmCharacterEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmPartEditor.resx">
+      <DependentUpon>FrmPartEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmSetItemEditor.resx">
+      <DependentUpon>FrmSetItemEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmSkinEditor.resx">
+      <DependentUpon>FrmSkinEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmViewTGA.resx">
+      <DependentUpon>FrmViewTGA.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmAcessLogin.resx">
+      <DependentUpon>FrmAcessLogin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmMain.resx">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LevelMinimoToolStripMenuItem.Image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MudarMarcaçãoToolStripMenuItem.Image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RemoverMarcaçãoToolStripMenuItem.Image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AlterarPreçoToolStripMenuItem.Image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ApagarTodosToolStripMenuItem.Image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AtivarTodosToolStripMenuItem.Image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btnAbrirArquivo.Image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DesativarTodosToolStripMenuItem.Image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zoom.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\winrar_extract.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\winrar_add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\user.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\to_do_list_cheked_all.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\to_do_list.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\textfield_key.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\stamp_pattern.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\search_plus.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\points.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\plugin_delete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\plugin_add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\plugin.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pang.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\package_go.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\package_add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\money_delete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\money_bag.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\mascot_02.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\marketwatch.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\list_arthur.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\key.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_44.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_43.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_38.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_29.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_26.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_23.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_22.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_19.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_18.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_15.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ico_11.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hand_point_270.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hand_point_090.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\fred.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\folder_explore1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\folder_explore.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\flag_1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\eye__minus.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\document_editing.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\disk_multiple.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\disk.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\disconnect.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\delete1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\delete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\database_lightning.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\data_sort.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\computer_key.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\compress.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\chart_organisation.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\card_icon_pack_04.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\building_edit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\box_open.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\box_closed.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bg_transparent.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ball_03.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\_error.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\accept.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\accept1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\add1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ajax_loader.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\application_put.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\arrow_join.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\arrow_merge.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\arrow_undo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\asterisk_yellow.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\backup_manager.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\book_previous.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\box.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bricks.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bullet_arrow_down.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bullet_arrow_up.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bullet_go.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cart_add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ch_cadie.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\database_add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\database_edit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\database_go.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\database_save.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon_009.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon_auxpart.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon_memo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\item_no_preview.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\item_preview_bg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tag_blue.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tick.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\wand.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\spin__n_splash___by_lylac_by_pangya_dh23x5-400t.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pangyanuri_dzhezdu5.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PangyaFresh11.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pangya2.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\favpng_pangya-fantasy-golf-ini3-digital-fan-art.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btnAbrir.Image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\btnAlterar.Image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnHairStyle.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BtnHairStyle3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconGroup99.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconGroup99.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconGroup99 %281%29.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconGroup99 %282%29.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\googletradutor.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\googletradutorv2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.DAT\PangyaAPI.DAT.csproj">
+      <Project>{432f623d-05d4-450b-8273-4024695c9cc5}</Project>
+      <Name>PangyaAPI.DAT</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.GameGuard\PangyaAPI.GameGuard.csproj">
+      <Project>{90b127c7-57a5-48bb-8491-9f740aeff452}</Project>
+      <Name>PangyaAPI.GameGuard</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.IFF\PangyaAPI.IFF.csproj">
+      <Project>{fe8119de-c23f-4d81-934a-da8926104eb3}</Project>
+      <Name>PangyaAPI.IFF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.PAK\PangyaAPI.PAK.csproj">
+      <Project>{3da9162c-bf2e-4c4e-91de-9b63bdd0627c}</Project>
+      <Name>PangyaAPI.PAK</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.Talk\PangyaAPI.Talk.csproj">
+      <Project>{a7624dcc-6910-4f94-96d0-d6018d355b99}</Project>
+      <Name>PangyaAPI.Talk</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.TGA\PangyaAPI.TGA.csproj">
+      <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
+      <Name>PangyaAPI.TGA</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.Translation\PangyaAPI.Translation.csproj">
+      <Project>{812896da-6517-4981-bdce-3540a455b8de}</Project>
+      <Name>PangyaAPI.Translation</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.UCC\PangyaAPI.UCC.csproj">
+      <Project>{0505d813-8d0b-4c54-a248-657f34e27711}</Project>
+      <Name>PangyaAPI.UCC</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.Utilities\PangyaAPI.Utilities.csproj">
+      <Project>{1e2be994-1794-47ce-b66b-65f02d42570c}</Project>
+      <Name>PangyaAPI.Utilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.ZIP\PangyaAPI.ZIP.csproj">
+      <Project>{71f94c7f-94e8-4aeb-963f-248fd4ee4e92}</Project>
+      <Name>PangyaAPI.ZIP</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\logo_pangya2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\highwing.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NProtect_GameGuard_logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon_gg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon_gg2.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if /I "$(ConfigurationName)" == "Release" Eazfuscator.NET.exe "$(TargetPath)" --msbuild-project-path "$(ProjectPath)" --msbuild-project-configuration "$(ConfigurationName)" --msbuild-project-platform "$(PlatformName)" --msbuild-solution-path "$(SolutionPath)" -n --newline-flush -v 2022.1</PostBuildEvent>
+  </PropertyGroup>
+</Project>
