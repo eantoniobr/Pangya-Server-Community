@@ -73,21 +73,29 @@ $ip_in = getClientIp();
 try {
     $pdo = getConnection();
 
+   // -------------------------------------------------------------
+    // 2. Verifica previamente se o ID ou E-mail já existem
     // -------------------------------------------------------------
-    // 2. Verifica previamente se o ID já existe, para não distribuir
-    //    itens duplicados caso a procedure apenas retorne uma conta
-    //    já existente (comportamento idempotente do ProcMakeUserBeta).
-    // -------------------------------------------------------------
-    $checkStmt = $pdo->prepare('SELECT COUNT(*) FROM pangya.account WHERE ID = ?');
-    $checkStmt->execute([$id_in]);
-    $alreadyExisted = ((int)$checkStmt->fetchColumn()) > 0;
+    $checkStmt = $pdo->prepare('
+        SELECT 
+            (SELECT COUNT(*) FROM pangya.account WHERE ID = ?) AS id_exists,
+            (SELECT COUNT(*) FROM pangya.contas_beta WHERE Email = ?) AS email_exists
+    ');
+    $checkStmt->execute([$id_in, $email_in]);
+    $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($alreadyExisted) {
+    if ((int)$result['id_exists'] > 0) {
         setFlash('error', 'Este ID de usuário já está em uso. Escolha outro ou faça login.');
         header('Location: register.php');
         exit;
     }
 
+    if ((int)$result['email_exists'] > 0) {
+        setFlash('error', 'Este E-mail já está cadastrado. Escolha outro ou faça login.');
+        header('Location: register.php');
+        exit;
+    }
+	
     // -------------------------------------------------------------
     // 3. Passo 1: executa ProcMakeUserBeta e captura o UID retornado
     // -------------------------------------------------------------
@@ -108,7 +116,6 @@ try {
 
     $stmt->execute();
 
-    // A procedure faz "SELECT @IDUSER" no final (sucesso) ou "SELECT 0" (erro no CATCH)
     $newUid = (int)$stmt->fetchColumn();
 
     if ($newUid <= 0) {
@@ -117,21 +124,41 @@ try {
         exit;
     }
 	
-	$stmt = $pdo->prepare('{CALL pangya.ProcMakeEmailKey (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}');
+// -------------------------------------------------------------
+    // Inserção na tabela contas_beta
+    // -------------------------------------------------------------
+    $sql = "INSERT INTO [pangya].[contas_beta] (
+	    [UID],
+        [NomeCompleto],
+        [Birthday],
+        [Email],
+        [Sexo],
+        [Pergunta],
+        [Resposta],
+        [LoginID],
+        [Senha],
+        [ip_register],
+        [referrer_code],
+        [Inviter_UID],
+        [Invited],
+        [status_referal]
+    ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, 0, '0'
+    )";
 
-    $stmt->bindValue(1, $NomeCompleto, PDO::PARAM_STR);
-    $stmt->bindValue(2, $Birthday, $Birthday === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
-    $stmt->bindValue(3, $Sexo, PDO::PARAM_INT);
-    $stmt->bindValue(4, $Pergunta, PDO::PARAM_STR);
-    $stmt->bindValue(5, $Resposta, $Resposta === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
-    $stmt->bindValue(6, $email_in, PDO::PARAM_STR);
-    $stmt->bindValue(7, $id_in, PDO::PARAM_STR);
-    $stmt->bindValue(8, $pass_in, PDO::PARAM_STR);
-    $stmt->bindValue(9, $ip_in, PDO::PARAM_STR);
-    $stmt->bindValue(10, $Referrer_Code, $Referrer_Code === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+    $stmt = $pdo->prepare($sql);
+	$stmt->bindValue(1, $newUid, PDO::PARAM_INT);
+    $stmt->bindValue(2, $NomeCompleto, PDO::PARAM_STR);
+    $stmt->bindValue(3, $Birthday, $Birthday === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+    $stmt->bindValue(4, $email_in, PDO::PARAM_STR);
+    $stmt->bindValue(5, $Sexo, PDO::PARAM_INT);
+    $stmt->bindValue(6, $Pergunta, PDO::PARAM_STR);
+    $stmt->bindValue(7, $Resposta, $Resposta === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+    $stmt->bindValue(8, $id_in, PDO::PARAM_STR);
+    $stmt->bindValue(9, $pass_in, PDO::PARAM_STR);
+    $stmt->bindValue(10, $ip_in, PDO::PARAM_STR);
 
     $stmt->execute();
-
     // -------------------------------------------------------------
     // 4. Passo 2: com o UID retornado, executa ProcAutoItem
     // -------------------------------------------------------------
@@ -150,8 +177,16 @@ try {
     exit;
 
 } catch (PDOException $e) {
-    error_log('Erro no cadastro: ' . $e->getMessage());
-    setFlash('error', 'Erro interno ao processar seu cadastro. Tente novamente mais tarde.');
-    header('Location: register.php');
+    // Exibe a mensagem, o arquivo e a linha exata do erro
+    echo '<strong>Erro:</strong> ' . $e->getMessage() . '<br>';
+    echo '<strong>Arquivo:</strong> ' . $e->getFile() . '<br>';
+    echo '<strong>Linha:</strong> ' . $e->getLine() . '<br><br>';
+
+    // Exibe o histórico de execução até o erro
+    echo '<pre>';
+    print_r($e->getTraceAsString());
+    echo '</pre>';
+
+    // Interrompe a execução para você visualizar no navegador
     exit;
 }

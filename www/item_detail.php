@@ -8,8 +8,8 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     $item_id = (int)$_GET['id'];
 }
 
-$item_name = 'Item Não Encontrado';
-$item_description = 'Detalhes do item não puderam ser carregados.';
+$item_name = t('dash_item_not_found');
+$item_description = t('no_items_found');
 $item_price_pang = 0;
 $item_price_cookie = 0;
 $item_shop_normal = 0;
@@ -25,10 +25,11 @@ if ($item_data) {
     $flags = buildItemUI($item_data);
 
     $item_name = $item_data['item_name'] ?? 'Desconhecido';
-$descData = find_desc($item_id);
-$item_description = ($descData && !empty($descData['info'])) 
-    ? $descData['info'] 
-    : 'Nenhuma descrição disponível.';
+    $descData = find_desc($item_id);
+    $item_description = ($descData && !empty($descData['info'])) 
+        ? $descData['info'] 
+        : t('no_items_found');
+        
     $item_shop_normal = $flags['IsNormal'];
     $item_shop_gif = $flags['IsGift'];
     $item_shop_ps = $flags['IsPSQ'];
@@ -46,14 +47,14 @@ $item_description = ($descData && !empty($descData['info']))
 
 $display_price_pang = number_format($item_price_pang, 0, '', '.');
 $display_price_cookie = number_format($item_price_cookie, 0, '', '.');
-$pageTitle = t('Wikipedia');
+$pageTitle = t('wikipedia');
 require __DIR__ . '/includes/header.php';
 ?>
  
 <div class="page-banner papel-banner">
     <div class="banner-content">
-        <h1 class="page-title"><i class="fas fa-coins"></i> Detail Items</h1>
-        <p>Visualizacao dos dados do item.</p>
+        <h1 class="page-title"><i class="fas fa-coins"></i> <?php echo t('details'); ?></h1>
+        <p><?php echo t('dash_details_summary'); // ou uma string genérica de descrição ?></p>
     </div>
 </div>
 
@@ -63,14 +64,14 @@ require __DIR__ . '/includes/header.php';
         <h1><?php echo htmlspecialchars($item_name); ?></h1>
     </div>
 
-    <?php if ($item_id !== null && $item_name !== 'Item Não Encontrado'): ?>
+    <?php if ($item_id !== null && $item_name !== t('dash_item_not_found')): ?>
     <div class="item-content">
         
         <div class="item-image-area">
             <img class="item-icon-detail" src="/assets/img/items/<?php echo htmlspecialchars($item_icon); ?>.png" alt="<?php echo htmlspecialchars($item_name); ?>">
             
             <div class="price-box">
-                <h2>Shop Info</h2>
+                <h2><?php echo t('shop_items'); ?></h2>
                 <?php if ($item_price_pang > 0): ?>
                     <div class="price-line">
                         <span class="price-label">Pang:</span>
@@ -87,7 +88,7 @@ require __DIR__ . '/includes/header.php';
                 
                 <?php if ($item_shop_hide === 0): ?>
                     <div class="price-line">
-                        <span class="price-label">Item Normal:</span>
+                        <span class="price-label"><?php echo t('dash_cat_item'); ?> Normal:</span>
                         <span class="price-value"><img src="/assets/img/bar/<?php echo $item_shop_normal === 1 ? 'bar_apply' : 'bar_deleted'; ?>.png"></span>
                     </div>
                     <div class="price-line">
@@ -124,7 +125,7 @@ require __DIR__ . '/includes/header.php';
         </div>
 
         <div class="item-info-area">
-            <h2>Info</h2>
+            <h2><?php echo t('details'); ?></h2>
             <p><?php echo nl2br(htmlspecialchars($item_description)); ?></p> 
         </div>
         
@@ -132,7 +133,7 @@ require __DIR__ . '/includes/header.php';
     
     <?php else: ?>
     <p style="color: var(--color-neon-pink, #ff00ff); text-align: center;">
-        <i class="fas fa-exclamation-triangle"></i> Por favor, forneça um ID de item válido.
+        <i class="fas fa-exclamation-triangle"></i> <?php echo t('item_id'); ?> inválido.
     </p>
     <?php endif; ?>
     
@@ -140,110 +141,34 @@ require __DIR__ . '/includes/header.php';
 
 <style>
 .page-banner.papel-banner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 30px;
-    background-color: var(--color-background-panel, #141420);
-    border: 1px solid var(--color-border-main, #333345);
-    border-radius: 8px;
-    margin-bottom: 25px;
-    box-shadow: 0 0 10px rgba(0, 234, 255, 0.1);
+    display: flex; flex-direction: column; align-items: center; text-align: center; padding: 30px;
+    background-color: var(--color-background-panel, #141420); border: 1px solid var(--color-border-main, #333345);
+    border-radius: 8px; margin-bottom: 25px; box-shadow: 0 0 10px rgba(0, 234, 255, 0.1);
 }
-
-.banner-content h1 {
-    margin: 0 0 8px 0;
-    font-size: 1.8rem;
-    color: var(--color-text-main, #FFFFFF);
-}
-
-.banner-content p {
-    margin: 0;
-    color: #a0a0b0;
-    font-size: 0.95rem;
-}
-
+.banner-content h1 { margin: 0 0 8px 0; font-size: 1.8rem; color: var(--color-text-main, #FFFFFF); }
+.banner-content p { margin: 0; color: #a0a0b0; font-size: 0.95rem; }
 .item-detail-container {
-    max-width: 800px;
-    margin: 40px auto;
-    background-color: var(--color-background-panel, #141420);
-    border: 1px solid var(--color-border-main, #333345);
-    border-radius: 12px;
-    box-shadow: 0 0 15px var(--color-neon-blue, #00eaff);
-    padding: 25px;
-    color: var(--color-text-main, #FFFFFF);
+    max-width: 800px; margin: 40px auto; background-color: var(--color-background-panel, #141420);
+    border: 1px solid var(--color-border-main, #333345); border-radius: 12px;
+    box-shadow: 0 0 15px var(--color-neon-blue, #00eaff); padding: 25px; color: var(--color-text-main, #FFFFFF);
 }
-
-.item-header {
-    display: flex;
-    align-items: center;
-    border-bottom: 2px solid var(--color-neon-pink, #ff00ff);
-    padding-bottom: 15px;
-    margin-bottom: 20px;
-}
-
-.item-header h1 {
-    font-size: 2.2em;
-    color: var(--color-neon-blue, #00eaff);
-    margin: 0;
-    text-shadow: 0 0 5px var(--color-neon-blue, #00eaff);
-}
-
-.item-content {
-    display: flex;
-    gap: 30px;
-}
-
-.item-image-area {
-    flex: 0 0 40%;
-    text-align: center;
-}
-
+.item-header { display: flex; align-items: center; border-bottom: 2px solid var(--color-neon-pink, #ff00ff); padding-bottom: 15px; margin-bottom: 20px; }
+.item-header h1 { font-size: 2.2em; color: var(--color-neon-blue, #00eaff); margin: 0; text-shadow: 0 0 5px var(--color-neon-blue, #00eaff); }
+.item-content { display: flex; gap: 30px; }
+.item-image-area { flex: 0 0 40%; text-align: center; }
 .item-image-area img.item-icon-detail {
-    max-width: 100%;
-    height: auto;
-    border: 3px solid var(--color-neon-pink, #ff00ff);
-    border-radius: 8px;
-    box-shadow: 0 0 10px var(--color-neon-pink, #ff00ff);
-    transition: transform 0.3s ease;
+    max-width: 100%; height: auto; border: 3px solid var(--color-neon-pink, #ff00ff);
+    border-radius: 8px; box-shadow: 0 0 10px var(--color-neon-pink, #ff00ff); transition: transform 0.3s ease;
 }
-
-.item-info-area {
-    flex: 1;
-}
-
-.item-info-area h2 {
-    color: var(--color-tertiary, #ffc800);
-    font-size: 1.5em;
-    margin-top: 0;
-}
-
+.item-info-area { flex: 1; }
+.item-info-area h2 { color: var(--color-tertiary, #ffc800); font-size: 1.5em; margin-top: 0; }
 .price-box {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #1f1f33;
-    border-radius: 8px;
-    border: 1px solid var(--color-neon-blue, #00eaff);
-    box-shadow: inset 0 0 5px var(--color-neon-blue, #00eaff);
+    margin-top: 20px; padding: 15px; background-color: #1f1f33; border-radius: 8px;
+    border: 1px solid var(--color-neon-blue, #00eaff); box-shadow: inset 0 0 5px var(--color-neon-blue, #00eaff);
 }
-
-.price-line {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 1.1em;
-    font-weight: bold;
-    margin: 8px 0;
-}
-
-.price-label {
-    color: var(--color-text-main, #FFFFFF);
-}
-
-.price-value {
-    color: var(--color-tertiary, #ffc800);
-}
+.price-line { display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; font-weight: bold; margin: 8px 0; }
+.price-label { color: var(--color-text-main, #FFFFFF); }
+.price-value { color: var(--color-tertiary, #ffc800); }
 </style>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

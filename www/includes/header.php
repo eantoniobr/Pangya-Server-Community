@@ -113,6 +113,11 @@ header('Content-Type: text/html; charset=utf-8');
                                     <span class="fi fi-us"></span> English
                                 </a>
                             </li>
+							 <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="?lang=th">
+                                    <span class="fi fi-th"></span> Thailand
+                                </a>
+                            </li>
                         </ul>
                     </li>
 

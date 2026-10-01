@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 session_regenerate_id(true);
                 $_SESSION['uid'] = (int)$user['UID'];
                 $_SESSION['login_id'] = $user['ID'];
-                $_SESSION['capability'] = (int) $user['capability'];
+                $_SESSION['capability'] = $user['capability'];
 
                 header('Location: dashboard.php');
                 exit;

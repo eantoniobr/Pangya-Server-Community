@@ -7,17 +7,17 @@ require_once __DIR__ . '/ShopCatalog.php';
 $term = trim((string) ($_GET['q'] ?? ''));
 $category = trim((string) ($_GET['category'] ?? ''));
 $types = [
-    'all' => ['label' => 'Todos', 'icon' => ''],
-    'card' => ['label' => 'Cards', 'icon' => '/assets/img/bar/BtnCard.png'],
-    'setitem' => ['label' => 'Sets', 'icon' => '/assets/img/bar/BtnSet.png'],
-    'part' => ['label' => 'Parts', 'icon' => '/assets/img/bar/BtnPart.png'],
-    'item' => ['label' => 'Itens', 'icon' => '/assets/img/bar/BtnItem.png'],
-    'skin' => ['label' => 'Skins', 'icon' => '/assets/img/bar/BtnSkin.png'],
-    'clubset' => ['label' => 'ClubSets', 'icon' => '/assets/img/bar/BtnClub.png'],
-    'caddie' => ['label' => 'Caddies', 'icon' => '/assets/img/bar/BtnCaddie.png'],
-    'auxpart' => ['label' => 'Rings', 'icon' => '/assets/img/bar/BtnAuxPart.png'],
-    'ball' => ['label' => 'Balls', 'icon' => '/assets/img/bar/BtnBall.png'],
-    'mascot' => ['label' => 'Mascotes', 'icon' => '/assets/img/bar/BtnMascot.png'],
+    'all' => ['label' => t('dash_cat_all'), 'icon' => ''],
+    'card' => ['label' => t('dash_cat_card'), 'icon' => '/assets/img/bar/BtnCard.png'],
+    'setitem' => ['label' => t('dash_cat_setitem'), 'icon' => '/assets/img/bar/BtnSet.png'],
+    'part' => ['label' => t('dash_cat_part'), 'icon' => '/assets/img/bar/BtnPart.png'],
+    'item' => ['label' => t('dash_cat_item'), 'icon' => '/assets/img/bar/BtnItem.png'],
+    'skin' => ['label' => t('dash_cat_skin'), 'icon' => '/assets/img/bar/BtnSkin.png'],
+    'clubset' => ['label' => t('dash_cat_clubset'), 'icon' => '/assets/img/bar/BtnClub.png'],
+    'caddie' => ['label' => t('dash_cat_caddie'), 'icon' => '/assets/img/bar/BtnCaddie.png'],
+    'auxpart' => ['label' => t('dash_cat_auxpart'), 'icon' => '/assets/img/bar/BtnAuxPart.png'],
+    'ball' => ['label' => t('dash_cat_ball'), 'icon' => '/assets/img/bar/BtnBall.png'],
+    'mascot' => ['label' => t('dash_cat_mascot'), 'icon' => '/assets/img/bar/BtnMascot.png'],
 ];
 
 if (!array_key_exists($category, $types)) {
@@ -68,7 +68,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
 </form>
 
-<div class="d-flex gap-2 overflow-auto pb-2 mb-4" aria-label="Categorias da loja" style="
+<div class="d-flex gap-2 overflow-auto pb-2 mb-4" aria-label="<?= htmlspecialchars(t('shop_categories')) ?>" style="
     position: relative;
     left: 36px;
 ">
@@ -98,7 +98,7 @@ require __DIR__ . '/../includes/header.php';
 </div>
 
 <p class="text-secondary small">
-    <?= $totalItems ?> itens encontrados. Use a busca para filtrar por nome ou TypeId.
+    <?= htmlspecialchars(sprintf(t('items_found_count'), $totalItems)) ?>
 </p>
 
 <div class="row g-3">
@@ -125,8 +125,8 @@ require __DIR__ . '/../includes/header.php';
     <input type="hidden" name="typeid" value="<?= (int) $item['typeid'] ?>">
     
     <div class="d-flex gap-2">
-        <a class="btn btn-outline-secondary btn-sm" href="/item_detail.php?id=<?= (int) $item['typeid'] ?>" title="Ver Detalhes">
-            <i class="bi bi-info-circle"></i> Detalhes
+        <a class="btn btn-outline-secondary btn-sm" href="/item_detail.php?id=<?= (int) $item['typeid'] ?>" title="<?= htmlspecialchars(t('view_details')) ?>">
+            <i class="bi bi-info-circle"></i> <?= htmlspecialchars(t('details')) ?>
         </a>
         <button type="submit" class="btn btn-primary btn-sm w-50">
            <img src="/assets/img/bar/bar_papel.png" alt="PangYa Community" height="42"> <?= htmlspecialchars(t('buy')) ?>
@@ -143,7 +143,7 @@ require __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <?php if ($totalPages > 1): ?>
-    <nav class="mt-4" aria-label="Paginação da loja">
+    <nav class="mt-4" aria-label="<?= htmlspecialchars(t('shop_pagination')) ?>">
         <ul class="pagination justify-content-center">
             <li class="page-item <?= $page === 1 ? 'disabled' : '' ?>">
                 <a class="page-link" href="?<?= htmlspecialchars(http_build_query(['q' => $term, 'category' => $category, 'page' => $page - 1])) ?>">

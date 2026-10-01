@@ -74,14 +74,16 @@ try {
     );
 }
 
+$newsPreview = [];
+try {
+    require_once __DIR__ . '/includes/NewsService.php';
+    $newsPreview = (new NewsService())->listPublished(1, 3);
+} catch (PDOException $e) {
+    error_log('Prévia de notícias na home: ' . $e->getMessage());
+}
+
 require __DIR__ . '/includes/header.php';
 ?>
-
-<!-- SDKs de Pagamento (PayPal e Mercado Pago) -->
-<!-- Substitua YOUR_PAYPAL_CLIENT_ID pelo seu Client ID do PayPal -->
-<script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=BRL"></script>
-<!-- SDK Mercado Pago -->
-<script src="https://sdk.mercadopago.com/js/v2"></script>
 
 <!-- Hero Banner -->
 <div class="hero-banner rounded-3 mb-4">
@@ -108,39 +110,10 @@ require __DIR__ . '/includes/header.php';
                 <span>💻 GitHub</span>
             </a>
 
-            <!-- Botão Pague-me um café (Abre modal de pagamentos) -->
-            <button type="button" class="btn btn-warning btn-lg fw-bold text-dark d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#donateModal">
-                ☕ Pague-me um café
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Doação / Apoio (PayPal e Mercado Pago) -->
-<div class="modal fade" id="donateModal" tabindex="-1" aria-labelledby="donateModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-light border-secondary">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title fw-bold" id="donateModalLabel">☕ Pague-me um café / Apoie o Servidor</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center p-4">
-                <p class="mb-4">Escolha a sua forma de pagamento preferida para apoiar o projeto:</p>
-                
-                <div class="d-grid mb-3">
-                    <a href="https://link.mercadopago.com.br/gameraze" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg text-white fw-bold d-flex align-items-center justify-content-center gap-2" style="background-color: #009ee3; border-color: #009ee3;">
-                        <i class="bi bi-qr-code-scan"></i> Pagar com Mercado Pago / Pix
-                    </a>
-                </div>
-
-                <div class="my-3 text-muted">— OU —</div>
-
-<div class="d-grid">
-    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=8QDX3E6W458FL&currency_code=BRL&item_name=Apoio+PangYa" target="_blank" rel="noopener noreferrer" class="btn btn-warning btn-lg text-dark fw-bold d-flex align-items-center justify-content-center gap-2" style="background-color: #ffc439; border-color: #ffc439;">
-        <i class="bi bi-paypal"></i> Pagar com PayPal
-    </a>
-</div>
-            </div>
+            <!-- Leva direto pra página de doações (checkout transparente MP + PayPal) -->
+            <a href="<?= isLoggedIn() ? 'Shop/ShopCash.php' : 'Account/login.php' ?>" class="btn btn-warning btn-lg fw-bold text-dark d-flex align-items-center gap-2">
+                ☕ <?= htmlspecialchars(t('support_server') ?? 'Apoie o servidor') ?>
+            </a>
         </div>
     </div>
 </div>
@@ -155,37 +128,37 @@ require __DIR__ . '/includes/header.php';
 
     <div class="carousel-inner rounded-3">
         <div class="carousel-item active">
-            <img src="assets/img/bg/beach-event-banner.jpg" class="d-block w-100 rounded-3" alt="Evento de Praia">
+            <img src="assets/img/bg/beach-event-banner.jpg" class="d-block w-100 rounded-3" alt="<?= htmlspecialchars(t('beach_event_alt') ?? 'Evento de Praia') ?>">
             <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
-                <h5>Pangya Community - Evento de Verão</h5>
-                <p>Participe dos eventos exclusivos da temporada na comunidade.</p>
+                <h5><?= htmlspecialchars(t('carousel_title_1') ?? 'Pangya Community - Evento de Verão') ?></h5>
+                <p><?= htmlspecialchars(t('carousel_desc_1') ?? 'Participe dos eventos exclusivos da temporada na comunidade.') ?></p>
             </div>
         </div>
 
         <div class="carousel-item">
-            <img src="assets/img/bg/beach-event-banner.jpg" class="d-block w-100 rounded-3" alt="Novidades do Servidor">
+            <img src="assets/img/bg/beach-event-banner.jpg" class="d-block w-100 rounded-3" alt="<?= htmlspecialchars(t('server_news_alt') ?? 'Novidades do Servidor') ?>">
             <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
-                <h5>Atualizações e Ferramentas</h5>
-                <p>Explore o PangYa Suite Tools e gerencie seus arquivos IFF com facilidade.</p>
+                <h5><?= htmlspecialchars(t('carousel_title_2') ?? 'Atualizações e Ferramentas') ?></h5>
+                <p><?= htmlspecialchars(t('carousel_desc_2') ?? 'Explore o PangYa Suite Tools e gerencie seus arquivos IFF com facilidade.') ?></p>
             </div>
         </div>
 
         <div class="carousel-item">
-            <img src="assets/img/bg/beach-event-banner.jpg" class="d-block w-100 rounded-3 bg-secondary" alt="Comunidade Open Source">
+            <img src="assets/img/bg/beach-event-banner.jpg" class="d-block w-100 rounded-3 bg-secondary" alt="<?= htmlspecialchars(t('open_source_alt') ?? 'Comunidade Open Source') ?>">
             <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
-                <h5>Código Aberto</h5>
-                <p>Contribua com o projeto no nosso repositório oficial do GitHub.</p>
+                <h5><?= htmlspecialchars(t('carousel_title_3') ?? 'Código Aberto') ?></h5>
+                <p><?= htmlspecialchars(t('carousel_desc_3') ?? 'Contribua com o projeto no nosso repositório oficial do GitHub.') ?></p>
             </div>
         </div>
     </div>
 
     <button class="carousel-control-prev" type="button" data-bs-target="#communityCarousel" data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Anterior</span>
+        <span class="visually-hidden"><?= htmlspecialchars(t('previous') ?? 'Anterior') ?></span>
     </button>
     <button class="carousel-control-next" type="button" data-bs-target="#communityCarousel" data-bs-slide="next">
         <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Próximo</span>
+        <span class="visually-hidden"><?= htmlspecialchars(t('next') ?? 'Próximo') ?></span>
     </button>
 </div>
 
@@ -203,7 +176,7 @@ require __DIR__ . '/includes/header.php';
             </div>
 
             <h3 class="fw-bold mb-1">
-            <?= htmlspecialchars($serverInfo['Name'] ?? 'Game Server no Running') ?>
+            <?= htmlspecialchars($serverInfo['Name'] ?? (t('game_server_offline') ?? 'Game Server no Running')) ?>
             </h3>
             <p class="text small mb-3">
                 IP: <?= htmlspecialchars($serverInfo['IP'] ?? '127.0.0.1') ?>:<?= htmlspecialchars($serverInfo['Port'] ?? '20301') ?>
@@ -217,13 +190,13 @@ require __DIR__ . '/includes/header.php';
                     </span>
                 </div>
                 <div class="d-flex justify-content-between small mb-2">
-                    <span>Taxa Pang / EXP (AppRate):</span>
+                    <span><?= htmlspecialchars(t('pang_exp_rate') ?? 'Taxa Pang / EXP (AppRate):') ?></span>
                     <span class="fw-bold text-warning">
                         <?= htmlspecialchars($serverInfo['AppRate'] ?? '0') ?>%
                     </span>
                 </div>
                 <div class="d-flex justify-content-between small">
-                    <span>Taxa Scratch (Papel Shop):</span>
+                    <span><?= htmlspecialchars(t('scratch_rate') ?? 'Taxa Scratch (Papel Shop):') ?></span>
                     <span class="fw-bold text-warning">
                         <?= htmlspecialchars($serverInfo['ScratchRate'] ?? '100') ?>%
                     </span>
@@ -271,11 +244,11 @@ require __DIR__ . '/includes/header.php';
                     <i class="bi bi-database-check me-1"></i> <?= htmlspecialchars(t('test_connection')) ?>
                 </a>
                 <a href="iff/test_archive.php" class="btn btn-sm btn-outline-warning">
-                    <i class="bi bi-file-earmark-binary me-1"></i> Testar Leitura IFF
+                    <i class="bi bi-file-earmark-binary me-1"></i> <?= htmlspecialchars(t('test_iff_reading') ?? 'Testar Leitura IFF') ?>
                 </a>
-                <button type="button" class="btn btn-sm btn-warning text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#donateModal">
-                    ☕ Pague-me um café
-                </button>
+                <a href="<?= isLoggedIn() ? 'Shop/ShopCash.php' : 'Account/login.php' ?>" class="btn btn-sm btn-warning text-dark fw-bold">
+                    ☕ <?= htmlspecialchars(t('support_server') ?? 'Apoie o servidor') ?>
+                </a>
             </div>
         </div>
     </div>
@@ -307,27 +280,27 @@ require __DIR__ . '/includes/header.php';
 
 <!-- Como Jogar -->
 <div class="card p-4 p-md-5 mb-5 border-0 bg-dark text-light">
-    <h3 class="text-center fw-bold mb-4">🚀 Como começar a jogar?</h3>
+    <h3 class="text-center fw-bold mb-4">🚀 <?= htmlspecialchars(t('how_to_play_title') ?? 'Como começar a jogar?') ?></h3>
     <div class="row text-center g-4">
         <div class="col-md-4">
             <div class="p-3">
                 <div class="display-5 text-primary fw-bold mb-2">1</div>
-                <h5 class="fw-bold">Crie sua conta</h5>
-                <p class="text small">Cadastre-se no painel em menos de 1 minuto para obter seu acesso ao jogo.</p>
+                <h5 class="fw-bold"><?= htmlspecialchars(t('how_to_play_step1_title') ?? 'Crie sua conta') ?></h5>
+                <p class="text small"><?= htmlspecialchars(t('how_to_play_step1_desc') ?? 'Cadastre-se no painel em menos de 1 minuto para obter seu acesso ao jogo.') ?></p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="p-3">
                 <div class="display-5 text-primary fw-bold mb-2">2</div>
-                <h5 class="fw-bold">Baixe o Cliente</h5>
-                <p class="text small">Acesse a aba de downloads e baixe o cliente completo com o patch instalado.</p>
+                <h5 class="fw-bold"><?= htmlspecialchars(t('how_to_play_step2_title') ?? 'Baixe o Cliente') ?></h5>
+                <p class="text small"><?= htmlspecialchars(t('how_to_play_step2_desc') ?? 'Acesse a aba de downloads e baixe o cliente completo com o patch instalado.') ?></p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="p-3">
                 <div class="display-5 text-primary fw-bold mb-2">3</div>
-                <h5 class="fw-bold">Entre em Campo</h5>
-                <p class="text small">Execute o jogo, faça login com a conta criada e resgate seus itens iniciais!</p>
+                <h5 class="fw-bold"><?= htmlspecialchars(t('how_to_play_step3_title') ?? 'Entre em Campo') ?></h5>
+                <p class="text small"><?= htmlspecialchars(t('how_to_play_step3_desc') ?? 'Execute o jogo, faça login com a conta criada e resgate seus itens iniciais!') ?></p>
             </div>
         </div>
     </div>
@@ -336,27 +309,34 @@ require __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- Script de Inicialização do PayPal -->
-<script>
-    if (typeof paypal !== 'undefined') {
-        paypal.Buttons({
-            createOrder: function(data, actions) {
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: {
-                            value: '10.00' // Valor do "café" em R$
-                        },
-                        description: 'Apoio / Café - Pangya Community'
-                    }]
-                });
-            },
-            onApprove: function(data, actions) {
-                return actions.order.capture().then(function(details) {
-                    alert('Muito obrigado pelo apoio, ' + details.payer.name.given_name + '!');
-                });
-            }
-        }).render('#paypal-button-container');
-    }
-</script>
+<!-- Últimas Notícias -->
+<?php if (!empty($newsPreview)): ?>
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold text-white mb-0">📰 <?= htmlspecialchars(t('news')) ?></h3>
+        <a href="noticias.php" class="btn btn-sm btn-outline-light"><?= htmlspecialchars(t('view_all') ?? 'Ver todas') ?></a>
+    </div>
+    <div class="row g-4">
+        <?php foreach ($newsPreview as $item): ?>
+            <div class="col-md-4">
+                <a href="noticias.php?n=<?= urlencode($item['slug']) ?>" class="text-decoration-none">
+                    <div class="card h-100 bg-dark text-light border-secondary">
+                        <?php if (!empty($item['cover_image'])): ?>
+                            <img src="<?= htmlspecialchars($item['cover_image']) ?>" class="card-img-top" style="height:160px;object-fit:cover;" alt="">
+                        <?php endif; ?>
+                        <div class="card-body">
+                            <div class="text-secondary small mb-1"><?= htmlspecialchars((new DateTime($item['created_at']))->format('d/m/Y')) ?></div>
+                            <h6 class="fw-bold mb-1"><?= htmlspecialchars($item['title']) ?></h6>
+                            <?php if (!empty($item['summary'])): ?>
+                                <p class="small text-secondary mb-0"><?= htmlspecialchars($item['summary']) ?></p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

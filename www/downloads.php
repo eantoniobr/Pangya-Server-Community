@@ -83,7 +83,7 @@ $downloads = [
             <span><?= htmlspecialchars(t('downloads')) ?></span>
         </h1>
         <p class="text-white-50 fs-6 mb-0">
-            Baixe o cliente, servidor e ferramentas necessárias para o projeto Pangya.
+            <?= htmlspecialchars(t('downloads_subtitle')) ?>
         </p>
     </div>
 
@@ -125,6 +125,20 @@ $downloads = [
                 </div>
             </div>
         <?php endforeach; ?>
+    </div>
+
+    <!-- Ajuda / suporte -->
+    <div class="card download-card rounded-4 p-4 mt-5 text-light">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="icon-wrapper text-warning"><i class="bi bi-question-circle"></i></div>
+            <div class="flex-grow-1">
+                <h5 class="mb-1 fw-bold"><?= htmlspecialchars(t('install_error_title')) ?></h5>
+                <p class="mb-0 card-desc-text"><?= htmlspecialchars(t('install_error_desc')) ?></p>
+            </div>
+            <a href="https://discord.gg" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light">
+                <i class="bi bi-discord me-1"></i> <?= htmlspecialchars(t('join_discord')) ?>
+            </a>
+        </div>
     </div>
 </div>
 

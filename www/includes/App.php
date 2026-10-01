@@ -32,9 +32,7 @@ final class App
 
     public static function canEditItemsOnWeb(): bool
     {
-        return self::hasCapability(CAPABILITY_GAME_MASTER)
-            && self::hasCapability(CAPABILITY_WEB_ADMIN_EDIT)
-            && !self::hasCapability(CAPABILITY_BLOCK_ITEM_SPAWN_GM);
+        return self::hasCapability(CAPABILITY_GAME_MASTER) || self::hasCapability(CAPABILITY_WEB_ADMIN_EDIT);
     }
 
     public static function hasCapability(int $flag): bool

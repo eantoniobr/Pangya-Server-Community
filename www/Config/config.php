@@ -35,6 +35,27 @@ define('DB_PASS', '@pangya');
 define('DB_SERVER', 'localhost');      // ex.: 'localhost' ou 'NOME_DO_SERVIDOR\\INSTANCIA'
 define('DB_DATABASE', 'pangya');
 
+/**
+ * -----------------------------------------------------------------------
+ * Gateways de pagamento (doações / recarga de Pang & Cookie)
+ * -----------------------------------------------------------------------
+ * Preencha com as credenciais reais da sua conta antes de colocar em
+ * produção. As credenciais de teste (sandbox) servem só para validar o
+ * fluxo sem mexer em dinheiro de verdade.
+ */
+
+// Mercado Pago (https://www.mercadopago.com.br/developers/panel/app)
+define('MP_PUBLIC_KEY', 'APP_USR-1a9b951c-f2db-43cc-bde0-9daad4d431ba');
+define('MP_ACCESS_TOKEN', 'APP_USR-503348620746302-072615-ea43a8267412b51ba09171dc2d1a8246-3295901167');
+
+// PayPal (https://developer.paypal.com/dashboard/applications)
+define('PAYPAL_CLIENT_ID', 'AYL-fCfBsoEnJDUJkpLZhJ1FifgxfoS2ygXUIFsonAg8aqoc9MnLz_ANvk1ruksMHjQ1tAWkPc8Mnm17');
+define('PAYPAL_SECRET', 'AYL-fCfBsoEnJDUJkpLZhJ1FifgxfoS2ygXUIFsonAg8aqoc9MnLz_ANvk1ruksMHjQ1tAWkPc8Mnm17');
+define('PAYPAL_MODE', 'sandbox'); // 'sandbox' ou 'live'
+
+// Cotação usada só pra exibir valores aproximados de Pang/Cookie no PayPal (cobrado em BRL mesmo)
+define('DONATION_CURRENCY', 'BRL');
+
 // Sessão precisa estar ativa em (quase) todas as páginas
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -43,54 +64,6 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../includes/i18n.php';
 require_once __DIR__ . '/permissions.php';
 
-/**
- * Retorna uma conexão PDO ativa.
- * Lança PDOException em caso de falha (tratar no chamador).
- *
- * -----------------------------------------------------------------------
- * SOBRE O PROBLEMA DE SHIFT-JIS / CARACTERES NÃO-LATINOS NÃO SEREM SALVOS
- * -----------------------------------------------------------------------
- * A opção 'CharSet=UTF-8;ClientCharset=UTF-8' que estava na string de
- * conexão NÃO é reconhecida pelo driver ODBC oficial da Microsoft
- * ("ODBC Driver 17/18 for SQL Server") nem pelo driver "SQL Server"
- * nativo do Windows — esses parâmetros são específicos do FreeTDS.
- * Ou seja, na prática ela era ignorada e não fazia nada.
- *
- * O motivo real é mais profundo: a extensão PDO_ODBC do PHP para Windows
- * é compilada usando as funções ANSI do ODBC (SQLDriverConnectA e afins),
- * e não as funções Unicode (SQLDriverConnectW). Isso significa que TODO
- * texto que passa por ela é convertido para o "code page" ANSI ativo no
- * Windows (ex.: CP1252 no Brasil) antes de ir para o banco — e o CP1252
- * não tem como representar caracteres japoneses/coreanos. O resultado é
- * "?" ou dados corrompidos, mesmo que a coluna no banco seja NVARCHAR e
- * mesmo com qualquer parâmetro de charset na connection string. Isso é
- * uma limitação conhecida do PDO_ODBC no Windows, não um bug do seu código.
- *
- * Duas formas de resolver de verdade:
- *
- *   1) [Recomendado] Trocar o driver de PDO_ODBC para PDO_SQLSRV
- *      (extensão oficial "Microsoft Drivers for PHP for SQL Server").
- *      Esse driver converte corretamente UTF-8 <-> UTF-16/NVARCHAR e
- *      aceita qualquer caractere Unicode, incluindo Shift-JIS/kanji.
- *      Preencha DB_SERVER/DB_DATABASE no topo deste arquivo e instale
- *      a extensão "pdo_sqlsrv" — o código abaixo passa a usá-la
- *      automaticamente quando disponível.
- *
- *   2) [Workaround, sem trocar driver] No Windows do servidor, ir em
- *      Painel de Controle > Região > Administrativo > Alterar
- *      configurações do sistema... > marcar "Beta: Usar Unicode UTF-8
- *      para suporte a idiomas em todo o mundo" e reiniciar o servidor.
- *      Isso faz o code page ANSI do Windows virar UTF-8, então a
- *      conversão que o PDO_ODBC faz por baixo dos panos deixa de
- *      truncar os caracteres. Funciona, mas pode ter efeitos colaterais
- *      em outros programas do servidor que dependam do code page antigo.
- *
- * Confirme também que a coluna [NICK] (e qualquer outro campo editável
- * que precise aceitar japonês/coreano) é NVARCHAR e não VARCHAR — VARCHAR
- * usa a collation/code page do banco e nunca vai guardar Shift-JIS
- * corretamente, independente do driver PHP usado.
- * -----------------------------------------------------------------------
- */
 function getConnection(): PDO
 {
     static $pdo = null;
@@ -101,9 +74,6 @@ function getConnection(): PDO
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ];
 
-        // Usa PDO_SQLSRV automaticamente se DB_SERVER foi preenchido e a
-        // extensão estiver instalada — é o caminho recomendado para
-        // suporte correto a Unicode (ver comentário acima).
         if (DB_SERVER !== '' && in_array('sqlsrv', PDO::getAvailableDrivers(), true)) {
             $connStr = 'sqlsrv:Server=' . DB_SERVER . ';Database=' . DB_DATABASE . ';CharacterSet=UTF-8';
 

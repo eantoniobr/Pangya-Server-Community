@@ -17,11 +17,11 @@ function addStep(array &$steps, string $label, bool $ok, string $detail = ''): v
 $pdoOdbcLoaded = extension_loaded('pdo_odbc');
 addStep(
     $steps,
-    'Extensão PHP pdo_odbc habilitada',
+    t('step_pdo_odbc_label') ?? 'Extensão PHP pdo_odbc habilitada',
     $pdoOdbcLoaded,
     $pdoOdbcLoaded
-        ? 'OK — versão PHP ' . PHP_VERSION
-        : 'Não encontrada. Habilite "extension=pdo_odbc" no php.ini e reinicie o servidor web.'
+        ? (t('ok_php_version') ?? 'OK — versão PHP ') . PHP_VERSION
+        : (t('pdo_odbc_not_found') ?? 'Não encontrada. Habilite "extension=pdo_odbc" no php.ini e reinicie o servidor web.')
 );
 
 // -------------------------------------------------------------------
@@ -31,9 +31,9 @@ $drivers = PDO::getAvailableDrivers();
 $hasOdbcDriver = in_array('odbc', $drivers, true);
 addStep(
     $steps,
-    'Driver "odbc" disponível no PDO',
+    t('step_driver_odbc_label') ?? 'Driver "odbc" disponível no PDO',
     $hasOdbcDriver,
-    'Drivers PDO instalados: ' . (empty($drivers) ? '(nenhum)' : implode(', ', $drivers))
+    (t('installed_pdo_drivers') ?? 'Drivers PDO instalados: ') . (empty($drivers) ? (t('none') ?? '(nenhum)') : implode(', ', $drivers))
 );
 
 // -------------------------------------------------------------------
@@ -47,15 +47,15 @@ if ($pdoOdbcLoaded && $hasOdbcDriver) {
     try {
         $pdo = getConnection();
         $connectionOk = true;
-        $connectionDetail = 'Conexão aberta com sucesso usando o DSN "' . DSN_NAME . '".';
+        $connectionDetail = (t('connection_success_dsn') ?? 'Conexão aberta com sucesso usando o DSN "') . DSN_NAME . '".';
     } catch (PDOException $e) {
-        $connectionDetail = 'Falha ao conectar: ' . $e->getMessage();
+        $connectionDetail = (t('connection_failed') ?? 'Falha ao conectar: ') . $e->getMessage();
     }
 } else {
-    $connectionDetail = 'Etapa pulada — pré-requisitos acima não atendidos.';
+    $connectionDetail = t('step_skipped_prerequisites') ?? 'Etapa pulada — pré-requisitos acima não atendidos.';
 }
 
-addStep($steps, 'Conexão PDO ODBC com o System DSN "' . DSN_NAME . '"', $connectionOk, $connectionDetail);
+addStep($steps, (t('pdo_odbc_connection_dsn') ?? 'Conexão PDO ODBC com o System DSN "') . DSN_NAME . '"', $connectionOk, $connectionDetail);
 
 // -------------------------------------------------------------------
 // 4. Query simples de sanidade (SELECT 1)
@@ -67,15 +67,15 @@ if ($connectionOk) {
     try {
         $result = $pdo->query('SELECT 1 AS ping')->fetch();
         $pingOk = isset($result['ping']) && (int)$result['ping'] === 1;
-        $pingDetail = $pingOk ? 'SELECT 1 executado com sucesso.' : 'Resposta inesperada do banco.';
+        $pingDetail = $pingOk ? (t('select_1_success') ?? 'SELECT 1 executado com sucesso.') : (t('unexpected_db_response') ?? 'Resposta inesperada do banco.');
     } catch (PDOException $e) {
-        $pingDetail = 'Erro ao executar SELECT 1: ' . $e->getMessage();
+        $pingDetail = (t('select_1_error') ?? 'Erro ao executar SELECT 1: ') . $e->getMessage();
     }
 } else {
-    $pingDetail = 'Etapa pulada — conexão não estabelecida.';
+    $pingDetail = t('step_skipped_no_connection') ?? 'Etapa pulada — conexão não estabelecida.';
 }
 
-addStep($steps, 'Consulta de sanidade (SELECT 1)', $pingOk, $pingDetail);
+addStep($steps, t('sanity_query_label') ?? 'Consulta de sanidade (SELECT 1)', $pingOk, $pingDetail);
 
 // -------------------------------------------------------------------
 // 5. Identifica o servidor/banco atual e a versão do SQL Server
@@ -88,19 +88,19 @@ if ($pingOk) {
         $row = $pdo->query('SELECT DB_NAME() AS db_name, @@SERVERNAME AS server_name, @@VERSION AS version')->fetch();
         $serverInfoOk = true;
         $serverInfoDetail = sprintf(
-            'Banco: %s | Servidor: %s | Versão: %s',
+            t('server_info_format') ?? 'Banco: %s | Servidor: %s | Versão: %s',
             $row['db_name'] ?? '?',
             $row['server_name'] ?? '?',
             isset($row['version']) ? strtok($row['version'], "\n") : '?'
         );
     } catch (PDOException $e) {
-        $serverInfoDetail = 'Erro ao obter informações do servidor: ' . $e->getMessage();
+        $serverInfoDetail = (t('server_info_error') ?? 'Erro ao obter informações do servidor: ') . $e->getMessage();
     }
 } else {
-    $serverInfoDetail = 'Etapa pulada — consulta de sanidade falhou.';
+    $serverInfoDetail = t('step_skipped_sanity_failed') ?? 'Etapa pulada — consulta de sanidade falhou.';
 }
 
-addStep($steps, 'Informações do servidor SQL Server', $serverInfoOk, $serverInfoDetail);
+addStep($steps, t('sql_server_info_label') ?? 'Informações do servidor SQL Server', $serverInfoOk, $serverInfoDetail);
 
 // -------------------------------------------------------------------
 // 6. Verifica se as tabelas/procedures-chave do projeto existem
@@ -108,11 +108,11 @@ addStep($steps, 'Informações do servidor SQL Server', $serverInfoOk, $serverIn
 $objectsOk = false;
 $objectsDetail = '';
 $expectedObjects = [
-    'pangya.account'                        => 'U',  // tabela
-    'pangya.contas_beta'                    => 'U',  // tabela
-    'pangya.pangya_item_warehouse'           => 'U',  // tabela
-    'pangya.ProcMakeUserBeta'                => 'P',  // procedure
-    'pangya.ProcAutoItem'                    => 'P',  // procedure
+    'pangya.account'                     => 'U',  // tabela
+    'pangya.contas_beta'                 => 'U',  // tabela
+    'pangya.pangya_item_warehouse'       => 'U',  // tabela
+    'pangya.ProcMakeUserBeta'            => 'P',  // procedure
+    'pangya.ProcAutoItem'                => 'P',  // procedure
 ];
 
 if ($serverInfoOk) {
@@ -130,36 +130,36 @@ if ($serverInfoOk) {
         }
         $objectsDetail = implode(' | ', $lines);
     } catch (PDOException $e) {
-        $objectsDetail = 'Erro ao verificar objetos: ' . $e->getMessage();
+        $objectsDetail = (t('object_check_error') ?? 'Erro ao verificar objetos: ') . $e->getMessage();
     }
 } else {
-    $objectsDetail = 'Etapa pulada — informações do servidor indisponíveis.';
+    $objectsDetail = t('step_skipped_server_unavailable') ?? 'Etapa pulada — informações do servidor indisponíveis.';
 }
 
-addStep($steps, 'Tabelas e procedures esperadas existem no banco', $objectsOk, $objectsDetail);
+addStep($steps, t('expected_tables_procedures_label') ?? 'Tabelas e procedures esperadas existem no banco', $objectsOk, $objectsDetail);
 
-$pageTitle = 'Teste de Conexão';
+$pageTitle = t('connection_test_title') ?? 'Teste de Conexão';
 require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="row justify-content-center">
     <div class="col-lg-9">
         <div class="card p-4 p-md-5">
-            <h2 class="mb-1">Teste de Conexão PHP + SQL Server</h2>
-            <p class="text-secondary mb-4">Diagnóstico via PDO_ODBC / System DSN.</p>
+            <h2 class="mb-1"><?= htmlspecialchars(t('connection_test_heading') ?? 'Teste de Conexão PHP + SQL Server') ?></h2>
+            <p class="text-secondary mb-4"><?= htmlspecialchars(t('connection_test_subtitle') ?? 'Diagnóstico via PDO_ODBC / System DSN.') ?></p>
 
             <div class="alert <?= $connectionOk ? 'alert-success' : 'alert-danger' ?>">
-                <strong><?= $connectionOk ? '✅ Conexão funcionando' : '❌ Conexão com falha' ?></strong>
-                — verifique os detalhes de cada etapa abaixo.
+                <strong><?= $connectionOk ? ('✅ ' . (t('connection_working') ?? 'Conexão funcionando')) : ('❌ ' . (t('connection_failed_status') ?? 'Conexão com falha')) ?></strong>
+                — <?= htmlspecialchars(t('check_steps_details_below') ?? 'verifique os detalhes de cada etapa abaixo.') ?>
             </div>
 
             <table class="table table-dark align-middle">
                 <thead>
                     <tr>
                         <th style="width:40px;">#</th>
-                        <th>Etapa</th>
-                        <th style="width:90px;">Status</th>
-                        <th>Detalhes</th>
+                        <th><?= htmlspecialchars(t('table_header_step') ?? 'Etapa') ?></th>
+                        <th style="width:90px;"><?= htmlspecialchars(t('table_header_status') ?? 'Status') ?></th>
+                        <th><?= htmlspecialchars(t('table_header_details') ?? 'Detalhes') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -169,9 +169,9 @@ require __DIR__ . '/includes/header.php';
                         <td><?= htmlspecialchars($step['label']) ?></td>
                         <td>
                             <?php if ($step['ok']): ?>
-                                <span class="badge bg-success">OK</span>
+                                <span class="badge bg-success"><?= htmlspecialchars(t('status_ok') ?? 'OK') ?></span>
                             <?php else: ?>
-                                <span class="badge bg-danger">FALHA</span>
+                                <span class="badge bg-danger"><?= htmlspecialchars(t('status_fail') ?? 'FALHA') ?></span>
                             <?php endif; ?>
                         </td>
                         <td class="small"><?= htmlspecialchars($step['detail']) ?></td>
@@ -181,8 +181,7 @@ require __DIR__ . '/includes/header.php';
             </table>
 
             <div class="alert alert-warning mt-4 mb-0">
-                ⚠️ Este arquivo expõe detalhes técnicos do servidor. Apague-o ou
-                bloqueie o acesso (ex.: <code>.htaccess</code>) assim que terminar os testes.
+                ⚠️ <?= htmlspecialchars(t('security_warning_test_file') ?? 'Este arquivo expõe detalhes técnicos do servidor. Apague-o ou bloqueie o acesso (ex.: .htaccess) assim que terminar os testes.') ?>
             </div>
         </div>
     </div>

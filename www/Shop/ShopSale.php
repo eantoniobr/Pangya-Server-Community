@@ -10,12 +10,12 @@ $uid = (int) $_SESSION['uid'];
 $catalog = new IffCatalog();
 
 $types = [
-    'all'       => ['label' => 'Todos', 'icon' => ''],
-    'card'      => ['label' => 'Cards', 'icon' => '/assets/img/bar/BtnCard.png'],
-    'part'      => ['label' => 'Parts', 'icon' => '/assets/img/bar/BtnPart.png'],
-    'item'      => ['label' => 'Itens', 'icon' => '/assets/img/bar/BtnItem.png'],
-    'clubset'   => ['label' => 'ClubSets', 'icon' => '/assets/img/bar/BtnClub.png'],
-    'auxpart'   => ['label' => 'Rings', 'icon' => '/assets/img/bar/BtnAuxPart.png']
+    'all'       => ['label' => t('dash_cat_all'), 'icon' => ''],
+    'card'      => ['label' => t('dash_cat_card'), 'icon' => '/assets/img/bar/BtnCard.png'],
+    'part'      => ['label' => t('dash_cat_part'), 'icon' => '/assets/img/bar/BtnPart.png'],
+    'item'      => ['label' => t('dash_cat_item'), 'icon' => '/assets/img/bar/BtnItem.png'],
+    'clubset'   => ['label' => t('dash_cat_clubset'), 'icon' => '/assets/img/bar/BtnClub.png'],
+    'auxpart'   => ['label' => t('dash_cat_auxpart'), 'icon' => '/assets/img/bar/BtnAuxPart.png']
 ];
 
 $selectedType = $_GET['type'] ?? 'all';
@@ -136,7 +136,6 @@ require __DIR__ . '/../includes/header.php';
         backdrop-filter: blur(4px);
     }
 
-    /* Estado Inativo (Tema Escuro) */
     .filter-btn-inactive {
         background-color: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.15);
@@ -151,7 +150,6 @@ require __DIR__ . '/../includes/header.php';
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
     }
 
-    /* Estado Ativo */
     .filter-btn-active {
         background-color: #0d6efd;
         border: 1px solid #0d6efd;
@@ -164,7 +162,6 @@ require __DIR__ . '/../includes/header.php';
         color: #ffffff;
     }
 
-    /* Ícone */
     .filter-btn-icon {
         width: 42px;
         height: 42px;
@@ -219,7 +216,7 @@ require __DIR__ . '/../includes/header.php';
                 placeholder="<?= htmlspecialchars(t('search_item')) ?>" 
                 value="<?= htmlspecialchars($searchQuery) ?>"
             >
-            <button type="submit" class="btn btn-sm btn-outline-light">Buscar</button>
+            <button type="submit" class="btn btn-sm btn-outline-light"><?= htmlspecialchars(t('search')) ?></button>
         </form>
     </div>
 
@@ -270,7 +267,7 @@ require __DIR__ . '/../includes/header.php';
                                     >
                                 </div>
                                 <div class="col-5">
-                                    <select class="form-select form-select-sm" name="currency" aria-label="Moeda">
+                                    <select class="form-select form-select-sm" name="currency" aria-label="<?= htmlspecialchars(t('currency')) ?>">
                                         <option value="Pang">Pang</option>
                                         <option value="Cookie">Cookie</option>
                                     </select>
@@ -332,7 +329,7 @@ require __DIR__ . '/../includes/header.php';
                         <th><?= htmlspecialchars(t('item_id')) ?></th>
                         <th>TypeId</th>
                         <th><?= htmlspecialchars(t('price')) ?></th>
-                        <th>Moeda</th>
+                        <th><?= htmlspecialchars(t('currency')) ?></th>
                         <th></th>
                     </tr>
                 </thead>
@@ -345,8 +342,8 @@ require __DIR__ . '/../includes/header.php';
                             <td><?= htmlspecialchars($listing['currency']) ?></td>
                             <td class="text-end">
     <?php if ((int) $listing['seller_uid'] === $uid): ?>
-        <button class="btn btn-sm btn-secondary" disabled title="Você não pode comprar seu próprio item">
-            <?= htmlspecialchars(t('My') ?? 'My') ?>
+        <button class="btn btn-sm btn-secondary" disabled title="<?= htmlspecialchars(t('cannot_buy_own_item')) ?>">
+            <?= htmlspecialchars(t('my_item')) ?>
         </button>
     <?php else: ?>
         <form method="post" action="marketplace_action.php" class="d-inline">

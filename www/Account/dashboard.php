@@ -109,14 +109,17 @@ WHERE
 $stmt->execute([$uid, $uid, $uid]);
 $account = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($account && !empty($account['NICK_HEX'])) {
+if (!empty($account['NICK_HEX'])) {
     $nickBytes = hex2bin($account['NICK_HEX']);
 
     if ($nickBytes !== false) {
         $account['NICK'] = trim(mb_convert_encoding($nickBytes, 'UTF-8', 'UTF-16LE'));
+    } else {
+        $account['NICK'] = '';
     }
+} else {
+    $account['NICK'] = '';
 }
-
     // -------------------------------------------------------------
     // 2. Estatísticas de jogo (pode não existir ainda para contas novas)
     // -------------------------------------------------------------
@@ -171,7 +174,7 @@ if ($account && !empty($account['NICK_HEX'])) {
 } catch (PDOException $e) {
     error_log('Erro ao carregar painel: ' . $e->getMessage());
 	echo $e->getMessage();
-    $loadError = 'Não foi possível carregar seus dados no momento.';
+    $loadError = t('dash_load_error');
 }
 
 // -------------------------------------------------------------
@@ -257,8 +260,8 @@ $serverMetrics = $serverMetrics ?? ['registered' => 0, 'online' => 0, 'login_onl
 function sexoLabel($sexo): string
 {
     return match ((int)$sexo) {
-        0 => 'Masculino',
-        1 => 'Feminino',
+        0 => t('male'),
+        1 => t('female'),
         default => '-',
     };
 }
@@ -283,7 +286,7 @@ function LevelIcon($level): string
     // Caminho da imagem
     $iconPath = "/assets/img/level/level_{$formattedLevel}.PNG";
 
-    return '<img src="' . $iconPath . '" alt="Level ' . $level . '" height="24">';
+    return '<img src="' . $iconPath . '" alt="' . htmlspecialchars(t('level')) . ' ' . $level . '" height="24">';
 }
 
 function formatDate($value): string
@@ -292,23 +295,39 @@ function formatDate($value): string
         return '-';
     }
     try {
-        return (new DateTime($value))->format('d/m/Y H:i');
+        return (new DateTime($value))->format(currentLanguage() === 'en' ? 'Y-m-d H:i' : 'd/m/Y H:i');
     } catch (Exception $e) {
         return (string)$value;
     }
 }
 
-$pageTitle = 'Painel do Usuário';
+/**
+ * Formata números conforme o idioma (pt-BR: 1.234 / demais: 1,234).
+ */
+function dashNumber($value): string
+{
+    return currentLanguage() === 'pt-BR'
+        ? number_format((float)$value, 0, ',', '.')
+        : number_format((float)$value, 0, '.', ',');
+}
+
+$pageTitle = t('dashboard');
 require __DIR__ . '/../includes/header.php';
 ?>
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">Meu Painel</h2>
-    <a href="logout.php" class="btn btn-outline-light btn-sm">Sair</a>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h2 class="mb-0"><?= htmlspecialchars(t('dash_my_panel')) ?></h2>
+    <div class="d-flex gap-2">
+        <a href="/Shop/ShopCash.php" class="btn btn-warning btn-sm fw-bold"><i class="bi bi-cash-coin me-1"></i><?= htmlspecialchars(t('dash_donations')) ?></a>
+        <?php if (isGameMaster()): ?>
+            <a href="/Admin/index.php" class="btn btn-outline-danger btn-sm"><i class="bi bi-shield-lock me-1"></i><?= htmlspecialchars(t('dash_admin_panel')) ?></a>
+        <?php endif; ?>
+        <a href="logout.php" class="btn btn-outline-light btn-sm"><?= htmlspecialchars(t('logout')) ?></a>
+    </div>
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-lg-3"><div class="card p-3 h-100"><div class="small text-secondary"><?= htmlspecialchars(t('registered_users')) ?></div><div class="fs-3 fw-bold"><?= number_format((int) $serverMetrics['registered'], 0, ',', '.') ?></div></div></div>
-    <div class="col-sm-6 col-lg-3"><div class="card p-3 h-100"><div class="small text-secondary"><?= htmlspecialchars(t('players_online')) ?></div><div class="fs-3 fw-bold text-success"><?= number_format((int) $serverMetrics['online'], 0, ',', '.') ?></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card p-3 h-100"><div class="small text-secondary"><?= htmlspecialchars(t('registered_users')) ?></div><div class="fs-3 fw-bold"><?= dashNumber((int) $serverMetrics['registered']) ?></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card p-3 h-100"><div class="small text-secondary"><?= htmlspecialchars(t('players_online')) ?></div><div class="fs-3 fw-bold text-success"><?= dashNumber((int) $serverMetrics['online']) ?></div></div></div>
     <div class="col-sm-6 col-lg-3"><div class="card p-3 h-100"><div class="small text-secondary"><?= htmlspecialchars(t('service_status')) ?></div><div><?= htmlspecialchars(t('login_server')) ?>: <span class="badge bg-<?= $serverMetrics['login_online'] ? 'success' : 'danger' ?>"><?= htmlspecialchars($serverMetrics['login_online'] ? t('online') : t('offline')) ?></span></div><div><?= htmlspecialchars(t('game_server')) ?>: <span class="badge bg-<?= $serverMetrics['game_online'] ? 'success' : 'danger' ?>"><?= htmlspecialchars($serverMetrics['game_online'] ? t('online') : t('offline')) ?></span></div></div></div>
     <div class="col-sm-6 col-lg-3"><div class="card p-3 h-100"><div class="small text-secondary"><?= htmlspecialchars(t('active_rates')) ?></div><div>Pang: <?= htmlspecialchars((string) $serverMetrics['pang_rate']) ?>%</div><div>EXP: <?= htmlspecialchars((string) $serverMetrics['exp_rate']) ?>%</div></div></div>
 </div>
@@ -322,8 +341,8 @@ require __DIR__ . '/../includes/header.php';
     <div class="modal-dialog">
         <form class="modal-content bg-dark text-light" action="update_profile.php" method="post" accept-charset="UTF-8">
             <div class="modal-header">
-                <h5 class="modal-title" id="editProfileModalLabel"><i class="bi bi-pencil-square me-2"></i>Editar Perfil</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <h5 class="modal-title" id="editProfileModalLabel"><i class="bi bi-pencil-square me-2"></i><?= htmlspecialchars(t('dash_edit_profile')) ?></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<?= htmlspecialchars(t('dash_close')) ?>"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
@@ -339,20 +358,20 @@ require __DIR__ . '/../includes/header.php';
                         required
                         value="<?= htmlspecialchars((string)$account['NICK']) ?>"
                     >
-                    <div class="form-text">Até 20 caracteres. Acentos e caracteres de outros idiomas (ex.: japonês/coreano) são aceitos.</div>
+                    <div class="form-text"><?= htmlspecialchars(t('dash_nick_help')) ?></div>
                 </div>
 
                 <div class="mb-1">
-                    <label for="editSexo" class="form-label">Sexo</label>
+                    <label for="editSexo" class="form-label"><?= htmlspecialchars(t('gender')) ?></label>
                     <select class="form-select" id="editSexo" name="sexo" required>
-                        <option value="1" <?= (int)$account['Sex'] === 0 ? 'selected' : '' ?>>Masculino</option>
-                        <option value="2" <?= (int)$account['Sex'] === 1 ? 'selected' : '' ?>>Feminino</option>
+                        <option value="1" <?= (int)$account['Sex'] === 0 ? 'selected' : '' ?>><?= htmlspecialchars(t('male')) ?></option>
+                        <option value="2" <?= (int)$account['Sex'] === 1 ? 'selected' : '' ?>><?= htmlspecialchars(t('female')) ?></option>
                     </select>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal"><?= htmlspecialchars(t('dash_cancel')) ?></button>
+                <button type="submit" class="btn btn-primary"><?= htmlspecialchars(t('dash_save')) ?></button>
             </div>
         </form>
     </div>
@@ -367,8 +386,8 @@ require __DIR__ . '/../includes/header.php';
     <div class="modal-dialog">
         <form class="modal-content bg-dark text-light" action="update_collection.php" method="post" accept-charset="UTF-8">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Editar Personagem <span id="charTypeIdLabel"></span></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i><?= htmlspecialchars(t('dash_edit_character')) ?> <span id="charTypeIdLabel"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<?= htmlspecialchars(t('dash_close')) ?>"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
@@ -381,18 +400,18 @@ require __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="row g-3">
                     <div class="col-6">
-                        <label for="charHair" class="form-label">Cabelo (default_hair)</label>
+                        <label for="charHair" class="form-label"><?= htmlspecialchars(t('dash_hair')) ?></label>
                         <input type="number" min="0" class="form-control" id="charHair" name="default_hair" required>
                     </div>
                     <div class="col-6">
-                        <label for="charShirts" class="form-label">Roupa (default_shirts)</label>
+                        <label for="charShirts" class="form-label"><?= htmlspecialchars(t('dash_shirts')) ?></label>
                         <input type="number" min="0" class="form-control" id="charShirts" name="default_shirts" required>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal"><?= htmlspecialchars(t('dash_cancel')) ?></button>
+                <button type="submit" class="btn btn-primary"><?= htmlspecialchars(t('dash_save')) ?></button>
             </div>
         </form>
     </div>
@@ -405,8 +424,8 @@ require __DIR__ . '/../includes/header.php';
     <div class="modal-dialog">
         <form class="modal-content bg-dark text-light" action="update_collection.php" method="post" accept-charset="UTF-8">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Editar Caddie <span id="caddieTypeIdLabel"></span></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i><?= htmlspecialchars(t('dash_edit_caddie')) ?> <span id="caddieTypeIdLabel"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<?= htmlspecialchars(t('dash_close')) ?>"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
@@ -415,22 +434,22 @@ require __DIR__ . '/../includes/header.php';
 
                 <div class="row g-3 mb-3">
                     <div class="col-6">
-                        <label for="caddieLevel" class="form-label">Nível</label>
+                        <label for="caddieLevel" class="form-label"><?= htmlspecialchars(t('level')) ?></label>
                         <input type="number" min="0" class="form-control" id="caddieLevel" name="clevel" required>
                     </div>
                     <div class="col-6">
-                        <label for="caddieExp" class="form-label">Exp</label>
+                        <label for="caddieExp" class="form-label"><?= htmlspecialchars(t('dash_exp')) ?></label>
                         <input type="number" min="0" class="form-control" id="caddieExp" name="exp" required>
                     </div>
                 </div>
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="caddieRent" name="rentflag" value="1">
-                    <label class="form-check-label" for="caddieRent">Alugado (RentFlag)</label>
+                    <label class="form-check-label" for="caddieRent"><?= htmlspecialchars(t('dash_rented')) ?></label>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal"><?= htmlspecialchars(t('dash_cancel')) ?></button>
+                <button type="submit" class="btn btn-primary"><?= htmlspecialchars(t('dash_save')) ?></button>
             </div>
         </form>
     </div>
@@ -443,8 +462,8 @@ require __DIR__ . '/../includes/header.php';
     <div class="modal-dialog">
         <form class="modal-content bg-dark text-light" action="update_collection.php" method="post" accept-charset="UTF-8">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Editar Mascote <span id="mascotTypeIdLabel"></span></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i><?= htmlspecialchars(t('dash_edit_mascot')) ?> <span id="mascotTypeIdLabel"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<?= htmlspecialchars(t('dash_close')) ?>"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken()) ?>">
@@ -453,18 +472,18 @@ require __DIR__ . '/../includes/header.php';
 
                 <div class="row g-3">
                     <div class="col-6">
-                        <label for="mascotLevel" class="form-label">Nível</label>
+                        <label for="mascotLevel" class="form-label"><?= htmlspecialchars(t('level')) ?></label>
                         <input type="number" min="0" class="form-control" id="mascotLevel" name="mlevel" required>
                     </div>
                     <div class="col-6">
-                        <label for="mascotExp" class="form-label">Exp</label>
+                        <label for="mascotExp" class="form-label"><?= htmlspecialchars(t('dash_exp')) ?></label>
                         <input type="number" min="0" class="form-control" id="mascotExp" name="exp" required>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal"><?= htmlspecialchars(t('dash_cancel')) ?></button>
+                <button type="submit" class="btn btn-primary"><?= htmlspecialchars(t('dash_save')) ?></button>
             </div>
         </form>
     </div>
@@ -474,7 +493,7 @@ require __DIR__ . '/../includes/header.php';
 <?php if ($loadError): ?>
     <div class="alert alert-danger"><?= htmlspecialchars($loadError) ?></div>
 <?php elseif (!$account): ?>
-    <div class="alert alert-warning">Nenhum dado de conta encontrado para este usuário.</div>
+    <div class="alert alert-warning"><?= htmlspecialchars(t('dash_no_account')) ?></div>
 <?php else: ?>
 
     <div class="row g-4">
@@ -482,26 +501,26 @@ require __DIR__ . '/../includes/header.php';
         <div class="col-lg-5">
             <div class="card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>Perfil</h5>
+                    <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i><?= htmlspecialchars(t('profile')) ?></h5>
                     <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                        <i class="bi bi-pencil-square me-1"></i>Editar
+                        <i class="bi bi-pencil-square me-1"></i><?= htmlspecialchars(t('dash_edit')) ?>
                     </button>
                 </div>
                 <table class="table table-dark table-borderless mb-0">
                     <tbody>
                         <tr><th scope="row">UID</th><td><?= htmlspecialchars((string)$account['UID']) ?></td></tr>
-                        <tr><th scope="row">Usuário (ID)</th><td><?= htmlspecialchars((string)$account['ID']) ?></td></tr>
+                        <tr><th scope="row"><?= htmlspecialchars(t('dash_user_id')) ?></th><td><?= htmlspecialchars((string)$account['ID']) ?></td></tr>
                         <tr><th scope="row">Nick</th><td><?= htmlspecialchars((string)$account['NICK']) ?></td></tr>
-                        <tr><th scope="row">Sexo</th><td><?= htmlspecialchars(sexoLabel($account['Sex'])) ?> <?= sexoIcon($account['Sex']) ?></td></tr>
-						<tr><th scope="row">Level</th><td><?= LevelIcon($stats['level']) ?></td></tr>
-                        <tr><th scope="row">Cadastrado em</th><td><?= htmlspecialchars(formatDate($account['RegDate'])) ?></td></tr>
-                        <tr><th scope="row">Último acesso</th><td><?= htmlspecialchars(formatDate($account['LastLogonTime'])) ?></td></tr>
-                        <tr><th scope="row">Total de logins</th><td><?= htmlspecialchars((string)$account['LogonCount']) ?></td></tr>
-                        <tr><th scope="row">Guild</th>
-                            <td><?= ((int)$account['GUILD_UID'] > 0) ? htmlspecialchars((string)$account['GUILD_UID']) : 'Nenhuma' ?></td>
+                        <tr><th scope="row"><?= htmlspecialchars(t('gender')) ?></th><td><?= htmlspecialchars(sexoLabel($account['Sex'])) ?> <?= sexoIcon($account['Sex']) ?></td></tr>
+						<tr><th scope="row"><?= htmlspecialchars(t('level')) ?></th><td><?= LevelIcon($stats['level']) ?></td></tr>
+                        <tr><th scope="row"><?= htmlspecialchars(t('dash_registered_at')) ?></th><td><?= htmlspecialchars(formatDate($account['RegDate'])) ?></td></tr>
+                        <tr><th scope="row"><?= htmlspecialchars(t('dash_last_login')) ?></th><td><?= htmlspecialchars(formatDate($account['LastLogonTime'])) ?></td></tr>
+                        <tr><th scope="row"><?= htmlspecialchars(t('dash_total_logins')) ?></th><td><?= htmlspecialchars((string)$account['LogonCount']) ?></td></tr>
+                        <tr><th scope="row"><?= htmlspecialchars(t('dash_guild')) ?></th>
+                            <td><?= ((int)$account['GUILD_UID'] > 0) ? htmlspecialchars((string)$account['GUILD_UID']) : htmlspecialchars(t('dash_none')) ?></td>
                         </tr>
-                        <tr><th scope="row">Convidado por indicação</th>
-                            <td><?= ((int)($account['Invited'] ?? 0) === 1) ? 'Sim' : 'Não' ?></td>
+                        <tr><th scope="row"><?= htmlspecialchars(t('dash_invited')) ?></th>
+                            <td><?= ((int)($account['Invited'] ?? 0) === 1) ? htmlspecialchars(t('dash_yes')) : htmlspecialchars(t('dash_no')) ?></td>
                         </tr>
                     </tbody>
                 </table>
@@ -511,54 +530,54 @@ require __DIR__ . '/../includes/header.php';
         <!-- Estatísticas de jogo -->
         <div class="col-lg-7">
             <div class="card p-4 h-100">
-                <h5 class="mb-3"><i class="bi bi-bar-chart-fill me-2"></i>Estatísticas de Jogo</h5>
+                <h5 class="mb-3"><i class="bi bi-bar-chart-fill me-2"></i><?= htmlspecialchars(t('game_stats')) ?></h5>
                 <?php if (!$stats): ?>
-                    <p class="mb-0 text-secondary">Ainda não há estatísticas de jogo para esta conta.</p>
+                    <p class="mb-0 text-secondary"><?= htmlspecialchars(t('dash_no_stats')) ?></p>
                 <?php else: ?>
                     <div class="row g-3">
                         <div class="col-6 col-md-4">
                             <div class="p-3 rounded bg-black bg-opacity-25 text-center">
                                 <div class="fs-4 fw-bold"><?= htmlspecialchars((string)$stats['level']) ?></div>
-                                <div class="small text-secondary">Nível</div>
+                                <div class="small text-secondary"><?= htmlspecialchars(t('level')) ?></div>
                             </div>
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="p-3 rounded bg-black bg-opacity-25 text-center">
-                                <div class="fs-4 fw-bold"><?= number_format((float)$stats['Pang'], 0, ',', '.') ?><img src="/assets/img/bar/bar_pang.png" alt="PangYa Community" height="24"></div>
-                                
+                                <div class="fs-4 fw-bold"><?= dashNumber((float)$stats['Pang']) ?><img src="/assets/img/bar/bar_pang.png" alt="PangYa Community" height="24"></div>
+                                <a href="/Shop/ShopCash.php" class="small text-warning"><?= htmlspecialchars(t('dash_recharge')) ?></a>
                             </div>
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="p-3 rounded bg-black bg-opacity-25 text-center">
-                                <div class="fs-4 fw-bold"><?= number_format((float)$stats['Cookie'], 0, ',', '.') ?><img src="/assets/img/bar/bar_cookies.png" alt="PangYa Community" height="24"></div>
-                                
+                                <div class="fs-4 fw-bold"><?= dashNumber((float)$stats['Cookie']) ?><img src="/assets/img/bar/bar_cookies.png" alt="PangYa Community" height="24"></div>
+                                <a href="/Shop/ShopCash.php" class="small text-warning"><?= htmlspecialchars(t('dash_recharge')) ?></a>
                             </div>
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="p-3 rounded bg-black bg-opacity-25 text-center">
-                                <div class="fs-4 fw-bold"><?= number_format((float)$stats['Xp'], 0, ',', '.') ?></div>
-                                <div class="small text-secondary">Experiência</div>
+                                <div class="fs-4 fw-bold"><?= dashNumber((float)$stats['Xp']) ?></div>
+                                <div class="small text-secondary"><?= htmlspecialchars(t('experience')) ?></div>
                             </div>
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="p-3 rounded bg-black bg-opacity-25 text-center">
                                 <div class="fs-4 fw-bold"><?= htmlspecialchars((string)$stats['LadderPoint']) ?></div>
-                                <div class="small text-secondary">Pontos Ranking</div>
+                                <div class="small text-secondary"><?= htmlspecialchars(t('dash_ladder_points')) ?></div>
                             </div>
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="p-3 rounded bg-black bg-opacity-25 text-center">
                                 <div class="fs-4 fw-bold">
-                                    <?= htmlspecialchars((string)$stats['LadderWin']) ?>V
-                                    / <?= htmlspecialchars((string)$stats['LadderLose']) ?>D
+                                    <?= htmlspecialchars((string)$stats['LadderWin']) ?><?= htmlspecialchars(t('dash_win_abbr')) ?>
+                                    / <?= htmlspecialchars((string)$stats['LadderLose']) ?><?= htmlspecialchars(t('dash_loss_abbr')) ?>
                                 </div>
-                                <div class="small text-secondary">Vitórias / Derrotas</div>
+                                <div class="small text-secondary"><?= htmlspecialchars(t('dash_wins_losses')) ?></div>
                             </div>
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="p-3 rounded bg-black bg-opacity-25 text-center">
                                 <div class="fs-4 fw-bold"><?= htmlspecialchars((string)$stats['Holes']) ?></div>
-                                <div class="small text-secondary">Buracos jogados</div>
+                                <div class="small text-secondary"><?= htmlspecialchars(t('dash_holes')) ?></div>
                             </div>
                         </div>
                         <div class="col-6 col-md-4">
@@ -569,7 +588,7 @@ require __DIR__ . '/../includes/header.php';
                         <div class="col-6 col-md-4">
                             <div class="p-3 rounded bg-black bg-opacity-25 text-center">
                                 <div class="fs-4 fw-bold"><?= htmlspecialchars((string)$stats['Media_score']) ?></div>
-                                <div class="small text-secondary">Média de score</div>
+                                <div class="small text-secondary"><?= htmlspecialchars(t('dash_avg_score')) ?></div>
                             </div>
                         </div>
                     </div>
@@ -580,17 +599,17 @@ require __DIR__ . '/../includes/header.php';
         <!-- Personagens -->
 <div class="col-lg-4">
     <div class="card p-4 h-100">
-        <h5 class="mb-3"><i class="bi bi-person-badge-fill me-2"></i>Personagens (<?= count($characters) ?>)</h5>
+        <h5 class="mb-3"><i class="bi bi-person-badge-fill me-2"></i><?= htmlspecialchars(t('characters')) ?> (<?= count($characters) ?>)</h5>
         
         <?php if (empty($characters)): ?>
-            <p class="mb-0 text-secondary">Nenhum personagem encontrado.</p>
+            <p class="mb-0 text-secondary"><?= htmlspecialchars(t('dash_no_characters')) ?></p>
         <?php else: ?>
             <ul class="list-group list-group-flush">
                 <?php foreach ($characters as $char): 
                     // Usa o cache compartilhado (mesmo do armazém) em vez de
                     // chamar find_all() de novo sem cache.
                     $itemData = iffLookup((int)$char['typeid'], $iffCache);
-                    $itemName = htmlspecialchars($itemData['item_name'] ?? 'no found');
+                    $itemName = htmlspecialchars($itemData['item_name'] ?? t('dash_item_not_found'));
 					$itemIcon = htmlspecialchars($itemData['icon'] ?? 'default');
                 ?>
                     <li class="list-group-item bg-transparent text-light collection-row d-flex align-items-center justify-content-between">
@@ -631,15 +650,15 @@ require __DIR__ . '/../includes/header.php';
      <!-- Caddies -->
 <div class="col-lg-4">
     <div class="card p-4 h-100">
-        <h5 class="mb-3"><i class="bi bi-person-arms-up me-2"></i>Caddies (<?= count($caddies) ?>)</h5>
+        <h5 class="mb-3"><i class="bi bi-person-arms-up me-2"></i><?= htmlspecialchars(t('caddies')) ?> (<?= count($caddies) ?>)</h5>
 
         <?php if (empty($caddies)): ?>
-            <p class="mb-0 text-secondary">Nenhum caddie encontrado.</p>
+            <p class="mb-0 text-secondary"><?= htmlspecialchars(t('dash_no_caddies')) ?></p>
         <?php else: ?>
             <ul class="list-group list-group-flush">
                 <?php foreach ($caddies as $caddie): 
                     $itemData = iffLookup((int)$caddie['typeid'], $iffCache);
-                    $itemName = htmlspecialchars($itemData['item_name'] ?? 'no found');
+                    $itemName = htmlspecialchars($itemData['item_name'] ?? t('dash_item_not_found'));
 					$itemIcon = htmlspecialchars($itemData['icon'] ?? 'default');
                 ?>
                     <li class="list-group-item bg-transparent text-light collection-row d-flex align-items-center justify-content-between">
@@ -653,8 +672,8 @@ require __DIR__ . '/../includes/header.php';
                                 >
                             </span>
                             <div class="collection-info">
-                                  <div>Name: <?= $itemName ?></div>
-                                <div class="text-secondary small">Nv. <?= htmlspecialchars((string)$caddie['cLevel']) ?></div>
+                                  <div><?= htmlspecialchars(t('dash_name')) ?>: <?= $itemName ?></div>
+                                <div class="text-secondary small"><?= htmlspecialchars(t('dash_lv_abbr')) ?> <?= htmlspecialchars((string)$caddie['cLevel']) ?></div>
                             </div>
                         </div>
 
@@ -680,15 +699,15 @@ require __DIR__ . '/../includes/header.php';
 <!-- Mascotes -->
 <div class="col-lg-4">
     <div class="card p-4 h-100">
-        <h5 class="mb-3"><i class="bi bi-emoji-heart-eyes-fill me-2"></i>Mascotes (<?= count($mascots) ?>)</h5>
+        <h5 class="mb-3"><i class="bi bi-emoji-heart-eyes-fill me-2"></i><?= htmlspecialchars(t('mascots')) ?> (<?= count($mascots) ?>)</h5>
 
         <?php if (empty($mascots)): ?>
-            <p class="mb-0 text-secondary">Nenhum mascote encontrado.</p>
+            <p class="mb-0 text-secondary"><?= htmlspecialchars(t('dash_no_mascots')) ?></p>
         <?php else: ?>
             <ul class="list-group list-group-flush">
                 <?php foreach ($mascots as $mascot): 
                     $itemData = iffLookup((int)$mascot['typeid'], $iffCache);
-					 $itemName = htmlspecialchars($itemData['item_name'] ?? 'no found');
+					 $itemName = htmlspecialchars($itemData['item_name'] ?? t('dash_item_not_found'));
 					$itemIcon = htmlspecialchars($itemData['icon'] ?? 'default');
                 ?>
                     <li class="list-group-item bg-transparent text-light collection-row d-flex align-items-center justify-content-between">
@@ -702,8 +721,8 @@ require __DIR__ . '/../includes/header.php';
                                 >
                             </span>
                             <div class="collection-info">
-                                <div>Name: <?= $itemName ?></div>
-                                <div class="text-secondary small">Nv. <?= htmlspecialchars((string)$mascot['mLevel']) ?></div>
+                                <div><?= htmlspecialchars(t('dash_name')) ?>: <?= $itemName ?></div>
+                                <div class="text-secondary small"><?= htmlspecialchars(t('dash_lv_abbr')) ?> <?= htmlspecialchars((string)$mascot['mLevel']) ?></div>
                             </div>
                         </div>
 
@@ -729,27 +748,27 @@ require __DIR__ . '/../includes/header.php';
 <div class="col-lg-12 mt-4">
     <div class="card p-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-            <h5 class="mb-0"><i class="bi bi-archive-fill me-2"></i>Armazém (<?= (int)$itemCount ?> itens · <?= count($warehouseItems) ?> tipos)</h5>
+            <h5 class="mb-0"><i class="bi bi-archive-fill me-2"></i><?= htmlspecialchars(sprintf(t('dash_warehouse_summary'), (int)$itemCount, count($warehouseItems))) ?></h5>
             
             <!-- Campo de Busca em Tempo Real -->
-            <input type="text" id="warehouseSearch" class="form-control form-control-sm style-search" style="max-width: 200px;" placeholder="Buscar item ou TypeID...">
+            <input type="text" id="warehouseSearch" class="form-control form-control-sm style-search" style="max-width: 200px;" placeholder="<?= htmlspecialchars(t('dash_warehouse_search')) ?>">
         </div>
 
         <?php if (!empty($formattedWarehouseItems)): 
             // Definção dos ícones, rótulos e chaves de filtro
             $typesConfig = [
-                'all'       => ['label' => 'Todos',      'icon' => ''],
-                'card'      => ['label' => 'Cards',      'icon' => '/assets/img/bar/BtnCard.png'],
-                'setitem'   => ['label' => 'Sets',       'icon' => '/assets/img/bar/BtnSet.png'],
-                'part'      => ['label' => 'Parts',      'icon' => '/assets/img/bar/BtnPart.png'],
-                'item'      => ['label' => 'Itens',      'icon' => '/assets/img/bar/BtnItem.png'],
-                'skin'      => ['label' => 'Skins',      'icon' => '/assets/img/bar/BtnSkin.png'],
-                'clubset'   => ['label' => 'ClubSets',   'icon' => '/assets/img/bar/BtnClub.png'],
-                'character' => ['label' => 'Characters', 'icon' => '/assets/img/bar/nuri_renew.png'],
-                'caddie'    => ['label' => 'Caddies',    'icon' => '/assets/img/bar/BtnCaddie.png'],
-                'auxpart'   => ['label' => 'Rings',      'icon' => '/assets/img/bar/BtnAuxPart.png'],
-                'ball'      => ['label' => 'Balls',      'icon' => '/assets/img/bar/BtnBall.png'],
-                'mascot'    => ['label' => 'Mascotes',   'icon' => '/assets/img/bar/BtnMascot.png'],
+                'all'       => ['label' => t('dash_cat_all'),      'icon' => ''],
+                'card'      => ['label' => t('dash_cat_card'),      'icon' => '/assets/img/bar/BtnCard.png'],
+                'setitem'   => ['label' => t('dash_cat_setitem'),       'icon' => '/assets/img/bar/BtnSet.png'],
+                'part'      => ['label' => t('dash_cat_part'),      'icon' => '/assets/img/bar/BtnPart.png'],
+                'item'      => ['label' => t('dash_cat_item'),      'icon' => '/assets/img/bar/BtnItem.png'],
+                'skin'      => ['label' => t('dash_cat_skin'),      'icon' => '/assets/img/bar/BtnSkin.png'],
+                'clubset'   => ['label' => t('dash_cat_clubset'),   'icon' => '/assets/img/bar/BtnClub.png'],
+                'character' => ['label' => t('dash_cat_character'), 'icon' => '/assets/img/bar/nuri_renew.png'],
+                'caddie'    => ['label' => t('dash_cat_caddie'),    'icon' => '/assets/img/bar/BtnCaddie.png'],
+                'auxpart'   => ['label' => t('dash_cat_auxpart'),      'icon' => '/assets/img/bar/BtnAuxPart.png'],
+                'ball'      => ['label' => t('dash_cat_ball'),      'icon' => '/assets/img/bar/BtnBall.png'],
+                'mascot'    => ['label' => t('dash_cat_mascot'),   'icon' => '/assets/img/bar/BtnMascot.png'],
             ];
 
             // Extrai as categorias únicas dos itens do usuário (convertidas em minúsculo)
@@ -794,13 +813,13 @@ require __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <?php if (empty($warehouseItems)): ?>
-            <p class="mb-0 text-secondary">Nenhum item no armazém.</p>
+            <p class="mb-0 text-secondary"><?= htmlspecialchars(t('dash_no_warehouse_items')) ?></p>
         <?php else: ?>
             <!-- Container onde os itens serão inseridos via JS -->
             <div id="warehouseContainer" class="row g-2 mb-4"></div>
 
             <!-- Controles da Paginação JS -->
-            <nav id="warehousePaginationNav" aria-label="Navegação do Armazém">
+            <nav id="warehousePaginationNav" aria-label="<?= htmlspecialchars(t('dash_warehouse_nav')) ?>">
                 <ul class="pagination pagination-sm justify-content-center mb-0" id="warehousePagination"></ul>
             </nav>
         <?php endif; ?>

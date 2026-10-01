@@ -131,8 +131,8 @@ require __DIR__ . '/../includes/header.php';
                                 <span class="input-group-text"><i class="bi bi-gender-ambiguous text-primary"></i></span>
                                 <select class="form-select" id="Sexo" name="Sexo" required>
                                     <option value="" selected disabled><?= htmlspecialchars(t('select')) ?></option>
-                                    <option value="1"><?= htmlspecialchars(t('male')) ?></option>
-                                    <option value="2"><?= htmlspecialchars(t('female')) ?></option>
+                                    <option value="0"><?= htmlspecialchars(t('male')) ?></option>
+                                    <option value="1"><?= htmlspecialchars(t('female')) ?></option>
                                 </select>
                             </div>
                         </div>
