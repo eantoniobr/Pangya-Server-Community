@@ -1,0 +1,55 @@
+using Pangya_GameServer.Feature;
+using Pangya_GameServer.Manager;
+using Pangya_GameServer.Models;
+using Pangya_GameServer.Session;
+using PangyaAPI.Network;
+using PangyaAPI.Network.Core;
+using PangyaAPI.Utilities;
+using PangyaAPI.Utilities.Log;
+
+public class Handle_PLAYER_COMET_REFILL : IPacketHandler<Player>
+{
+    public async Task Handle(Player _session, Packet _packet)
+    {
+        Packet p = new Packet();
+        try
+        {
+            uint item_typeid = _packet.ReadUInt32();
+            uint ball_typeid = _packet.ReadUInt32();
+
+            if (!sCometRefillSystem.getInstance().isLoad()) sCometRefillSystem.getInstance().load();
+
+            var pBall = _session.Inventory.FindWarehouseItemByTypeid(ball_typeid);
+            var pItem = _session.Inventory.FindWarehouseItemByTypeid(item_typeid);
+
+            if (pBall == null || pItem == null || pItem.STDA_C_ITEM_QNTD < 1)
+                throw new exception("Item ou bola faltando", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 0x5600101));
+
+            var ctx = sCometRefillSystem.getInstance().findCometRefill(pItem._typeid);
+            if (ctx == null) throw new exception("Refill nao no sistema", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 8, 0x5600100));
+
+            var qntd = sCometRefillSystem.getInstance().drawsCometRefill(ctx);
+
+            stItem it_rm = new stItem { type = 2, id = (int)pItem.id, _typeid = pItem._typeid, qntd = 1, STDA_C_ITEM_QNTD = -1 };
+            if (ItemManager.removeItem(it_rm, _session) <= 0) throw new exception("Erro remover", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 6, 0x5600106));
+
+            stItem it_add = new stItem { type = 2, id = (int)pBall.id, _typeid = pBall._typeid, qntd = (int)qntd, STDA_C_ITEM_QNTD = (short)qntd };
+            if (ItemManager.addItem(it_add, _session, 0, 0) < 0) throw new exception("Erro add", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 7, 0x5600107));
+
+            p.init_plain(0x197);
+            p.WriteByte(1);
+            p.WriteUInt32(pItem._typeid);
+            p.WriteUInt32(pBall._typeid);
+            p.WriteUInt16((ushort)pBall.STDA_C_ITEM_QNTD);
+            _session.Send(p);
+        }
+        catch (exception e)
+        {
+            _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_COMET_REFILL][Error] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+            p.init_plain(0x197);
+            p.WriteByte(0);
+            p.WriteZero(10);
+            _session.Send(p);
+        }
+    }
+}

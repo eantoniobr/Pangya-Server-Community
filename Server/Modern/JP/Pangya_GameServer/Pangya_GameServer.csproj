@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	  <AssemblyName>GameService</AssemblyName>
+    <BaseOutputPath>..\Build\Game</BaseOutputPath>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+  </PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;CS8603;CS8600;CS8601;CS8602;CS8618;CS8625;IDE0290;CS8625;</NoWarn>
+  </PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <NoWarn>1701;1702;CS8603;CS8600;CS8601;CS8602;CS8618;CS8625;IDE0290;CS8625;</NoWarn>
+</PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;CS8603;CS8600;CS8601;CS8602;CS8618;CS8625;IDE0290;CS8625;</NoWarn>
+    <DefineConstants>$(DefineConstants);_RELEASE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <NoWarn>1701;1702;CS8603;CS8600;CS8601;CS8602;CS8618;CS8625;IDE0290;CS8625;</NoWarn>
+    <DefineConstants>$(DefineConstants);_RELEASE</DefineConstants>
+  </PropertyGroup> 
+
+  <ItemGroup>
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.DataBase\PangyaAPI.DataBase.csproj" />
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.IFF\PangyaAPI.IFF.csproj" />
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.Network\PangyaAPI.Network.csproj" />
+    <ProjectReference Include="..\PangyaAPI\PangyaAPI.Utilities\PangyaAPI.Utilities.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config\personal_config.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="data\pangya_jp.iff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="server.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

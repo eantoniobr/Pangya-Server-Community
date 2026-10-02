@@ -1,0 +1,99 @@
+﻿using Pangya_LoginServer.DataBase;
+
+using Pangya_LoginServer.Session;
+using PangyaAPI.Network;
+using PangyaAPI.Network.Core;
+using PangyaAPI.Network.Session;
+using PangyaAPI.Utilities.Log;
+using System.Text.RegularExpressions;
+
+namespace Pangya_LoginServer.Handles
+{
+    public class Handle_PLAYER_RECONNECT : IPacketHandler<Player>
+    {
+        private static readonly Regex InvalidIdRegex = new Regex(@".*[\^$&,\\?`´~\|""@#¨'%*!\\].*", RegexOptions.Compiled);
+
+        // Alterado para Task para suportar await corretamente
+        public async Task Handle(Player player, Packet packet)
+        {
+            try
+            { 
+                // 1. Leitura dos dados do pacote (Estrutura padrão Re-Login)
+                string id = packet.ReadString();
+                int server_uid = packet.ReadInt32(); // ID do servidor que ele estava
+                string auth_key_login_received = packet.ReadString();
+
+                // 2. Validação básica de caracteres no ID (Segurança)
+                if (string.IsNullOrEmpty(id) || InvalidIdRegex.IsMatch(id))
+                {
+                    player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500052));
+                    return;
+                }
+
+                // 3. Busca o UID pelo ID (Operação Assíncrona no DB)
+                int uid = CommandDB.VerifyID(id);
+
+                if (uid <= 0)
+                {
+                    player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500052));
+                    return;
+                }
+
+                // 4. Busca dados do Player e a AuthKey original (Async)
+                // Rodando em paralelo para maior performance
+                var playerInfoTask = CommandDB.GetPlayerInfo((uint)uid);
+                var authKeyTask = CommandDB.GetAuthKeyLogin((uint)uid); 
+
+                var info = playerInfoTask;
+                string akli = authKeyTask;
+
+                // 5. Validação de Integridade (Se a chave bate com o banco)
+                if (auth_key_login_received != akli)
+                {
+                    player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500052));
+                    return;
+                }
+
+                // 6. Atualiza a sessão com os dados do banco
+                player.UserInfo.Set(info);
+
+                // 7. Verificações de bloqueio e BAN
+                if (CheckBlockStatus(player))
+                {
+                    // O método CheckBlockStatus lança exceção ou envia erro
+                    return;
+                }
+                 
+                // 9. Finaliza o login usando o SUCCESS_LOGIN (option 1 = Reconnect)
+                // Isso envia a lista de servidores e confirma a entrada
+                await Handle_PLAYER_LOGIN.SUCCESS_LOGIN(player, 1);
+            }
+            catch (Exception ex)
+            {
+                // Log de erro centralizado
+                _smp.message_pool.getInstance().push(new message(
+                    $"[Handle_PLAYER_RECONNECT][Error] {ex.Message}",
+                    type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500052));
+            }
+            await Task.CompletedTask;
+        }
+
+        private bool CheckBlockStatus(Player player)
+        {
+            var state = player.UserInfo.block_flag.m_id_state;
+
+            if (state.ull_IDState == 0) return false;
+
+            if (state.L_BLOCK_FOREVER || state.L_BLOCK_TEMPORARY)
+            {
+                player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500052));
+                return true;
+            }
+
+            // Adicione outras regras de BAN/IP conforme necessário
+            return false;
+        }
+    }
+}

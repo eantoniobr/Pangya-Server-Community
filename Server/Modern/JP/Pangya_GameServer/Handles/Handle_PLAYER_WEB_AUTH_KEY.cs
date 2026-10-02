@@ -1,0 +1,56 @@
+﻿using Pangya_GameServer.Repository;
+using Pangya_GameServer.Session;
+using PangyaAPI.Network;
+using PangyaAPI.Network.Core;
+using PangyaAPI.Utilities;
+using PangyaAPI.Utilities.Log;
+using PangyaAPI.Utilities.Models;
+
+namespace Pangya_GameServer.Handles
+{
+    public class Handle_PLAYER_WEB_AUTH_KEY : IPacketHandler<Player>
+    {
+        public async Task Handle(Player session, Packet packet)
+        {
+            try
+            {
+                // 2. Criação do Comando de Banco de Dados 
+                string webKey = CommandDB.WEBKeyGeneration(session.UserInfo.uid);
+
+                // 4. Resposta ao Cliente (0x1AD)
+                using (var p = new Packet())
+                {
+                    p.init_plain(0x1AD);
+                    p.WriteString(webKey);
+                    p.WriteByte(1);
+                    session.Send(p);
+                }
+
+                // Log de auditoria
+                _smp.message_pool.getInstance().push(new message(
+                    $"[WebAuth] Chave gerada para UID={session.UserInfo.uid}: {webKey}",
+                    type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+            catch (exception e)
+            {
+                _smp.message_pool.getInstance().push(new message(
+                    $"[Handle_PLAYER_WEB_AUTH_KEY][ErrorSystem] {e.getFullMessageError()}",
+                    type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                // Em caso de erro, podemos enviar o pacote com falha (0)
+                SendError(session);
+            }
+        }
+
+        private void SendError(Player session)
+        {
+            using (var p = new Packet())
+            {
+                p.init_plain(0x1AD);
+                p.WriteString(""); // Chave vazia
+                p.WriteByte(0);  // Falha
+                session.Send(p);
+            }
+        }
+    }
+}

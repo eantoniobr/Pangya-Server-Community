@@ -1,0 +1,42 @@
+﻿using Pangya_GameServer.Server;
+using Pangya_GameServer.Session;
+using PangyaAPI.Network;
+using PangyaAPI.Network.Core;
+using PangyaAPI.Utilities;
+using PangyaAPI.Utilities.Log;
+using System;
+using System.Threading.Tasks;
+
+namespace Pangya_GameServer.Handles
+{
+    public class Handle_PLAYER_HEARTBEAT : IPacketHandler<Player>
+    {
+        public async Task Handle(Player session, Packet packet)
+        {
+            try
+            {
+                // Calcula o tempo decorrido desde o último tick (em milisegundos)
+                long lastTick = session.TicketBot;
+                int currentTick = packet.ReadInt32();
+                long diff = currentTick - lastTick;
+
+                //_smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_HEARTBEAT][Log] PLAYER[UID= {session.UserInfo.uid}, TIME OLD= {diff}ms, TIME NOW= {currentTick}ms", type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                // Se o tempo passado for maior que o TTL definido + 25%, loga um Warning
+                long ttlLimit = GameServer.getInstance().getBotTTL() + (GameServer.getInstance().getBotTTL() / 4);
+                if (diff >= ttlLimit)
+                {
+                     _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_HEARTBEAT][Warning] PLAYER[UID= {session.UserInfo.uid}, TIME OLD= {diff}ms (LIMIT= {ttlLimit}ms)] DELAY", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                }
+                // Atualiza o tick da sessão
+                session.TicketBot = Environment.TickCount;
+            }
+            catch (exception e)
+            {
+                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_HEARTBEAT][ErrorSystem] {e.getFullMessageError()}", type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+
+            await Task.CompletedTask;
+        }
+    }
+}

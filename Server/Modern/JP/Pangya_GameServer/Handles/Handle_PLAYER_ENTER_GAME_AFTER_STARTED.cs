@@ -1,0 +1,140 @@
+using System;
+using System.Threading.Tasks;
+using Pangya_GameServer.Feature;
+using Pangya_GameServer.Flags;
+using Pangya_GameServer.Manager;
+using Pangya_GameServer.Models;
+using Pangya_GameServer.Repository;
+using Pangya_GameServer.Server;
+using Pangya_GameServer.Session;
+using PangyaAPI.IFF.Handle.JP;
+using PangyaAPI.IFF.Regions.JP.Models;
+using PangyaAPI.Network;
+using PangyaAPI.Network.Core;
+using PangyaAPI.Utilities;
+using PangyaAPI.Utilities.Log;
+using snmdb;
+using System;
+using System.Threading.Tasks;
+namespace Pangya_GameServer.Handles
+{
+    public class Handle_PLAYER_ENTER_GAME_AFTER_STARTED : IPacketHandler<Player>
+    {
+        public async Task Handle(Player _session, Packet _packet)
+        {
+            Packet p = new Packet();
+            var m_ci = _session.GetChannel();
+            try
+            {
+                byte option = _packet.ReadByte();
+
+                if (option == 0 || option == 1)
+                {
+                    short sala_numero = _packet.ReadInt16();
+
+                    if (sala_numero == -1)
+                    {
+                        throw new exception("[[ERROR] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar na sala[NUMERO=" + (sala_numero) + "] ja em jogo, mas ela nao existe. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            2700, 1));
+                    }
+
+                    var r = _session.GetRoom() ?? GameServer.getInstance().FindRoom(sala_numero);
+
+                    if (r == null)
+                    {
+                        throw new exception("[[ERROR] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar na sala[NUMERO=" + (sala_numero) + "] ja em jogo, mas ela nao existe. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            2700, 1));
+                    }
+
+                    if (r.GetTipo() != ROOM_INFO_TYPE.TOURNEY)
+                    {
+                        throw new exception("[[ERROR] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar na sala[TIPO=" + r.GetInfo() + ", NUMERO=" + r.GetRoomId() + "] ja em jogo, mas o tipo da sala nao é Tourney. Hacker.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            15, 0x770001));
+                    }
+
+                    if (r.IsLocked())
+                    {
+                        throw new exception("[[ERROR] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar na sala[NUMERO=" + (sala_numero) + "] ja em jogo, mas a sala é privada. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            2710, 1));
+                    }
+
+                    if (!(r.CurrentGame != null))
+                    {
+                        throw new exception("[[ERROR] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar na sala[NUMERO=" + (sala_numero) + "] ja em jogo, mas a sala nao esta em jogo ainda. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            2701, 1));
+                    }
+
+                    if (r.IsFull())
+                    {
+                        throw new exception("[[ERROR] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar na sala[NUMERO=" + (sala_numero) + "] ja em jogo, mas a sala ja esta no seu limite de jogadores.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            2702, 1));
+                    }
+
+                    if (option == 0)
+                    {
+                       r.SendTimeGame(_session);
+                    }
+                    else if (option == 1)
+                    {
+                        try
+                        {
+                            m_ci.DeleteInviteTimeResquestByInvited(_session);
+
+                            if (r.EnterGameAfterStarted(_session))
+                            {
+                                m_ci.SendUpdateRoomInfo(r.GetInfo(), 3);
+                                m_ci.UpdatePlayerInfo(_session);
+
+                                if (r.GetTipo() != ROOM_INFO_TYPE.PRACTICE && r.GetTipo() != ROOM_INFO_TYPE.GRAND_ZODIAC_PRACTICE)
+                                {
+                                    m_ci.SendUpdatePlayerInfo(_session, 3);
+                                }
+                            }
+                        }
+                        catch (exception e)
+                        {
+                            throw;
+                        }
+                    }
+                }
+                else if (option == 2)
+                {
+                    EnterAfterStartInfo easi = new EnterAfterStartInfo();
+
+                    for (int i = 0; i < 18; i++)
+                        easi.tacada[i] = _packet.ReadByte();
+
+                    for (int i = 0; i < 18; i++)
+                        easi.score[i] = _packet.ReadInt32();
+
+                    for (int i = 0; i < 18; i++)
+                        easi.pang[i] = _packet.ReadUInt64();
+
+                    easi.request_oid = _packet.ReadInt32();
+                    easi.owner_oid = _packet.ReadUInt32();
+
+                    var r = _session.GetRoom() ?? throw new exception("[[ERROR] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "] ja em jogo, mas ela nao existe. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            2700, 1));
+
+                    if (!(r.CurrentGame != null))
+                    {
+                        throw new exception("[[ERROR] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "] ja em jogo, mas a sala nao esta em jogo ainda. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            2701, 1));
+                    }
+
+                   r.CurrentGame?.RequestUpdateEnterAfterStartedInfo(_session, easi);
+                }
+            }
+            catch (exception e)
+            {
+                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_ENTER_GAME_AFTER_STARTED][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                p.init_plain(0x113);
+                p.WriteByte(6);
+                p.WriteByte((byte)((ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL) ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 1));
+
+                _session.Send(p);
+            }
+        }
+    }
+}

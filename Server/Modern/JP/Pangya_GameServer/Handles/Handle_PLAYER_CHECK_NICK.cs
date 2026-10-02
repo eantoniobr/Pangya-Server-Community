@@ -1,0 +1,137 @@
+using Pangya_GameServer.Feature;
+using Pangya_GameServer.Flags;
+using Pangya_GameServer.Manager;
+using Pangya_GameServer.Models;
+using Pangya_GameServer.Repository;
+using Pangya_GameServer.Session;
+using PangyaAPI.Network;
+using PangyaAPI.Network.Core;
+using PangyaAPI.Network.Repository;
+using PangyaAPI.Utilities;
+using PangyaAPI.Utilities.Log;
+using snmdb;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+namespace Pangya_GameServer.Handles
+{
+    public class Handle_PLAYER_CHECK_NICK : IPacketHandler<Player>
+    {
+        public async Task Handle(Player _session, Packet _packet)
+        {
+            NICK_CHECK nc = NICK_CHECK.SUCCESS;
+            string nick = string.Empty;
+
+            byte opt = 0;
+            byte error = 2;
+
+            MemberInfo mi = null;
+
+            try
+            {
+                opt = _packet.ReadByte();
+
+                if (opt != 0)
+                {
+                    _smp.message_pool.getInstance().push(new message(
+                       $"[Lobby::requestCheckNick][WARNING] Player[UID={_session.UserInfo.uid}] Pediu para Check Nickname: {nick}, [OPT={opt}] diferente de 0.",
+                       type_msg.CL_FILE_LOG_AND_CONSOLE));
+                }
+
+                nick = _packet.ReadPStr();
+
+                _smp.message_pool.getInstance().push(new message($"[Lobby::requestCheckNick][Log] Player[UID={_session.UserInfo.uid}, IGN_CHECK={nick}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                if (nc == NICK_CHECK.SUCCESS && Regex.IsMatch(nick, @".*[ ].*"))
+                {
+                    nc = NICK_CHECK.EMPETY_ERROR;
+
+                    _smp.message_pool.getInstance().push(new message(
+                       $"[Lobby::requestCheckNick][Log] Player[UID={_session.UserInfo.uid}] Pediu para verificar o nick contem espaco em branco: {nick}",
+                       type_msg.CL_FILE_LOG_AND_CONSOLE));
+                }
+
+                if ((nc == NICK_CHECK.SUCCESS && nick.Length < 4) ||
+                    Regex.IsMatch(nick, @".*[\^$&,\\?`´~\|""@#¨'%*!\\].*"))
+                {
+                    nc = NICK_CHECK.INCORRECT_NICK;
+
+                    _smp.message_pool.getInstance().push(new message(
+                       $"[Lobby::requestCheckNick][Log] Player[UID={_session.UserInfo.uid}] Pediu para verificar o nick é menor que 4 letras ou tem caracteres que nao pode: {nick}",
+                       type_msg.CL_FILE_LOG_AND_CONSOLE));
+                }
+
+                if (nc == NICK_CHECK.SUCCESS)
+                {
+                    var cmd_vn = new CmdVerifyNick(nick); // Waiter
+                    NormalManagerDB.getInstance().add(0, cmd_vn, null, null);
+
+                    if (cmd_vn.getException().getCodeError() != 0)
+                        throw cmd_vn.getException();
+
+                    if (cmd_vn.getLastCheck())
+                    {
+                        nc = NICK_CHECK.NICK_IN_USE;
+
+                        error = (nc == NICK_CHECK.NICK_IN_USE && cmd_vn.getUID() != 0 ? (byte)0 : (byte)2);
+
+                        var cmd_mi = new CmdMemberInfo(cmd_vn.getUID()); // Waiter
+                        NormalManagerDB.getInstance().add(0, cmd_mi, null, null);
+
+                        if (cmd_mi.getException().getCodeError() != 0)
+                            throw cmd_mi.getException();
+
+                        mi = cmd_mi.getInfo();
+
+                        _smp.message_pool.getInstance().push(new message(
+                           $"[Lobby::requestCheckNick][Log] Player[UID={_session.UserInfo.uid}] Pediu para verificar o nick ja esta em uso: {nick}",
+                           type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    }
+                }
+            }
+            catch (exception e) // sua exception customizada
+            {
+                _smp.message_pool.getInstance().push(new message(
+                   $"[Lobby::requestCheckNick][ErrorSystem] {e.getFullMessageError()}",
+                   type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                if (ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.PANGYA_DB)
+                    nc = NICK_CHECK.ERROR_DB;
+                else
+                    nc = NICK_CHECK.UNKNOWN_ERROR;
+            }
+            catch (Exception e)
+            {
+                _smp.message_pool.getInstance().push(new message(
+                   $"[Lobby::requestCheckNick][ErrorSystem] {e.Message}",
+                   type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                nc = NICK_CHECK.UNKNOWN_ERROR;
+            }
+
+            try
+            {
+                Packet p = new Packet(0xA1);
+
+                p.WriteByte(error);
+
+                if (error == 0 && nc == NICK_CHECK.NICK_IN_USE)
+                {
+                    p.WriteUInt32(mi.uid);
+                    p.WriteBytes(mi.ToArray());
+                }
+
+                _session.Send(p);
+            }
+            catch (exception e)
+            {
+                _smp.message_pool.getInstance().push(new message(
+                   $"[Lobby::requestCheckNick][ErrorSystem] {e.getFullMessageError()}",
+                   type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+        }
+    }
+}

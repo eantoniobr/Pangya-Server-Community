@@ -1,0 +1,54 @@
+using System;
+using System.Threading.Tasks;
+using Pangya_GameServer.Feature;
+using Pangya_GameServer.Flags;
+using Pangya_GameServer.Manager;
+using Pangya_GameServer.Models;
+using Pangya_GameServer.Repository;
+using Pangya_GameServer.Server;
+using Pangya_GameServer.Session;
+using PangyaAPI.IFF.Handle.JP;
+using PangyaAPI.IFF.Regions.JP.Models;
+using PangyaAPI.Network;
+using PangyaAPI.Network.Core;
+using PangyaAPI.Utilities;
+using PangyaAPI.Utilities.Log;
+using snmdb;
+using System;
+using System.Threading.Tasks;
+namespace Pangya_GameServer.Handles
+{
+    public class Handle_PLAYER_EXIT_ROOM_GRAND_PRIX : IPacketHandler<Player>
+    {
+        public async Task Handle(Player _session, Packet pkt)
+        {
+            try
+            {
+                var _channel = _session.GetChannel();
+                byte option = pkt.ReadByte();
+                short roomId = pkt.ReadInt16();
+                uint gamePang = pkt.ReadUInt32();
+                uint gameBonus = pkt.ReadUInt32();
+                byte[] roomKey = pkt.ReadBytes(8); 
+                if (_session.GetRoom() != null)
+                {
+                    // Log de depuração
+                    _smp.message_pool.getInstance().push(new message(
+                        $"[Handle_PLAYER_EXIT_ROOM_GRAND_PRIX][Sucess] PLAYER[UID: {_session.UserInfo.uid}, RID: {_session.UserInfo.Member.sala_numero}] EXIT TO ROOM. Option: {option}, Pang: {gamePang}",
+                        type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                    _channel.Lobby.LeaveRoomGrandPrix(_session, 1);
+                    _session.SetRoom(null);
+                    //atualiza.
+                    _channel.UpdatePlayerInfo(_session);
+                    _channel.SendUpdatePlayerInfo(_session, 3);
+                } 
+            }
+            catch (exception e)
+            {
+                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_EXIT_ROOM_GRAND_PRIX][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+            await Task.CompletedTask;
+        }
+    }
+}

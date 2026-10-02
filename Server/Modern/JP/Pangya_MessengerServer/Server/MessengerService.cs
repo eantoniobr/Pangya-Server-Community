@@ -1,0 +1,989 @@
+﻿using Pangya_MessengerServer.Flags;
+using Pangya_MessengerServer.Handles;
+using Pangya_MessengerServer.Manager;
+using Pangya_MessengerServer.Models;
+using Pangya_MessengerServer.Session;
+using PangyaAPI.DataBase;
+using PangyaAPI.IFF.Handle.JP;
+using PangyaAPI.Network;
+using PangyaAPI.Network.Core;
+using PangyaAPI.Network.Handle;
+using PangyaAPI.Network.Models;
+using PangyaAPI.Network.Repository;
+using PangyaAPI.Network.Security;
+using PangyaAPI.Network.Service;
+using PangyaAPI.Utilities;
+using PangyaAPI.Utilities.Log;
+using PangyaAPI.Utilities.Models;
+using System.Diagnostics;
+
+namespace Pangya_MessengerServer.Server
+{
+    public class MessengerService : AppServer<Player, PacketIDClient>
+    {
+        private readonly PlayerManager _playerManager; 
+
+        public MessengerService() : base(new PlayerManager(500), new PacketDispatcher<Player, PacketIDClient>())
+        {
+            // Fazemos o cast do sessionManager para o seu PlayerManager
+            _playerManager = (PlayerManager)SessionsManager;
+
+            LoadConfig();
+
+            RegisterHandlers();
+        }
+
+        private void RegisterHandlers()
+        {
+            // --- Conexão e Autenticação ---
+            _dispatcher.Register(PacketIDClient.CLIENT_CONNECT_0x12, new Handle_PLAYER_LOGIN());
+            _dispatcher.Register(PacketIDClient.CLIENT_NOTIFY_LOGOUT_0x16, new Handle_PLAYER_LOGOUT());
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_CHECK_NICK_0x17, new Handle_PLAYER_CHECK_NICK());
+
+            // --- Informações de Usuário e Amigos ---
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_USERINFO_0x14, new Handle_FRIEND_GUILD_LIST());
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_USERINFO_OFFLINE_0x13, new Handle_DUMMY());
+
+            // --- Gerenciamento de Lista de Amigos ---
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_REGISTER_FRIEND_0x18, new Handle_PLAYER_ADD_FRIEND());
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_FRIEND_AGREE_0x19, new Handle_PLAYER_CONFIRM_FRIEND());
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_FRIEND_REMOVE_0x1C, new Handle_PLAYER_DELETE_FRIEND());
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_CHANGE_FRIENDALIAS_0x1F, new Handle_PLAYER_ASSING_NICK());
+
+            // --- Privacidade e Bloqueio ---
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_FRIEND_BLOCK_0x1A, new Handle_PLAYER_BLOCK_FRIEND());
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_FRIEND_BLOCK_CANCEL_0x1B, new Handle_PLAYER_UNBLOCK_FRIEND());
+
+            // --- Status e Localização ---
+            _dispatcher.Register(PacketIDClient.CLIENT_NOTIFY_UPDATE_MY_STATUS_0x1D, new Handle_PLAYER_STATE());
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_UPDATE_CHANNEL_INFO_0x23, new Handle_UPDATE_CHANNEL_INFO());
+
+            // --- Chat ---
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_CHAT_FRIEND_0x1E, new Handle_PLAYER_CHAT_FRIEND());
+            _dispatcher.Register(PacketIDClient.CLIENT_REQ_CHAT_GUILD_0x25, new Handle_PLAYER_CHAT_GUILD());
+
+            // --- Convites e Presentes ---
+            _dispatcher.Register(PacketIDClient.CLIENT_NOTIFY_PLAYER_WAS_INVITED_ROOM_0x24, new Handle_PLAYER_INVITE_ROOM());
+            _dispatcher.Register(PacketIDClient.CLIENT_NOTIFY_PLAYER_WAS_INVITED_ROOM_GUILD_BATTLE_0x28, new Handle_PLAYER_INVITE_GUILD_BATTLE());
+            _dispatcher.Register(PacketIDClient.CLIENT_NOTIFY_PLAYER_GIFT_ITEM_0x29, new Handle_PLAYER_NOTIFY_GIFT_ITEM());
+
+            // --- Sincronização de Guilda (Notificações do Sistema) ---
+            _dispatcher.Register(PacketIDClient.CLIENT_NOTIFY_PLAYER_GUILD_JOINED_0x2A, new Handle_DUMMY());
+            _dispatcher.Register(PacketIDClient.CLIENT_NOTIFY_PLAYER_GUILD_BANISH_0x2B, new Handle_DUMMY());
+            _dispatcher.Register(PacketIDClient.CLIENT_NOTIFY_PLAYER_GUILD_SHIELD_CHANGED_0x2C, new Handle_DUMMY());
+            _dispatcher.Register(PacketIDClient.CLIENT_NOTIFY_PLAYER_GUILD_NAME_CHANGED_0x2D, new Handle_DUMMY());
+        }
+
+        public override bool CheckCommand(Queue<string> _command)
+        {
+            Console.ResetColor();
+
+            if (_command.Count == 0)
+            {
+                _smp.message_pool.getInstance().push(new message("[MessengerServer::CheckCommand][Error] Missing parameter", type_msg.CL_ONLY_CONSOLE));
+                return true;
+            }
+
+            string s = _command.Dequeue();
+
+            if (!string.IsNullOrEmpty(s) && s == "exit")
+            {
+                Environment.Exit(-1);
+                return true;
+            }
+            if (s.Equals("status", StringComparison.OrdinalIgnoreCase))
+            {
+                var process = Process.GetCurrentProcess();
+                var memoryUsage = process.PrivateMemorySize64 / 1024 / 1024; // MB  
+                _smp.message_pool.getInstance().push(new message($"[{GetType().Name}::CheckCommand][Debug] STATUS[USERS: {Sessions?.Count() ?? 0}, MEMORY: {memoryUsage}, UPTIME: {DateTime.Now - process.StartTime}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                return true;
+            }
+            else if (!string.IsNullOrEmpty(s) && s == "reload_files")
+            {
+                ReloadFiles();
+                return true;
+            }
+            else if (!string.IsNullOrEmpty(s) && s == "rate")
+            {
+                string sTipo = _command.Dequeue();
+                int tipo = -1;
+
+                if (!string.IsNullOrEmpty(sTipo))
+                {
+                    switch (sTipo)
+                    {
+                        case "pang": tipo = 0; break;
+                        case "exp": tipo = 1; break;
+                        case "club": tipo = 2; break;
+                        case "chuva": tipo = 3; break;
+                        case "treasure": tipo = 4; break;
+                        case "scratchy": tipo = 5; break;
+                        case "pprareitem": tipo = 6; break;
+                        case "ppcookieitem": tipo = 7; break;
+                        case "memorial": tipo = 8; break;
+                        default:
+                            _smp.message_pool.getInstance().push(new message($"[MessengerServer::checkCommand][Error] Unknown Command: \"rate {sTipo}\"", type_msg.CL_ONLY_CONSOLE));
+                            break;
+                    }
+                }
+                else
+                {
+                    _smp.message_pool.getInstance().push(new message($"[MessengerServer::checkCommand][Error] Unknown Command: \"rate {sTipo}\"", type_msg.CL_ONLY_CONSOLE));
+                }
+
+                if (tipo != -1 && tipo >= 0 && tipo <= 8)
+                {
+                    if (uint.TryParse(_command.Dequeue(), out uint qntd) && qntd > 0)
+                    {
+                        UpdateRateAndEvent(tipo, qntd);
+                    }
+                    else
+                    {
+                        _smp.message_pool.getInstance().push(new message($"[MessengerServer::checkCommand][Error] Unknown value, Command: \"rate {sTipo}\"", type_msg.CL_ONLY_CONSOLE));
+                    }
+                }
+                return true;
+            }
+            else if (!string.IsNullOrEmpty(s) && s == "event")
+            {
+                s = _command.Dequeue();
+                uint qntd = 0;
+
+                if (!string.IsNullOrEmpty(s))
+                {
+                    qntd = uint.Parse(_command.Dequeue());
+
+                    switch (s)
+                    {
+                        case "grand_zodiac_event":
+                            UpdateRateAndEvent(9, qntd);
+                            break;
+                        case "angel_event":
+                            UpdateRateAndEvent(10, qntd);
+                            break;
+                        case "grand_prix":
+                            UpdateRateAndEvent(11, qntd);
+                            break;
+                        case "golden_time":
+                            UpdateRateAndEvent(12, qntd);
+                            break;
+                        case "login_reward":
+                            UpdateRateAndEvent(13, qntd);
+                            break;
+                        case "bot_gm_event":
+                            UpdateRateAndEvent(14, qntd);
+                            break;
+                        case "smart_calc":
+                            UpdateRateAndEvent(15, qntd);
+                            break;
+                        default:
+                            _smp.message_pool.getInstance().push(new message($"[MessengerServer::checkCommand][Error] Unknown Comamnd: \"Event {s}\"", type_msg.CL_ONLY_CONSOLE));
+                            break;
+                    }
+                }
+                return true;
+            }
+            else if (!string.IsNullOrEmpty(s) && s == "reload_system")
+            {
+                string sTipo = _command.Dequeue();
+                int tipo = -1;
+
+                if (!string.IsNullOrEmpty(sTipo))
+                {
+                    switch (sTipo)
+                    {
+                        case "all": tipo = 0; break;
+                        case "iff": tipo = 1; break;
+                        case "card": tipo = 2; break;
+                        case "comet_refill": tipo = 3; break;
+                        case "papel_shop": tipo = 4; break;
+                        case "box": tipo = 5; break;
+                        case "memorial_shop": tipo = 6; break;
+                        case "cube_coin": tipo = 7; break;
+                        case "treasure_hunter": tipo = 8; break;
+                        case "drop": tipo = 9; break;
+                        case "attendance_reward": tipo = 10; break;
+                        case "map_course": tipo = 11; break;
+                        case "approach_mission": tipo = 12; break;
+                        case "grand_zodiac_event": tipo = 13; break;
+                        case "coin_cube_location": tipo = 14; break;
+                        case "golden_time": tipo = 15; break;
+                        case "login_reward": tipo = 16; break;
+                        case "bot_gm_event": tipo = 17; break;
+                        case "smart_calc": tipo = 18; break;
+                        default:
+                            _smp.message_pool.getInstance().push(new message($"[MessengerServer::checkCommand][Error] Unknown Command: \"reload_system {sTipo}\"", type_msg.CL_ONLY_CONSOLE));
+                            break;
+                    }
+                }
+                else
+                {
+                    _smp.message_pool.getInstance().push(new message($"[MessengerServer::checkCommand][Error] Unknown Command: \"reload_system {sTipo}\"", type_msg.CL_ONLY_CONSOLE));
+                }
+
+                if (tipo != -1 && tipo >= 0 && tipo <= 18)
+                {
+                    ReloadGlobalSystem((uint)tipo);
+                }
+                return true;
+
+            }
+            else if (s == "cls" || s == "clear")
+            {
+                Console.Clear();
+                ConsoleEx.Log();
+                return true;
+            }
+            return false;
+        }
+
+        protected override void OnClientConnected(IAppSession session)
+        {
+            if (session is not Player player)
+            {
+                Console.WriteLine($"[Erro] A sessão conectada não é do tipo Player! Tipo real: {session.GetType().Name}");
+                return;
+            }
+
+            try
+            {
+                var packet = new Packet(0x2E);
+                packet.WriteByte(0);
+                packet.WriteByte(0);
+                packet.WriteInt32(player._ParseKey);
+                player.Send(packet, true);
+                _smp.message_pool.getInstance().push(new message($"[{GetType().Name}::OnClientConnected][Sucess] PLAYER[IP: {player.GetIP()}, OID: {player.ConnectionID}", 0));
+            }
+            catch (exception ex)
+            {
+                _smp.message_pool.getInstance().push(new message(
+              $"[MessengerServer.OnClientConnected][ErrorSt]: {ex.getFullMessageError()}",
+              type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+        }
+
+        protected override void OnClientDisconnected(IAppSession session)
+        {
+            if (session == null)
+                throw new exception("[MessengerService::OnClientDisconnected][Error] _session is nullptr.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 60, 0));
+
+            Player p = (Player)session; 
+
+            bool ret = false;
+
+            try
+            {
+                if (Interlocked.CompareExchange(ref p.UserInfo.m_logout, p.UserInfo.m_logout, 0) == 0)
+                {
+                    ret = SendUpdatePlayerLogoutToFriends(p);
+                }
+            }
+            catch (exception e)
+            {
+                _smp.message_pool.getInstance().push(new message("[MessengerService::OnClientDisconnecteded][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+            // Log para não mostrar essa mensagem 2x (evita spam se o logout já foi processado)
+            if (ret)
+                _smp.message_pool.getInstance().push(new message($"[{GetType().Name}::OnClientDisconnected][Warning] PLAYER[ID: {p.UserInfo?.id} UID: {p.UserInfo?.uid}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+        }
+
+        protected override bool CheckPacket(IAppSession session, Packet packet)
+        {
+            if (packet == null) return false;
+
+            if ((PacketIDClient)packet.Type == PacketIDClient.CLIENT_CONNECT_0x12 || (PacketIDClient)packet.Type == PacketIDClient.CLIENT_REQ_USERINFO_0x14)
+            {
+                return true;
+            }
+
+            if (!session.Authorized)
+            {
+                return false;
+            }
+
+            switch ((PacketIDClient)packet.Type)
+            { 
+                case PacketIDClient.CLIENT_REQ_USERINFO_OFFLINE_0x13:
+                    
+                    
+                case PacketIDClient.CLIENT_NOTIFY_LOGOUT_0x16:
+                    
+                case PacketIDClient.CLIENT_REQ_CHECK_NICK_0x17:
+                    
+                case PacketIDClient.CLIENT_REQ_REGISTER_FRIEND_0x18:
+                    
+                case PacketIDClient.CLIENT_REQ_FRIEND_AGREE_0x19:
+                    
+                case PacketIDClient.CLIENT_REQ_FRIEND_BLOCK_0x1A:
+                    
+                case PacketIDClient.CLIENT_REQ_FRIEND_BLOCK_CANCEL_0x1B:
+                    
+                case PacketIDClient.CLIENT_REQ_FRIEND_REMOVE_0x1C:
+                    
+                case PacketIDClient.CLIENT_NOTIFY_UPDATE_MY_STATUS_0x1D:
+                    
+                case PacketIDClient.CLIENT_REQ_CHAT_FRIEND_0x1E:
+                    
+                case PacketIDClient.CLIENT_REQ_CHANGE_FRIENDALIAS_0x1F:
+                    
+                case PacketIDClient.CLIENT_REQ_UPDATE_CHANNEL_INFO_0x23:
+                    
+                case PacketIDClient.CLIENT_NOTIFY_PLAYER_WAS_INVITED_ROOM_0x24:
+                    
+                case PacketIDClient.CLIENT_REQ_CHAT_GUILD_0x25:
+                    
+                case PacketIDClient.CLIENT_NOTIFY_PLAYER_WAS_INVITED_ROOM_GUILD_BATTLE_0x28:
+                    
+                case PacketIDClient.CLIENT_NOTIFY_PLAYER_GIFT_ITEM_0x29:
+                    
+                case PacketIDClient.CLIENT_NOTIFY_PLAYER_GUILD_JOINED_0x2A:
+                    
+                case PacketIDClient.CLIENT_NOTIFY_PLAYER_GUILD_BANISH_0x2B:
+                    
+                case PacketIDClient.CLIENT_NOTIFY_PLAYER_GUILD_SHIELD_CHANGED_0x2C:
+                    
+                case PacketIDClient.CLIENT_NOTIFY_PLAYER_GUILD_NAME_CHANGED_0x2D: 
+                    return true;
+            }
+
+            return false;
+        }
+
+        protected override void OnHeartBeat()
+        {
+            OnStart();
+        }
+
+        protected override void OnStart()
+        {
+            Console.Title = $"Messenger Service - P: {m_si.curr_user}, Auth: {(m_unit_connect != null && m_unit_connect.isLive()? "ON": "OFF")}";
+        }
+         
+        public override async void LoadConfig()
+        {
+            base.LoadConfig();
+
+            // Tipo Server
+            m_si.tipo = 3;
+
+
+            // Recupera Valores de rate do server do banco de dados
+            var cmd_rci = new CmdRateConfigInfo(m_si.uid);  // Waiter
+
+            if (cmd_rci.getException().getCodeError() != 0 || cmd_rci.isError()/*Deu erro na consulta não tinha o rate config info para esse gs, pode ser novo*/)
+            {
+
+                if (cmd_rci.getException().getCodeError() != 0)
+                    _smp.message_pool.getInstance().push(new message("[MessengerService::config_init][ErrorSystem] " + cmd_rci.getException().getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                _smp.message_pool.getInstance().push(new message("[MessengerService::config_init][Error] nao conseguiu recuperar os valores de rate do server[UID="
+                        + (m_si.uid) + "] no banco de dados. Utilizando valores padroes de rates.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                m_si.rate.scratchy = 100;
+                m_si.rate.papel_shop_rare_item = 100;
+                m_si.rate.papel_shop_cookie_item = 100;
+                m_si.rate.treasure = 100;
+                m_si.rate.memorial_shop = 100;
+                m_si.rate.chuva = 100;
+                m_si.rate.grand_zodiac_event_time = 1; // Ativo por padr�o
+                m_si.rate.grand_prix_event = 1;        // Ativo por padr�o
+                m_si.rate.golden_time_event = 1;       // Ativo por padr�o
+                m_si.rate.login_reward_event = 1;      // Ativo por padr�o
+                m_si.rate.bot_gm_event = 1;            // Ativo por padr�o
+                m_si.rate.smart_calculator = 0;        // Atibo por padr�o
+
+                m_si.rate.angel_event = 0;             // Desativado por padr�o
+                m_si.rate.pang = 0;
+                m_si.rate.exp = 0;
+                m_si.rate.club_mastery = 0;
+
+                // Atualiza no banco de dados
+               snmdb.NormalManagerDB.getInstance().add(2, new CmdUpdateRateConfigInfo(m_si.uid, m_si.rate), DBResponse, this);
+
+            }
+            else
+            {   // Conseguiu recuperar com sucesso os valores do server
+
+                m_si.rate.scratchy = cmd_rci.getInfo().scratchy;
+                m_si.rate.papel_shop_rare_item = cmd_rci.getInfo().papel_shop_rare_item;
+                m_si.rate.papel_shop_cookie_item = cmd_rci.getInfo().papel_shop_cookie_item;
+                m_si.rate.treasure = cmd_rci.getInfo().treasure;
+                m_si.rate.memorial_shop = cmd_rci.getInfo().memorial_shop;
+                m_si.rate.chuva = cmd_rci.getInfo().chuva;
+                m_si.rate.grand_zodiac_event_time = cmd_rci.getInfo().grand_zodiac_event_time;
+                m_si.rate.grand_prix_event = cmd_rci.getInfo().grand_prix_event;
+                m_si.rate.golden_time_event = cmd_rci.getInfo().golden_time_event;
+                m_si.rate.login_reward_event = cmd_rci.getInfo().login_reward_event;
+                m_si.rate.bot_gm_event = cmd_rci.getInfo().bot_gm_event;
+                m_si.rate.smart_calculator = cmd_rci.getInfo().smart_calculator;
+
+                m_si.rate.angel_event = cmd_rci.getInfo().angel_event;
+                m_si.rate.pang = cmd_rci.getInfo().pang;
+                m_si.rate.exp = cmd_rci.getInfo().exp;
+                m_si.rate.club_mastery = cmd_rci.getInfo().club_mastery;
+            }
+        }
+
+        protected void ReloadFiles()
+        {
+            base.LoadConfig();
+            LoadConfig();
+
+            // Reload All Globals Systems
+            ReloadSystem();
+
+            _smp.message_pool.getInstance().push(new message("[MessengerServer::ReloadFiles][Log] Reload System now sucess!", type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+        }
+
+        public override void authCmdShutdown(int _time_sec)
+        {
+            //base.authCmdShutdown(_time_sec);
+        }
+
+        public override void authCmdBroadcastNotice(string _notice)
+        {
+            //base.authCmdBroadcastNotice(_notice);
+        }
+
+        public override void authCmdBroadcastTicker(string _nickname, string _msg)
+        {
+            //base.authCmdBroadcastTicker(_nickname, _msg);
+        }
+
+        public override void authCmdBroadcastCubeWinRare(string _msg, uint _option)
+        {
+            //base.authCmdBroadcastCubeWinRare(_msg, _option);
+        }
+
+        public override void authCmdDisconnectPlayer(uint _req_server_uid, uint _player_uid, byte _force)
+        {
+            try
+            {
+
+                var s = _playerManager.FindPlayer(_player_uid);
+
+                if (s != null)
+                {
+
+                    // Log
+                    _smp.message_pool.getInstance().push(new message("[MessengerServer::authCmdDisconnectPlayer][log] Comando do Auth Server, Server[UID=" + (_req_server_uid)
+                            + "] pediu para desconectar o PLAYER[UID=" + (s.UserInfo.uid) + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                    // Deconecta o Player
+                    if (_force == 1) // Força o Disconect do player, sem verificar as regras do Game Server
+                        OnClientDisconnected(s);
+                    else
+                    { 
+
+                            OnClientDisconnected(s);
+                    }
+
+                }
+                else
+                {
+
+                    // Não encontrou o player no server, então desconecta no banco de dados
+                    snmdb.NormalManagerDB.getInstance().add(5, new CmdRegisterLogon(_player_uid, 1/*Logout*/), DBResponse, this);
+
+                    // Log
+                    _smp.message_pool.getInstance().push(new message("[MessengerServer::authCmdDisconnectPlayer][Warning] Comando do Auth Server, Server[UID=" + (_req_server_uid)
+                            + "] pediu para desconectar o PLAYER[UID=" + (_player_uid) + "], mas nao encontrou ele no server, entao desconecta ele no banco de dados.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                }
+
+                // UPDATE ON Auth Server
+                m_unit_connect.SendConfirmDisconnectPlayer(_req_server_uid, _player_uid);
+
+            }
+            catch (exception e)
+            {
+
+                _smp.message_pool.getInstance().push(new message("[MessengerServer::authCmdDisconnectPlayer][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+        }
+
+        public override void authCmdConfirmDisconnectPlayer(uint _player_uid)
+        {
+            //base.authCmdConfirmDisconnectPlayer(_player_uid);
+        }
+
+        public override void authCmdNewMailArrivedMailBox(uint _player_uid, int _mail_id)
+        {
+            //base.authCmdNewMailArrivedMailBox(_player_uid, _mail_id);
+        }
+
+        public override void authCmdNewRate(uint _tipo, uint _qntd)
+        {
+            try
+            {
+
+               // UpdateRateAndEvent((int)_tipo, _qntd);
+
+            }
+            catch (exception e)
+            {
+
+                _smp.message_pool.getInstance().push(new message("[MessengerServer::authCmdNewRate][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+        }
+
+        public override void authCmdReloadGlobalSystem(uint _tipo)
+        {
+            try
+            {
+                //ReloadGlobalSystem(_tipo);
+            }
+            catch (exception e)
+            {
+
+                _smp.message_pool.getInstance().push(new message("[MessengerServer::authCmdReloadGlobalSystem][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+        }
+
+        public override void authCmdInfoPlayerOnline(uint _req_server_uid, uint _player_uid)
+        {
+            //base.authCmdInfoPlayerOnline(_req_server_uid, _player_uid);
+        }
+
+        public override void authCmdConfirmSendInfoPlayerOnline(uint _req_server_uid, AuthServerPlayerInfo _aspi)
+        {
+            try
+            {
+
+                var s = _playerManager.FindPlayer(_aspi.uid);
+
+                if (s != null)
+                {
+
+                    confirmLoginOnOtherServer(s, _req_server_uid, _aspi);
+
+                }
+                else
+                    _smp.message_pool.getInstance().push(new message("[MessengerServer::authCmdConfirmSendInfoPlayerOnline][Warning] PLAYER[UID=" + (_aspi.uid)
+                            + "] retorno do confirma login com Auth Server do Server[UID=" + (_req_server_uid) + "], mas o palyer nao esta mais conectado.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+            }
+            catch (exception e)
+            {
+
+                _smp.message_pool.getInstance().push(new message("[MessengerServer::authCmdConfirmSendInfoPlayerOnline][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+        }
+
+        public override void authCmdSendCommandToOtherServer(Packet _packet)
+        {
+            //base.authCmdSendCommandToOtherServer(_packet);
+        }
+
+        public override void authCmdSendReplyToOtherServer(Packet _packet)
+        {
+            //base.authCmdSendReplyToOtherServer(_packet);
+        }
+
+        public override void sendCommandToOtherServerWithAuthServer(Packet _packet, uint _send_server_uid_or_type)
+        {
+            //base.sendCommandToOtherServerWithAuthServer(_packet, _send_server_uid_or_type);
+        }
+
+        public override void sendReplyToOtherServerWithAuthServer(Packet _packet, uint _send_server_uid_or_type)
+        {
+            //base.sendReplyToOtherServerWithAuthServer(_packet, _send_server_uid_or_type);
+        }
+
+        public void confirmLoginOnOtherServer(Player _session, uint _req_server_uid, AuthServerPlayerInfo _aspi)
+        {
+            // Usar o 'using' garante que o buffer do pacote seja liberado da memória (importante no Linux/Docker)
+            using (var p = new Packet())
+            {
+                try
+                {
+
+                    // Validações de Segurança
+                    if (_aspi.uid != _session.UserInfo.uid ||
+                        _aspi.option != 1 ||
+                        _aspi.id != _session.UserInfo.id ||
+                        _aspi.ip != _session.GetIP())
+                    {
+                        goto send_error;
+                    }
+
+                    // --- Bloco de SUCESSO ---
+
+                    // Inicializa lista de amigos
+                    _session.UserInfo.m_friend_manager.init(_session.UserInfo);
+
+                    // Estado 4 = Online/Lobby
+                    _session.UserInfo.m_state = 4;
+                    _session.Authorized = true;
+
+                    _smp.message_pool.getInstance().push(new message($"[MessengerServer] Player[UID={_session.UserInfo.uid}] logou com sucesso!", type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                    // Resposta de Sucesso (0x2F)
+                    p.init_plain(0x2F);
+                    p.WriteByte(0); // OK
+                    p.WriteUInt32(_session.UserInfo.uid);
+
+                    _session.Send(p); 
+                    return; // IMPORTANTE: Sai do método aqui para não executar o erro abaixo!
+
+                send_error:
+                    // --- Bloco de ERRO ---
+                    p.init_plain(0x2F);
+                    p.WriteByte(1); // Error (Geralmente 1 ou 2 dependendo do cliente)
+                    _session.Send(p);
+
+                    // Fecha a conexão de forma segura
+                    _session.Disconnect();
+                }
+                catch (Exception e)
+                {
+                    _smp.message_pool.getInstance().push(new message($"[MessengerServer::confirmLogin] Error: {e.Message}", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                }
+            }
+        }
+
+
+        public override List<Player> FindAllGM()
+        {
+            return _playerManager.FindAllGM();
+        }
+
+        public override Player FindSessionByOid(int oid)
+        {
+            return _playerManager.FindSessionByOid(oid);
+        }
+
+        public override Player FindSessionByUid(uint uid)
+        {
+            return _playerManager.FindSessionByUID(uid);
+        }
+
+        public override List<Player> FindAllSessionByUid(uint uid)
+        {
+            return _playerManager.FindAllSessionByUid(uid);
+        }
+
+        public override Player FindSessionByNickname(string nickname)
+        {
+            return _playerManager.FindSessionByNickname(nickname);
+        }
+
+        public void FriendBroadcast(Dictionary<uint, Player> _m_player, Player _s, Packet _p)
+        {
+            if (_m_player == null || _m_player.Count == 0)
+            {
+                _m_player = MessengerServer.getInstance().FindAllGuildMember(_s.UserInfo.guild_uid);
+            }
+
+            foreach (var el in _m_player)
+            {
+                if (el.Value != null && el.Value != _s)
+                {
+                    el.Value.Send(_p);
+                }
+            }
+        } 
+
+        public Dictionary<uint, Player> FindAllGuildMember(uint club_id)
+        {
+            return _playerManager.FindAllGuildMember(club_id);
+        }
+
+        internal Player FindPlayer(uint member_uid)
+        {
+            return _playerManager.FindPlayer(member_uid, false);
+        }
+
+        public void SendUpdatedFriendList(Player target)
+        {
+            if (target == null || !target.Connected) return;
+
+            var p = new Packet();
+            var friend_list = target.UserInfo.m_friend_manager.getAllFriendAndGuildMember();
+
+            // Usando sua constante FRIEND_PAG_LIMIT
+            var mp = new ManyPacket((ushort)friend_list.Count, 30);
+
+            if (mp.paginas > 0)
+            {
+                for (var i = 0; i < mp.paginas; i++, mp.increse())
+                {
+                    p.init_plain((ushort)0x30);
+                    p.WriteUInt16(0x102);   // Sub Packet Id
+                    p.WriteBytes(mp.pag.ToArray());
+
+                    // Filtra os amigos da página atual
+                    var _begin = friend_list.Skip(mp.index.start).Take(mp.index.end - mp.index.start);
+
+                    foreach (var friend in _begin)
+                    {
+                        p.WriteBytes(friend.ToArray());
+
+                        // Verifica se o amigo em questão está online no Messenger
+                        var s_friend = (Player)FindSessionByUid(friend.uid);
+                        FriendInfoEx pFi = null;
+
+                        // Se o amigo está online E não bloqueou o 'target'
+                        if (s_friend != null && (pFi = s_friend.UserInfo.m_friend_manager.findFriendInAllFriend(target.UserInfo.uid)) != null && !pFi.state.block.IsTrue())
+                        {
+                            p.WriteBytes(s_friend.UserInfo.m_cpi.ToArray());
+                            p.WriteByte(s_friend.UserInfo.m_state);
+
+                            // Atualiza o bitmask de estado no objeto local antes de enviar
+                            friend.state.online = 1;
+                            switch (s_friend.UserInfo.m_state)
+                            {
+                                case 0: friend.state.play = 1; break;
+                                case 1: friend.state.AFK = 1; break;
+                                case 3: friend.state.busy = 1; break;
+                                default: friend.state.online = 1; break;
+                            }
+                        }
+                        else
+                        {
+                            // Amigo Offline
+                            p.WriteInt16(-1);      // Sala
+                            p.WriteInt32(-1);      // Tipo Sala
+                            p.WriteInt32(-1);      // Server GUID
+                            p.WriteSByte(-1);       // Canal ID
+                            p.WriteZero(64);   // Nome Canal
+                            p.WriteByte(5);        // Ícone OFFLINE
+                            friend.state.online = 0;
+                        }
+
+                        p.WriteByte(friend.cUnknown_flag);
+
+                        // Lógica de Flag (Master/Sub/Membro/Level)
+                        byte flagValue = (friend.flag.ucFlag == 2)
+                            ? (byte)(friend.uid == target.UserInfo.uid ? 1 : 0)
+                            : friend.level;
+
+                        p.WriteByte(flagValue);
+                        p.WriteByte(friend.state.ucState);
+                        p.WriteByte(friend.flag.ucFlag);
+                    }
+
+                    target.Send(p);
+                }
+            }
+            else
+            {
+                // Envia página vazia se não tiver amigos/guild
+                p.init_plain((ushort)0x30);
+                p.WriteUInt16(0x102);
+                p.WriteBytes(mp.pag.ToArray());
+                target.Send(p);
+            }
+        }
+
+        public bool SendUpdatePlayerLogoutToFriends(Player _session)
+        {
+            bool ret = true;
+            var p = new Packet();
+            try
+            {
+
+                /* Lógica Atômica:
+            Tenta mudar m_logout de 0 para 1.
+            Se o retorno for 1, significa que outra Thread já passou por aqui.
+         */
+                if (_session.UserInfo.m_logout == 0)
+                {
+                    _session.UserInfo.m_logout = 1;
+                    return false;
+                }
+
+                // Resposta para os amigos do player, que ele deslogou
+                p.init_plain(0x30);
+
+                p.WriteUInt16(0x10F); // Sub packet Id
+
+                p.WriteUInt32(_session.UserInfo.uid);
+
+                FriendBroadcast(_playerManager.FindAllFriend(_session.UserInfo.m_friend_manager.getAllFriendAndGuildMember(true/*Not Send To Block Friend*/)), _session, p);
+
+                _smp.message_pool.getInstance().push(new message("[MessengerService::SendUpdatePlayerLogoutToFriends][Log] PLAYER[ID: " + (_session.UserInfo.id) + ", UID: " + (_session.UserInfo.uid) + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+            }
+            catch (exception e)
+            {
+
+                _smp.message_pool.getInstance().push(new message("[MessengerService::SendUpdatePlayerLogoutToFriends][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                // Error
+                ret = false;
+            }
+
+            return ret;
+        }
+
+        public Dictionary<uint, Player> FindAllFriend(List<FriendInfoEx> friendInfoExes)
+        {
+            return _playerManager.FindAllFriend(friendInfoExes);
+        }
+
+        private void ReloadSystem()
+        {
+            // Recarrega IFF_STRUCT
+            sIff.getInstance().reload(); 
+        }
+
+        private void ReloadGlobalSystem(uint _tipo)
+        {
+            try
+            {
+                switch (_tipo)
+                {
+                    case 0:     // Reload All Globals Systems
+                        ReloadSystem();
+                        break;
+
+                    case 1:     // IFF
+                                // Recarrega IFF_STRUCT
+                        sIff.getInstance().reload();
+                        break;
+                    case 2:     // Card
+                    case 3:     // Comet Refill
+                    case 4:     // Papel Shop
+                    case 5:     // Box
+                    case 6:     // Memorial Shop
+                    case 7:     // Cube e Coin
+                    case 8:     // Treasure Hunter
+                    case 9:     // Drop
+                    case 10:    // Attendance Reward
+                    case 11:    // Map Course Dados
+                    case 12:    // Approach Mission
+                    case 13:    // Grand Zodiac Event
+                    case 14:    // Coin Cube Location Update System
+                    case 15:    // Golden Time System
+                    case 16:    // Login Reward System
+                    case 17:    // Bot GM Event
+                                // N�o tem esses Systemas aqui
+                        break;
+                    case 18:    // Smart Calculator Lib
+                                // Recarrega Smart Calculator Lib
+                                // sSmartCalculator.getInstance().load();
+                        break;
+
+                    default:
+                        throw new Exception($"[MessengerServer::reloadGlobalSystem][Error] Tipo[VALUE={_tipo}] desconhecido.");
+                }
+
+                // Log
+                _smp.message_pool.getInstance().push(
+                     new message($"[MessengerServer::reloadGlobalSystem][Error] Recarregou o Sistema[Tipo={_tipo}] com sucesso!", type_msg.CL_FILE_LOG_AND_CONSOLE)
+                 );
+            }
+            catch (Exception e)
+            {
+                _smp.message_pool.getInstance().push(
+                     new message($"[MessengerServer::reloadGlobalSystem][ErrorSystem] {e.Message}", type_msg.CL_FILE_LOG_AND_CONSOLE)
+                 );
+            }
+        }
+
+
+        // Update rate e Event of Server
+
+        public void UpdateRateAndEvent(int _tipo, uint _qntd)
+        {
+            try
+            {
+
+                if (_qntd == 0u && _tipo != 9/*Grand Zodiac Event Time*/ && _tipo != 10/*Angel Event*/
+                    && _tipo != 11/*Grand Prix Event*/ && _tipo != 12/*Golden Time Event*/ && _tipo != 13/*Login Reward Event*/
+                    && _tipo != 14/*Bot GM Event*/ && _tipo != 15/*Smart Calculator*/)
+                    throw new exception("[MessengerServer::UpdateRateAndEvent][Error] Rate[TIPO=" + (_tipo) + ", QNTD="
+                            + (_qntd) + "], qntd is invalid(zero).", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 120, 0));
+
+                switch (_tipo)
+                {
+                    case 0: // Pang
+                    case 1: // Exp
+                    case 2: // Mastery
+                    case 3: // Chuva
+                    case 4: // Treasure Hunter
+                    case 5: // Scratchy
+                    case 6: // Papel Shop Rare Item
+                    case 7: // Papel Shop Cookie Item
+                    case 8: // Memorial shop
+                    case 9: // Event Grand Zodiac Time Event [Active/Desactive]
+                    case 10: // Event Angel (Reduce 1 quit per game done)
+                    case 11: // Grand Prix Event
+                    case 12: // Golden Time Event
+                    case 13: // Login Reward System Event
+                    case 14: // Bot GM Event
+                    case 15: // Smart Calculator
+                        {
+                            m_si.rate.smart_calculator = (short)_qntd;
+
+                            // Recarrega o Smart Calculator System se ele foi ativado
+                            if (m_si.rate.smart_calculator == 1)
+                                ReloadGlobalSystem(18/*Smart Calculator*/);
+
+                            break;
+                        }
+                    default:
+                        throw new exception("[MessengerServer::UpdateRateAndEvent][Error] troca Rate[TIPO=" + (_tipo) + ", QNTD="
+                                + (_qntd) + "], tipo desconhecido.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 120, 0));
+                }
+
+                // Update no DB os server do server que foram alterados
+                snmdb.NormalManagerDB.getInstance().add(2, new CmdUpdateRateConfigInfo(m_si.uid, m_si.rate), DBResponse, this);
+
+                // Log
+                _smp.message_pool.getInstance().push(new message("[MessengerServer::UpdateRateAndEvent][Error] New Rate[Tipo=" + (_tipo) + ", QNTD="
+                        + (_qntd) + "] com sucesso!", type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+
+            }
+            catch (exception e)
+            {
+
+                _smp.message_pool.getInstance().push(new message("[MessengerServer::UpdateRateAndEvent][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+            }
+        }
+
+
+
+        protected override void DBResponse(int _msg_id, Pangya_DB _pangya_db, object _arg)
+        {
+            if (_arg == null)
+            {
+                _smp.message_pool.getInstance().push(new message("[MessengerService::DBResponse][WARNING] _arg is nullptr, na msg_id = " + (_msg_id), type_msg.CL_FILE_LOG_AND_CONSOLE));
+                return;
+            }
+
+            // Por Hora s� sai, depois fa�o outro tipo de tratamento se precisar
+            if (_pangya_db.getException().getCodeError() != 0)
+            {
+                _smp.message_pool.getInstance().push(new message("[MessengerService::DBResponse][Error] " + _pangya_db.getException().getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+                return;
+            }
+
+            switch (_msg_id)
+            {
+                case 1: // Insert Block IP
+                    {
+                        var cmd_ibi = (CmdInsertBlockIp)(_pangya_db); 
+
+                        break;
+                    }
+                case 2: // Update Server Rate Config Info
+                    {
+
+                        var cmd_urci = (CmdUpdateRateConfigInfo)(_pangya_db); 
+
+                        break;
+                    }
+                case 0:
+                default:
+                    break;
+            }
+        }
+
+    }
+
+    public class MessengerServer : Singleton<MessengerService>
+    { }
+}

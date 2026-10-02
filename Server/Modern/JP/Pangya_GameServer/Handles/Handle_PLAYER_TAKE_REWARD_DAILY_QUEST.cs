@@ -1,0 +1,167 @@
+using Pangya_GameServer.Feature;
+using Pangya_GameServer.Manager;
+using Pangya_GameServer.Models;
+using Pangya_GameServer.PacketFunc;
+using Pangya_GameServer.Session;
+using PangyaAPI.IFF.Handle.JP;
+using PangyaAPI.IFF.Regions.JP.Models.IFF;
+using PangyaAPI.Network;
+using PangyaAPI.Network.Core;
+using PangyaAPI.Utilities;
+using PangyaAPI.Utilities.Log;
+using static Pangya_GameServer.Models.DefineConstants;
+namespace Pangya_GameServer.Handles
+{
+    public class Handle_PLAYER_TAKE_REWARD_DAILY_QUEST : IPacketHandler<Player>
+    {
+        public async Task Handle(Player _session, Packet _packet)
+        {
+
+            var p = new Packet();
+
+            int[] quest_id = null;
+
+            try
+            {
+                if (_packet == null)
+                {
+                    throw new exception("_packet is null", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST,
+                        2, 0));
+                }
+
+                int num_quest = _packet.ReadInt32();
+
+                if (num_quest <= 0u)
+                {
+                    throw new exception("numero de quest para pegar recompensa e 0", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST,
+                        5005, 0));
+                }
+
+                quest_id = _packet.ReadInt32(4 * num_quest);
+
+                var v_quest = DailyQuestManager.LeaveQuestUser(_session, quest_id, num_quest);
+
+                QuestItem qi = null;
+
+                List<stItem> v_item = [];
+                stItem item = new();
+
+                // UPADATE Achievement ON SERVER, DB and GAME
+                AchievementSystem sys_achievement = new AchievementSystem();
+
+                // Add Reward Item do player
+                foreach (var el in v_quest)
+                {
+
+                    // Item Reward, d� para o player
+                    if ((qi = sIff.getInstance().findQuestItem(el._typeid)) != null)
+                    {
+                        for (var i = 0; i < (qi.reward._typeid.Length); ++i)
+                        {
+
+                            if (qi.reward._typeid[i] != 0)
+                            {
+
+                                item = new stItem(); 
+                                item.type = 2;
+                                item.id = -1;
+                                item._typeid = qi.reward._typeid[i];
+                                item.qntd = (int)qi.reward.qntd[i];
+                                item.c[0] = (short)item.qntd;
+                                item.c[3] = (short)qi.reward.time[i];
+
+                                // Add Item no db e no player
+                                var rt = RetAddItem.INIT_VALUE; 
+                                if ((rt = ItemManager.addItem(item,  _session, 0, 0)) < 0)
+                                {
+                                    throw new exception("[DailyQuestManager::requestTakeRewardQuest][Error] PLAYER[UID=" + Convert.ToString(_session.UserInfo.uid) + "] tentou pegar a recompensa da Quest[TYPEID=" + Convert.ToString(el._typeid) + ", ID=" + Convert.ToString(el.id) + "], mas nao conseguiu adicionar o Item[TYPEID=" + Convert.ToString(item._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST, 1500, 0));
+                                }
+
+                                if (rt != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH)
+                                {
+                                    v_item.Add(new stItem(item));
+                                }
+                            }
+                        }
+
+                        // S� add o contador de clear quest pega recompensa nas quest normais, a box de 10 clear quest n�o add ao contador
+                        if (el._typeid != CLEAR_10_DAILY_QUEST_TYPEID)
+                        {
+                            sys_achievement.incrementCounter(0x6C40009F/*Pega Recompessa de clear quest*/);
+                        }
+                    }
+                }
+
+                // Add os Counter Item Excluido do player
+                foreach (var el in v_quest)
+                {
+
+                    if (el.map_counter_item.Any())
+                    {
+
+                        foreach (var el2 in el.map_counter_item.Values)
+                        {
+
+                            item = new stItem
+                            {
+                                type = 2,
+                                id = el2.id,
+                                _typeid = el2._typeid,
+                                qntd = el2.value * -1
+                            };
+                            item.STDA_C_ITEM_QNTD = (short)item.qntd;
+                            item.stat.qntd_ant = el2.value;
+                            item.stat.qntd_dep = item.stat.qntd_ant + item.qntd;
+                            v_item.Add(new stItem(item));
+                        }
+                    }
+                }
+
+                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_TAKE_REWARD_DAILY_QUEST][Sucess] PLAYER[UID: {_session.UserInfo.uid}] Pegou recompensa da Daily Quest com sucesso.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+
+                // UPDATE ON GAME
+                p.init_plain(0x216); 
+                p.WriteUInt32((uint)UtilTime.GetSystemTimeAsUnix()); 
+                p.WriteInt32(v_item.Count); // Att 2 Item 
+                foreach (var el in v_item)
+                {
+                    p.WriteByte(el.type);
+                    p.WriteUInt32(el._typeid);
+                    p.WriteInt32(el.id); // id do item no banco de dados
+                    p.WriteUInt32(el.flag_time); // type
+                    p.WriteBytes(el.stat.ToArray());
+                    p.WriteInt32((el.STDA_C_ITEM_TIME > 0) ? el.STDA_C_ITEM_TIME : el.STDA_C_ITEM_QNTD);
+                    p.WriteZero(25);
+                }
+                _session.Send(p);
+
+
+                _session.Send(Handle_PACKET_RESPONSE.pacote227(v_quest));
+
+                // UPADATE Achievement ON SERVER, DB and GAME
+                sys_achievement.finish_and_update(_session);
+
+                if (quest_id != null)
+                {
+                    quest_id = null;
+                }
+
+            }
+            catch (exception e)
+            {
+
+                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_TAKE_REWARD_DAILY_QUEST][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+
+                _session.Send(Handle_PACKET_RESPONSE.pacote227(new List<AchievementInfoEx>(), 1));
+                 
+                if (quest_id != null)
+                {
+                    quest_id = null;
+                }
+            }
+
+            await Task.CompletedTask;
+        }
+    }
+}
