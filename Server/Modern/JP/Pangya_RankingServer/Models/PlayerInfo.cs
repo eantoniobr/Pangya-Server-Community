@@ -8,12 +8,12 @@ namespace Pangya_RankingServer.Models
     {
         public PlayerInfo()
         {
-            clear();
+            Clear();
         }
 
-        public override void clear()
+        public override void Clear()
         {
-            base.clear();
+            base.Clear();
             m_sd = new SearchDataEx();
             m_state = 0;
         }

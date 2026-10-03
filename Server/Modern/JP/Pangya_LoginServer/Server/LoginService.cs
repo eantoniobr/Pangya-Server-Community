@@ -5,6 +5,7 @@ using Pangya_LoginServer.Session;
 using PangyaAPI.DataBase;
 using PangyaAPI.IFF.Handle.JP;
 using PangyaAPI.Network;
+using PangyaAPI.Network.Config;
 using PangyaAPI.Network.Core;
 using PangyaAPI.Network.Handle;
 using PangyaAPI.Network.Models;
@@ -23,7 +24,7 @@ namespace Pangya_LoginServer.Server
         private PlayerManager _playerManager;
         public bool IsUnderMaintenance { get; private set; }
 
-        public LoginService() : base(new PlayerManager(500), new PacketDispatcher<Player, PacketIDClient>())
+        public LoginService() : base(new PlayerManager(500), new PacketDispatcher<Player, PacketIDClient>(), TypeServer.LoginServer)
         { 
             _playerManager = (PlayerManager)SessionsManager;
 
@@ -290,8 +291,8 @@ namespace Pangya_LoginServer.Server
         {
             base.LoadConfig();
             // Server Tipo
-            m_si.tipo = 0/*Login Server*/;
-            using (var m_reader_ini = new IniHandle("Server.ini"))
+            m_si.tipo = 0/*Login Server*/; 
+            using (var m_reader_ini = ServerConfig.GetLoadConfigIni(ServerType))
             {
                 m_access_flag = m_reader_ini.readInt("OPTION", "ACCESSFLAG") == 1;
                 m_create_user_flag = m_reader_ini.readInt("OPTION", "CREATEUSER") == 1;

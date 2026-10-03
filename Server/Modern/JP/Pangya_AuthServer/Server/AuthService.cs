@@ -6,6 +6,7 @@ using PangyaAPI.DataBase;
 using PangyaAPI.Network;
 using PangyaAPI.Network.Core;
 using PangyaAPI.Network.Handle;
+using PangyaAPI.Network.Models;
 using PangyaAPI.Network.Repository;
 using PangyaAPI.Network.Security;
 using PangyaAPI.Network.Service.Auth;
@@ -26,7 +27,7 @@ namespace Pangya_AuthServer.Server
         #endregion
 
         #region Constructor
-        public AuthService() : base(new PlayerManager(500), new AppAuthPacketDispatcher<Player, AuthClientDispatcher>())
+        public AuthService() : base(new PlayerManager(500), new AppAuthPacketDispatcher<Player, AuthClientDispatcher>(), TypeServer.AuthServer)
         {
             _playerManager = (PlayerManager)SessionsManager;
             LoadConfig();

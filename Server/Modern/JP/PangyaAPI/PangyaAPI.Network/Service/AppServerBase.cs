@@ -4,6 +4,7 @@ using PangyaAPI.Network.Config;
 using PangyaAPI.Network.Core;
 using PangyaAPI.Network.Flags;
 using PangyaAPI.Network.Models;
+using PangyaAPI.Network.Repository;
 using PangyaAPI.Network.Security;
 using PangyaAPI.Network.Service;
 using PangyaAPI.Network.Service.Auth;
@@ -17,6 +18,7 @@ using System.Net.Sockets;
 public abstract class AppServerBase<T, TId> : UnitAuthCommand, IAppServer where T : class, IAppSession where TId : struct, Enum
 {
     #region FIELDS
+    public TypeServer ServerType { get; set; }
 
     private TcpListener _listener;
     private CancellationTokenSource _cts;
@@ -44,8 +46,9 @@ public abstract class AppServerBase<T, TId> : UnitAuthCommand, IAppServer where 
     #endregion
 
     #region CONSTRUTOR
-    protected AppServerBase(AppSessionManager<T> sessionManager, IAppPacketDispatcher<T, TId> dispatcher)
+    protected AppServerBase(AppSessionManager<T> sessionManager, IAppPacketDispatcher<T, TId> dispatcher, TypeServer typeServer)
     {
+        ServerType = typeServer;
         SessionsManager = sessionManager;
         _dispatcher = dispatcher;
     }
@@ -356,23 +359,15 @@ public abstract class AppServerBase<T, TId> : UnitAuthCommand, IAppServer where 
     {
         try
         {
-            using var ini = new IniHandle("Server.ini");
+            ServerInfo serverInfo = m_si;
+            ConfigTimeOut timeouts = Timeouts;
+            int timeTickBotLimit = m_Bot_TTL;
 
-            m_si = new ServerInfo
-            {
-                version = ini.ReadString("SERVERINFO", "VERSION"),
-                version_client = ini.ReadString("SERVERINFO", "CLIENTVERSION"),
-                nome = ini.ReadString("SERVERINFO", "NAME", "Pangya Server Csharp"),
-                uid = ini.ReadInt32("SERVERINFO", "GUID"),
-                port = ini.ReadInt32("SERVERINFO", "PORT"),
-                ip = ini.ReadString("SERVERINFO", "IP"),
-                max_user = ini.ReadInt32("SERVERINFO", "MAXUSER"),
-                propriedade = new Property(ini.ReadUInt32("SERVERINFO", "PROPERTY")),
-                packet_version = ini.ReadUInt32("SERVERINFO", "PACKETVERSION")
-            };
-            // Carrega configuração de timeouts da seção [TIMEOUT] do ini
-            Timeouts = ConfigTimeOut.FromIni(ini);
-            m_Bot_TTL = ini.ReadInt32("OPTION", "ANTIBOTTTL", 1000);
+            ServerConfig.LoadConfig(ref serverInfo, ref timeouts, ref timeTickBotLimit, ServerType);
+
+            m_si = serverInfo;
+            Timeouts = timeouts;
+            m_Bot_TTL = timeTickBotLimit; 
         }
         catch (Exception ex)
         {

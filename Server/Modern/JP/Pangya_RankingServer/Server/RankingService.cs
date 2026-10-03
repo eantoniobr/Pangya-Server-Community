@@ -27,7 +27,7 @@ namespace Pangya_RankingServer.Server
         int m_sync_update_time_refresh = 0;
 
         private readonly PlayerManager _playerManager;
-        public RankingService() : base(new PlayerManager(500), new PacketDispatcher<Player, PacketIDClient>())
+        public RankingService() : base(new PlayerManager(500), new PacketDispatcher<Player, PacketIDClient>(), TypeServer.RankServer)
         {
             // Fazemos o cast do sessionManager para o seu PlayerManager
             _playerManager = (PlayerManager)SessionsManager;

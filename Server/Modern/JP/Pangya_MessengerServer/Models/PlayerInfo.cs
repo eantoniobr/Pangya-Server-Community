@@ -6,19 +6,16 @@ namespace Pangya_MessengerServer.Models
     public class PlayerInfo : PlayerInfoBase
     {
         public PlayerInfo()
-        {
-            m_logout = 0;
-            base.clear();
-            m_cpi.clear();
-            m_friend_manager.clear();
+        { 
+            Clear(); 
         }
 
-        public override void clear()
+        public override void Clear()
         {
             m_logout = 0;
-            base.clear();
-            m_cpi.clear();
-            m_friend_manager.clear();
+            base.Clear();
+            m_cpi = new ChannelPlayerInfo();
+            m_friend_manager = new FriendManager(); 
         }
 
 

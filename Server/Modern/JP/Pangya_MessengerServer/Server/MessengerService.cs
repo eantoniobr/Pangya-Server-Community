@@ -23,7 +23,7 @@ namespace Pangya_MessengerServer.Server
     {
         private readonly PlayerManager _playerManager; 
 
-        public MessengerService() : base(new PlayerManager(500), new PacketDispatcher<Player, PacketIDClient>())
+        public MessengerService() : base(new PlayerManager(500), new PacketDispatcher<Player, PacketIDClient>(), TypeServer.MessengerServer)
         {
             // Fazemos o cast do sessionManager para o seu PlayerManager
             _playerManager = (PlayerManager)SessionsManager;

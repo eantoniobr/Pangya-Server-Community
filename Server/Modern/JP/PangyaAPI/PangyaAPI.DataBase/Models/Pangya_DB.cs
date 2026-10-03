@@ -12,7 +12,7 @@ namespace PangyaAPI.DataBase
         private static readonly CmdExecuteLog cdcs = new CmdExecuteLog();
 
         private Connector _db;
-        public virtual string FileConnection { get; set; } = "server.ini";
+        public virtual string FileConnection { get; set; } = "db.ini";
         private bool _wait = false;
         private bool executed;
         public Pangya_DB()

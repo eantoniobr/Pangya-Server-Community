@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>AuthService</AssemblyName>
-    <BaseOutputPath>..\Build\Auth</BaseOutputPath>
+	  <BaseOutputPath>..\Build\All</BaseOutputPath>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
@@ -33,7 +33,13 @@
   </ItemGroup>
 
  <ItemGroup>
-   <None Update="server.ini">
+   <None Update="Log.ini">
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </None>
+   <None Update="db.ini">
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </None>
+   <None Update="AS.ini">
      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
    </None>
  </ItemGroup>

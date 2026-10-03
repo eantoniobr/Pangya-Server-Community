@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>MessengerService</AssemblyName>
-    <BaseOutputPath>..\Build\Messenger</BaseOutputPath>
+	  <BaseOutputPath>..\Build\All</BaseOutputPath>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
@@ -18,7 +18,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="server.ini">
+    <None Update="db.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Log.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MS.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

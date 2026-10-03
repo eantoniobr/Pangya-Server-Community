@@ -13,6 +13,7 @@ using PangyaAPI.DataBase;
 using PangyaAPI.IFF.Handle.JP;
 using PangyaAPI.IFF.Regions.JP.Models.IFF;
 using PangyaAPI.Network;
+using PangyaAPI.Network.Config;
 using PangyaAPI.Network.Core;
 using PangyaAPI.Network.Handle;
 using PangyaAPI.Network.Models;
@@ -35,7 +36,7 @@ namespace Pangya_GameServer.Server
         public BroadcastManager SendTicker = new(30/*30 segundos para o ticker*/);
         public BroadcastManager SendNotice = new(60/*60 segundos 1 minuto para o notice*/);
         public bool SaveRoomLog { get; private set; }
-        public GameService() : base(new PlayerManager(500), new PacketDispatcher<Player, PacketIDClient>())
+        public GameService() : base(new PlayerManager(500), new PacketDispatcher<Player, PacketIDClient>(), TypeServer.GameServer)
         {
             // Fazemos o cast do sessionManager para o seu PlayerManager
             _playerManager = (PlayerManager)SessionsManager;
@@ -269,7 +270,7 @@ namespace Pangya_GameServer.Server
         {
             try
             {
-                using var m_reader_ini = new IniHandle("Server.ini");
+                using var m_reader_ini = ServerConfig.GetLoadConfigIni(ServerType);
                 int num_channel = m_reader_ini.readInt("CHANNELINFO", "NUM_CHANNEL");
 
                 for (sbyte i = 0; i < num_channel; ++i)
@@ -1401,7 +1402,7 @@ namespace Pangya_GameServer.Server
 
             // Server Tipo
             m_si.tipo = 1;
-            using (var m_reader_ini = new IniHandle("Server.ini"))
+            using (var m_reader_ini = ServerConfig.GetLoadConfigIni(ServerType))
             {
                 try
                 {
@@ -2323,21 +2324,7 @@ namespace Pangya_GameServer.Server
             return SaveRoomLog;
         }
 
-        public uint Version_Decrypt(uint packet_version)
-        {
-            string PacketVerKey = "{873AE210-2EEF-4c61-B030-A54F17633A7A}" /*"{782AE110-2EEF-4c61-B030-A53F17634F7D}"*/;
-
-            byte[] tmpPVer = BitConverter.GetBytes(packet_version);
-            int index = 0;
-
-            for (int i = 0; i < PacketVerKey.Length; i++)
-            {
-                tmpPVer[index] ^= (byte)PacketVerKey[i];
-                index = (index == 3) ? 0 : index + 1;
-            }
-            return BitConverter.ToUInt32(tmpPVer, 0);
-        }
-
+        
         #endregion
 
         protected override void DBResponse(int _msg_id, Pangya_DB _pangya_db, object _arg)

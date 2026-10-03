@@ -282,7 +282,7 @@ namespace PangyaAPI.Utilities.Log
         public void set_prex(string prefix)
         {
             prex = prefix;
-        }
+        } 
 
         #region Helpers and placeholders
 
@@ -296,7 +296,7 @@ namespace PangyaAPI.Utilities.Log
 
             try
             {
-                var reader_ini = new IniHandle("Server.ini");
+                var reader_ini = new IniHandle("Log.ini");
 
                 return reader_ini.ReadString("LOG", "DIR", "Log");
             }

@@ -95,7 +95,7 @@ namespace Pangya_GameServer.Handles
                 CheckAccountBlock(session);
 
                 // --- Packet version validation (after decrypt) ---
-                packetVersion = GameServer.getInstance().Version_Decrypt(packetVersion);
+                packetVersion = PacketVersion(packetVersion);
                 var serverPacketVersion = GameServer.getInstance().getInfo().packet_version;
                 if (!GameServer.getInstance().canSameIDLogin() && packetVersion != serverPacketVersion)
                 {
@@ -357,6 +357,22 @@ namespace Pangya_GameServer.Handles
                 }
             }
         }
+
+        public uint PacketVersion(uint packet_version)
+        {
+            string PacketVerKey = "{782AE110-2EEF-4c61-B030-A53F17634F7D}";
+
+            byte[] tmpPVer = BitConverter.GetBytes(packet_version);
+            int index = 0;
+
+            for (int i = 0; i < PacketVerKey.Length; i++)
+            {
+                tmpPVer[index] ^= (byte)PacketVerKey[i];
+                index = (index == 3) ? 0 : index + 1;
+            }
+            return BitConverter.ToUInt32(tmpPVer, 0);
+        }
+
 
         private void EvaluateClientVersion(Player session, ClientVersion serverVer, ClientVersion clientVer)
         {

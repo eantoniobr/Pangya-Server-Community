@@ -21,6 +21,7 @@ namespace PangyaAPI.Network.Service.Auth
         private TcpListener _listener;
         private CancellationTokenSource _cts;
         private IAppServerAccept _acceptLoop;
+        public TypeServer ServerType { get; set; }
 
         public bool IsRunning { get; private set; }
         protected readonly IAuthPacketDispatcher<T, AuthClientDispatcher> _dispatcher;
@@ -44,8 +45,9 @@ namespace PangyaAPI.Network.Service.Auth
 
         protected UnitServer(
        AppSessionManager<T> sessionManager,
-       IAuthPacketDispatcher<T, AuthClientDispatcher> dispatcher)
+       IAuthPacketDispatcher<T, AuthClientDispatcher> dispatcher, TypeServer typeServer)
         {
+            ServerType = typeServer;
             SessionsManager = sessionManager;
             _dispatcher = dispatcher;
         }
@@ -56,22 +58,15 @@ namespace PangyaAPI.Network.Service.Auth
         {
             try
             {
-                using var ini = new IniHandle("Server.ini");
+                ServerInfo serverInfo = m_si;
+                ConfigTimeOut timeouts = Timeouts;
+                int timeTickBotLimit = m_Bot_TTL;
 
-                m_si = new ServerInfo
-                {
-                    version = ini.ReadString("SERVERINFO", "VERSION"),
-                    version_client = ini.ReadString("SERVERINFO", "CLIENTVERSION"),
-                    nome = ini.ReadString("SERVERINFO", "NAME", "Pangya Server Csharp"),
-                    uid = ini.ReadInt32("SERVERINFO", "GUID"),
-                    port = ini.ReadInt32("SERVERINFO", "PORT"),
-                    ip = ini.ReadString("SERVERINFO", "IP"),
-                    max_user = ini.ReadInt32("SERVERINFO", "MAXUSER"),
-                    propriedade = new Property(ini.ReadUInt32("SERVERINFO", "PROPERTY")),
-                    packet_version = ini.ReadUInt32("SERVERINFO", "PACKETVERSION")
-                };
+                ServerConfig.LoadConfig(ref serverInfo, ref timeouts, ref timeTickBotLimit, ServerType);
 
-                m_Bot_TTL = ini.ReadInt32("OPTION", "ANTIBOTTTL", 1000);
+                m_si = serverInfo;
+                Timeouts = timeouts;
+                m_Bot_TTL = timeTickBotLimit;
             }
             catch (Exception ex)
             {

@@ -46,7 +46,7 @@ namespace Pangya_MessengerServer.Session
                 if (ret = base.Clear())
                 {
                     // Player Info
-                    UserInfo.clear();
+                    UserInfo.Clear();
                 }
                 return ret;
             }

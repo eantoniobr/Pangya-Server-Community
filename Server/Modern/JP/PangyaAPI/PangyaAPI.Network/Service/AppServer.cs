@@ -21,7 +21,7 @@ namespace PangyaAPI.Network.Service
         public List<ServerInfo> m_server_list;
         public ServerInfo getInfo() => m_si;
 
-        protected AppServer(AppSessionManager<T> sessionManager, IAppPacketDispatcher<T, TId> dispatcher) : base(sessionManager, dispatcher)
+        protected AppServer(AppSessionManager<T> sessionManager, IAppPacketDispatcher<T, TId> dispatcher, TypeServer typeServer) : base(sessionManager, dispatcher, typeServer)
         {
         }
 

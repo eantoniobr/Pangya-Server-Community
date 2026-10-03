@@ -68,7 +68,7 @@ namespace Pangya_RankingServer.Repository
                     4, 0));
             }
 
-            m_pi.clear();
+            m_pi.Clear();
 
             var r = procedure(
                 m_szConsulta,

@@ -1,4 +1,5 @@
 using PangyaAPI.Network;
+using PangyaAPI.Network.Config;
 using PangyaAPI.Network.Core;
 using PangyaAPI.Network.Models;
 using PangyaAPI.Network.Repository;
@@ -30,7 +31,7 @@ where TId : struct, Enum
 
     public async Task ConnectAndRun()
     {
-        using IniHandle m_reader_ini = new("Server.ini");
+        using IniHandle m_reader_ini = ServerConfig.GetLoadConfigIni(_owner.ServerType);
         var ip = m_reader_ini.ReadString("AUTHSERVER", "IP");
         var port = m_reader_ini.readInt("AUTHSERVER", "PORT");
 
