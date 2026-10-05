@@ -28,8 +28,8 @@ namespace Pangya_GameServer.Handles
 
             try
             { 
-                uint opt = pkt.ReadUInt32();
-                ushort paginaSolicitada = pkt.ReadUInt16();
+                uint opt = Packet.ReadUInt32();
+                ushort paginaSolicitada = Packet.ReadUInt16();
 
                 var itemList = Player.Inventory.DolfineLocker.v_item;
                 int totalItems = itemList.Count;

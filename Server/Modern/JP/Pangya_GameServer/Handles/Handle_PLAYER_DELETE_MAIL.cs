@@ -49,12 +49,12 @@ namespace Pangya_GameServer.Handles
                 if (mails != null && mails.Any())
                 {
                     // Página ainda contém e-mails após a exclusão
-                    Player.Send(HandlePacket_RESPONSE.pacote215(mails, (int)pagina, (int)Player.UserInfo.MailBox.getTotalPages()));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote215(mails, (int)pagina, (int)Player.UserInfo.MailBox.getTotalPages()));
                 }
                 else
                 {
                     // MailBox vazio ou página ficou sem e-mails
-                    Player.Send(HandlePacket_RESPONSE.pacote215(new List<MailBox>(), (int)pagina, 1));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote215(new List<MailBox>(), (int)pagina, 1));
                 }
             }
             catch (exception e)

@@ -3632,13 +3632,11 @@ namespace Pangya_GameServer.Models
                 p.WriteUInt32(special_flag_mod.ulNaturalAndShortGame);
                 p.WriteByte(max_player);
                 p.WriteByte(gallery_limit);        // constante 30 de pangya
-                p.WriteSByte(Convert.ToSByte(state_flag == 1 ? 0 : 1));
+                p.WriteByte((byte)(state_flag & 0xFF));
                 p.WriteUInt32(time_vs);
                 p.WriteUInt32(time_30s);
                 p.WriteUInt32(trofel);
-                p.WriteByte(senha_flag); // Senha Flag
-                if (senha_flag == 0)
-                    p.WriteString(senha);
+                p.WriteByte(senha_flag); // Senha Flag 
                 p.WriteString(name);
                 return p.GetBytes;
             }

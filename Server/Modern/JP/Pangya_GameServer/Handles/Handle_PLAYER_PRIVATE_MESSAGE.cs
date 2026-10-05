@@ -13,8 +13,8 @@ namespace Pangya_GameServer.Handles
         {
             try
             {  
-                string targetNickname = pkt.ReadPStr();
-                string messageContent = pkt.ReadPStr();
+                string targetNickname = Packet.ReadPStr();
+                string messageContent = Packet.ReadPStr();
 
                 if (string.IsNullOrWhiteSpace(targetNickname) || string.IsNullOrWhiteSpace(messageContent))
                     return; // Silencioso para evitar spam de exceção por pacotes malformados

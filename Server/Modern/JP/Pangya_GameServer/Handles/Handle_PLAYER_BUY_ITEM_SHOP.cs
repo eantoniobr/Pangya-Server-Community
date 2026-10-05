@@ -253,7 +253,7 @@ namespace Pangya_GameServer.Handles
 
                     if (coupon.id != 0 && coupon._typeid != 0u)
                     {
-                        if (ItemManager.removeItem(coupon, _session) <= 0)
+                        if (ItemManager.removeItem(coupon, Player) <= 0)
                         {
                             _smp.message_pool.getInstance().push(new message("[Lobby::RequestBuyItemShop][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou comprar um item com coupon de descontou, mas nao conseguiu remove o coupon[TYPEID=" + coupon._typeid + ", ID=" + coupon.id + "], item typeid: " + bi._typeid + ". Hacker ou bug.", type_msg.CL_FILE_LOG_AND_CONSOLE));
                             _smp.message_pool.getInstance().push(new message("[Lobby::RequestBuyItemShop][Warning] devolve as moedas gasta deu erro no add itens no db para o Player.", type_msg.CL_FILE_LOG_AND_CONSOLE));
@@ -278,7 +278,7 @@ namespace Pangya_GameServer.Handles
                         Player.Send(p);
                     }
 
-                    var rai = ItemManager.addItem(v_item, _session, 0, 1);
+                    var rai = ItemManager.addItem(v_item, Player, 0, 1);
 
                     if (rai.fails.Count > 0 && rai.type != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH)
                     {
@@ -316,7 +316,7 @@ namespace Pangya_GameServer.Handles
                         Player.Send(p);
                     }
 
-                    Player.Send(HandlePacket_RESPONSE.pacote0AA(Player, v_item));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote0AA(Player, v_item));
 
                     p.init_plain(0x68);
                     p.WriteUInt32(0);

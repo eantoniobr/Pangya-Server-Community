@@ -23,7 +23,7 @@ namespace Pangya_GameServer.Handles
                     );
                 }
 
-                _channel?.Lobby.EnterGrandPrix(session);
+                _channel?.Lobby.EnterGrandPrix(Player);
                 var p = new Packet(0x250);
 
                 p.WriteUInt32(0u); // Status OK

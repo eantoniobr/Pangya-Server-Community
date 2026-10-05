@@ -119,7 +119,7 @@ namespace Pangya_GameServer.Handles
                             item.qntd = 1;
                             item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
 
-                            if (ItemManager.removeItem(item, _session) <= 0)
+                            if (ItemManager.removeItem(item, Player) <= 0)
                             {
                                 throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu deletar o Spinning Cube. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     10, 0x6300110));
@@ -134,7 +134,7 @@ namespace Pangya_GameServer.Handles
                             item.qntd = 1;
                             item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
 
-                            if (ItemManager.removeItem(item, _session) <= 0)
+                            if (ItemManager.removeItem(item, Player) <= 0)
                             {
                                 throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu deletar a Key[TYPEID=" + (KEY_OF_SPINNING_CUBE_TYPEID) + ", DESC=Spinning Cube]. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     11, 0x6300111));
@@ -152,7 +152,7 @@ namespace Pangya_GameServer.Handles
 
                                 var rt = RetAddItem.INIT_VALUE;
 
-                                if ((rt = ItemManager.addItem(item, _session, 0, 0)) < 0)
+                                if ((rt = ItemManager.addItem(item, Player, 0, 0)) < 0)
                                 {
                                     throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu adicionar um  Openned Spinning Cube. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         12, 0x6300112));
@@ -261,7 +261,7 @@ namespace Pangya_GameServer.Handles
                             item.qntd = 1;
                             item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
 
-                            if (ItemManager.removeItem(item, _session) <= 0)
+                            if (ItemManager.removeItem(item, Player) <= 0)
                             {
                                 throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu deletar Papel Box. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     10, 0x6300110));
@@ -278,7 +278,7 @@ namespace Pangya_GameServer.Handles
                             key.STDA_C_ITEM_QNTD = (short)key.qntd;
 
                             var rt = RetAddItem.INIT_VALUE;
-                            if ((rt = ItemManager.addItem(key, _session, 0, 0)) < 0)
+                            if ((rt = ItemManager.addItem(key, Player, 0, 0)) < 0)
                             {
                                 throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], nao conseguiu adicionar Key[TYPEID=" + (KEY_OF_SPINNING_CUBE_TYPEID) + ", DESC=Spinning Cube]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     14, 0x6300114));
@@ -293,7 +293,7 @@ namespace Pangya_GameServer.Handles
                                 item.STDA_C_ITEM_QNTD = (short)item.qntd;
 
                                 rt = RetAddItem.INIT_VALUE;
-                                if ((rt = ItemManager.addItem(item, _session, 0, 0)) < 0)
+                                if ((rt = ItemManager.addItem(item, Player, 0, 0)) < 0)
                                 {
                                     throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu adicionar um  Openned Papel Box. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         12, 0x6300112));
@@ -395,7 +395,7 @@ namespace Pangya_GameServer.Handles
                             item.qntd = 1;
                             item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
 
-                            if (ItemManager.removeItem(item, _session) <= 0)
+                            if (ItemManager.removeItem(item, Player) <= 0)
                             {
                                 throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu deletar Box. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     10, 0x6300110));
@@ -412,7 +412,7 @@ namespace Pangya_GameServer.Handles
                                 item.STDA_C_ITEM_QNTD = (short)item.qntd;
 
                                 var rt = RetAddItem.INIT_VALUE;
-                                if ((rt = ItemManager.addItem(item, _session, 0, 0)) < 0)
+                                if ((rt = ItemManager.addItem(item, Player, 0, 0)) < 0)
                                 {
                                     throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu adicionar um  Openned Box. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         12, 0x6300112));

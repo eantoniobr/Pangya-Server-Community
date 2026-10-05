@@ -50,7 +50,7 @@ namespace Pangya_GameServer.Handles
 
                 ri.time_vs = Packet.ReadUInt32();
                 ri.time_30s = Packet.ReadUInt32();
-                ri.max_Player = Packet.ReadByte();
+                ri.max_player = Packet.ReadByte();
                 ri.tipo = Packet.ReadByte();
                 ri.qntd_hole = Packet.ReadByte();
                 ri.course = (ROOM_INFO_COURSE)(Packet.ReadByte());
@@ -88,7 +88,7 @@ namespace Pangya_GameServer.Handles
                     practice = true;
                 }
 
-                if (!Player.UserInfo.UserCapabilities.game_master && ri.max_Player > 30)
+                if (!Player.UserInfo.UserCapabilities.game_master && ri.max_player > 30)
                 {
                     throw new exception("[Handle_PLAYER_MAKE_ROOM] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] Channel[ID=" + _channel?.getId() + "] limite atingido, Hacker, por que o cliente nao deixa criar uma sala maior que 30, pois o cliente nao e gm/adm.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         7, 0));
@@ -120,7 +120,7 @@ namespace Pangya_GameServer.Handles
                 if (practice)
                 {
                     s_tmp = "Single Player Practice Mode";
-                    if (ri.max_Player > 1)
+                    if (ri.max_player > 1)
                     {
                         throw new exception("[Handle_PLAYER_MAKE_ROOM] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] Channel[ID=" + (_channel?.getId())
                             + "] Numero de jogadores errado, Hacker, por que o cliente nao deixa enviar esse pacote assim.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 7, 7));
@@ -303,7 +303,7 @@ namespace Pangya_GameServer.Handles
                     item.qntd = 1;
                     item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
 
-                    if (ItemManager.removeItem(item, _session) <= 0)
+                    if (ItemManager.removeItem(item, Player) <= 0)
                     {
                         throw new exception("[Handle_PLAYER_MAKE_ROOM] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] Channel[ID=" + _channel?.getId() + "] erro ao remover Ticket SSC.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 11, 0));
                     }
@@ -320,7 +320,7 @@ namespace Pangya_GameServer.Handles
                 {
                     _channel?.DeleteInviteTimeResquestByInvited(Player);
 
-                    r = GameServer.getInstance().MakeRoom(_channel, ri, _session);
+                    r = GameServer.getInstance().MakeRoom(_channel, ri, Player);
 
                     if (r == null)
                     {

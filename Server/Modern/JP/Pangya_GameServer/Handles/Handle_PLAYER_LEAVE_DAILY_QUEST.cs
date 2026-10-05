@@ -78,7 +78,7 @@ namespace Pangya_GameServer.Handles
 
                 Player.Send(p);
 
-                Player.Send(HandlePacket_RESPONSE.pacote228(v_quest));
+                Player.Send(Handle_PACKET_RESPONSE.pacote228(v_quest));
 
                 if (quest_id == null)
                 {
@@ -93,7 +93,7 @@ namespace Pangya_GameServer.Handles
 
                 var v_ai = new List<AchievementInfoEx>();
 
-                Player.Send(HandlePacket_RESPONSE.pacote228(v_ai, 1));
+                Player.Send(Handle_PACKET_RESPONSE.pacote228(v_ai, 1));
 
                 if (quest_id != null)
                 {

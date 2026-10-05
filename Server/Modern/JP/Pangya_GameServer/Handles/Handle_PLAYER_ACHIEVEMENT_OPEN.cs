@@ -20,7 +20,7 @@ namespace Pangya_GameServer.Handles
 
                 if (mgr == null)
                 {
-                    Player.Send(HandlePacket_RESPONSE.pacote22C(1)); // Falha
+                    Player.Send(Handle_PACKET_RESPONSE.pacote22C(1)); // Falha
                     return;
                 }
 

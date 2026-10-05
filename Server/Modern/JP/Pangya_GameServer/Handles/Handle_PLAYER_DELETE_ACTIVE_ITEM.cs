@@ -80,7 +80,7 @@ namespace Pangya_GameServer.Handles
                 item.STDA_C_ITEM_QNTD = (short)((ushort)qntd * -1);
 
                 // Atualiza ON Server AND Banco de dados
-                if (ItemManager.removeItem(item, _session) <= 0)
+                if (ItemManager.removeItem(item, Player) <= 0)
                 {
                     throw new exception("[Lobby::RequestDeleteActiveItem][Error] PLAYER [UID=" + Player.UserInfo.uid + "] nao conseguiu excluir item[TYPEID=" + (_typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         702, 0x5200703));

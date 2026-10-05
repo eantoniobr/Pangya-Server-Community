@@ -99,7 +99,7 @@ namespace Pangya_GameServer.Handles
                 EquipCard(ce, pCi);
 
                 // 7. Persistência e Remoção de Itens
-                if (ItemManager.removeItem(v_item, _session) <= 0)
+                if (ItemManager.removeItem(v_item, Player) <= 0)
                 {
                     throw new exception("[EquipWithPatcher] Falha ao remover itens do inventário.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 807, 0x5200808));
@@ -211,7 +211,7 @@ namespace Pangya_GameServer.Handles
         {
             AchievementSystem sys = new AchievementSystem();
             sys.incrementCounter(0x6C400087u);
-            sys.finish_and_update(session);
+            sys.finish_and_update(Player);
         }
 
         private void HandleError(Player session, exception e)

@@ -45,7 +45,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 4. Envia pacote 212 com as informações do e-mail
-                Player.Send(HandlePacket_RESPONSE.pacote212(email));
+                Player.Send(Handle_PACKET_RESPONSE.pacote212(email));
 
             }
             catch (exception e)

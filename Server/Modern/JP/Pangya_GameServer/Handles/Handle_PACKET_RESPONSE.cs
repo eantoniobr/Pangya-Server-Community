@@ -17,7 +17,7 @@ namespace Pangya_GameServer.PacketFunc
     /// <summary>
     /// somente as respostas para o client
     /// </summary>
-    public class HandlePacket_RESPONSE
+    public class Handle_PACKET_RESPONSE
     {
         //////
        static int MAX_BUFFERPacket = 1000;
@@ -1338,70 +1338,68 @@ namespace Pangya_GameServer.PacketFunc
             return p;
         }
 
-        //tested, melhorar com tempo@@@@
-        public static bool pacote048(Packet p, Player _session, List<PlayerRoomInfoEx> v_element, int option = 0)
+        //tested, melhorar com tempo@@@@ 
+        public static bool pacote048(Packet p, Player _session, List<PlayerRoomInfoEx> PlayerInfo, int option = 0)
         {
             TPlayerRoom_Action opt = (TPlayerRoom_Action)(option & 0xFF);
-
             Debug.WriteLine($"pacote048 => enum: {opt}, code: {option & 0xFF}, code2: {option & 0x100}");
-
             try
             {
-
+                // Action code 2: Handles explicit session exit broadcast triggers
+                
                 if ((option & 0xFF) == 2)
-                { // exit _session
+                {
                     p.init_plain(0x48);
                     p.WriteSByte((sbyte)option);
                     p.WriteInt16(-1);
                     p.WriteInt32(_session.ConnectionID);
                     return true;
                 }
+                // Action code 7: Handles distinct partitioned loop serialization configurations
                 else if ((option & 0xFF) == 7)
                 {
-                    int elementSize = (option & 0x100) != 0 ? Marshal.SizeOf(new PlayerRoomInfo()) : Marshal.SizeOf(new PlayerRoomInfoEx());
-                    int maxPacket = Marshal.SizeOf(new PlayerRoomInfoEx());
-                    int total = v_element.Count;
-                    int porPacket = (maxPacket - 100 > elementSize) ? (maxPacket - 100) / elementSize : 1;
+                    int elementSize = (option & 0x100) != 0 ? 348 : 861;
+                    int maxPacket = 861;
+                    int total = PlayerInfo.Count;
+                    int por_packet = (maxPacket - 100 > elementSize) ? (maxPacket - 100) / elementSize : 1;
 
-                    int index = 0;
 
-                    while (index < total)
+                    // Inicializa o pacote único para toda a lista
+                    p.init_plain(0x48);
+                    p.WriteByte((byte)option);
+                    p.WriteInt16(-1);
+
+                    // Escreve a quantidade total de elementos ou o ID da sessão dependendo da opção
+                    if ((option & 0xFF) == 0 || (option & 0xFF) == 5)
+                        p.WriteByte((byte)((total > por_packet) ? por_packet : total));
+                    else if ((option & 0xFF) == 7)
+                        p.WriteSByte((sbyte)total);
+                    else if ((option & 0xFF) == 3)
+                        p.WriteInt32(_session.ConnectionID);
+
+                    // Serializa todos os jogadores da lista sequencialmente no mesmo pacote
+                    foreach (var _sessionRoom in PlayerInfo)
                     {
-                        p.init_plain(0x48);
-                        p.WriteSByte((sbyte)option);
-                        p.WriteInt16(-1);
-
-                        if ((option & 0xFF) == 0 || (option & 0xFF) == 5)
-                            p.WriteSByte((sbyte)Math.Min(porPacket, total - index));
-                        else if ((option & 0xFF) == 7)
-                            p.WriteSByte((sbyte)total);
-                        else if ((option & 0xFF) == 3 || (option & 0xFF) == 3)
-                            p.WriteInt32(_session.ConnectionID);
-
-                        for (int i = 0; i < porPacket && index < total; i++, index++)
-                        {
-                            var PlayerRoom = v_element[index];
-                            if (elementSize == 348)
-                                p.WriteBytes(PlayerRoom.ToArray());
-                            else
-                                p.WriteBytes(PlayerRoom.ToArrayEx());
-                        }
-
-                        p.WriteByte(0);
-
-                        _session.Send(p);
+                        if (elementSize == 348)
+                            p.WriteBytes(_sessionRoom.ToArray());
+                        else
+                            p.WriteBytes(_sessionRoom.ToArrayEx());
                     }
+                    // Marca o fim da lista de jogadores
+                    p.WriteByte(0);
+                    _session.Send(p);
                     return true;
                 }
                 else
                 {
-                    int elementSize = (option & 0x100) != 0 ? Marshal.SizeOf(new PlayerRoomInfo()) : Marshal.SizeOf(new PlayerRoomInfoEx());
-                    int elements = v_element.Count;
+                    int elementSize = (option & 0x100) != 0 ? 348 : 861;
+                    int elements = PlayerInfo.Count;
                     int totalSize = elements * elementSize;
 
                     try
                     {
-                        if (totalSize < MAX_BUFFERPacket - 100)//-> MAKE_END_SPLITPacket nao tem, so no else, OK?
+                        // Serialization under maximum packet boundaries (Single Payload)
+                        if (totalSize < 20 - 100)
                         {
                             p.init_plain(0x48);
                             p.WriteSByte((sbyte)option);
@@ -1409,71 +1407,68 @@ namespace Pangya_GameServer.PacketFunc
 
                             if ((option & 0xFF) == 0 || (option & 0xFF) == 5)
                                 p.WriteByte((byte)elements);
-                            else if ((option & 0xFF) == 3 || (option & 0xFF) == 3)
+                            else if ((option & 0xFF) == 3)
                                 p.WriteInt32(_session.ConnectionID);
 
-                            foreach (var PlayerRoom in v_element)
+                            foreach (var _sessionRoom in PlayerInfo)
                             {
                                 if (elementSize == 348)
-                                    p.WriteBytes(PlayerRoom.ToArray());
+                                    p.WriteBytes(_sessionRoom.ToArray());
                                 else
-                                    p.WriteBytes(PlayerRoom.ToArrayEx());
+                                    p.WriteBytes(_sessionRoom.ToArrayEx());
                             }
                             p.WriteByte(0);
                             return true;
                         }
+                        // Serialization exceeding boundaries requires sequential Data chunk splitting (Multi Payload)
                         else
                         {
-                            int total = elements;
-                            int porPacket = ((MAX_BUFFERPacket - 100) > elementSize) ? (MAX_BUFFERPacket - 100) / elementSize : 1;
+                            elements = PlayerInfo.Count;
 
-                            int index = 0;
+                            // Inicializa o pacote único para toda a lista
+                            p.init_plain(0x48);
+                            p.WriteByte((byte)option);
+                            p.WriteInt16(-1);
 
-                            while (index < total)
+                            // Escreve a quantidade total de elementos ou o ID da sessão dependendo da opção
+                            if ((option & 0xFF) == 0 || (option & 0xFF) == 5)
                             {
-                                p.init_plain(0x48);
-
-                                if ((option & 0xFF) == 0 && index != 0)
-                                    p.WriteByte(5); // append _sessions
-                                else
-                                    p.WriteByte((byte)option);
-
-                                p.WriteInt16(-1);
-
-                                if ((option & 0xFF) == 0 || (option & 0xFF) == 5)
-                                    p.WriteSByte((sbyte)Math.Min(porPacket, total - index));
-                                else if ((option & 0xFF) == 3)
-                                {
-                                    elementSize = 348;
-                                    p.WriteInt32(_session.ConnectionID);
-                                }
-
-                                for (int i = 0; i < porPacket && index < total; i++, index++)
-                                {
-                                    var PlayerRoom = v_element[index];
-                                    if (elementSize == 348)
-                                        p.WriteBytes(PlayerRoom.ToArray());
-                                    else
-                                        p.WriteBytes(PlayerRoom.ToArrayEx());
-                                }
-
-                                p.WriteByte(0); // Final list de PlayerRoomInfo
-                                _session.Send(p);
+                                p.WriteByte((byte)elements);
                             }
+                            else if ((option & 0xFF) == 3)
+                            {
+                                elementSize = 348;
+                                p.WriteInt32(_session.ConnectionID);
+                            }
+
+                            // Serializa todos os jogadores da lista sequencialmente no mesmo pacote
+                            foreach (var _sessionRoom in PlayerInfo)
+                            {
+                                if (elementSize == 348)
+                                    p.WriteBytes(_sessionRoom.ToArray());
+                                else
+                                    p.WriteBytes(_sessionRoom.ToArrayEx());
+                            }
+
+                            // Marca o fim da lista de jogadores
+                            p.WriteByte(0);
+
+                            _session.Send(p);
+                            // Retorna o pacote único pronto para ser enviado de uma vez só
+                            return true;
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("[pacote048][Fatal] " + ex);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[pacote048][Fatal] " + ex);
             }
-            return false;
+            return true;
         }
+
 
         public static Packet pacote04A(RoomInfo _ri, short option)
         {

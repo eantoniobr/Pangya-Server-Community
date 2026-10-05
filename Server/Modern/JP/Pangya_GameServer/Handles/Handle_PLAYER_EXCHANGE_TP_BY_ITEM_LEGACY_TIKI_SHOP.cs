@@ -96,7 +96,7 @@ namespace Pangya_GameServer.Handles
                     throw new exception("[Handle_PLAYER_EXCHANGE_TP_BY_ITEM_LEGACY_TIKI_SHOP][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] tentou trocar item(ns)(" + s_item + "), mas ocorreu um erro na inicializacao do Tiki Points from IFF_STRUCT is invalid(" + (tiki_pts) + ").", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 905, 0x5200905));
                 }
 
-                if (ItemManager.removeItem(v_item, _session) <= 0)
+                if (ItemManager.removeItem(v_item, Player) <= 0)
                 {
                     throw new exception("[Handle_PLAYER_EXCHANGE_TP_BY_ITEM_LEGACY_TIKI_SHOP][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] tentou trocar item(ns)(" + s_item + "), mas nao conseguiu deletar ele(s).", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 902, 0x5200903));
                 }

@@ -106,7 +106,7 @@ namespace Pangya_GameServer.Handles
                 NormalManagerDB.getInstance().add(0, new CmdUpdateLegacyTikiShopPoint(Player.UserInfo.uid, Player.UserInfo.PointShopLegacy));
 
                 // 5. Inserção dos Itens no Inventário
-                var rai = ItemManager.addItem(v_item_to_add, _session, 0, 0);
+                var rai = ItemManager.addItem(v_item_to_add, Player, 0, 0);
 
                 if (rai.fails.Count > 0 && rai.type != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH)
                 {

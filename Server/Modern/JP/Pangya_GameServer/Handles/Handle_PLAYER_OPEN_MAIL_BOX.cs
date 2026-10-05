@@ -42,12 +42,12 @@ namespace Pangya_GameServer.Handles
                 if (mails != null && mails.Any())
                 {
                     // Pagina existe, envia ela
-                    Player.Send(HandlePacket_RESPONSE.pacote211(mails, pagina, (int)Player.UserInfo.MailBox.getTotalPages()));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote211(mails, pagina, (int)Player.UserInfo.MailBox.getTotalPages()));
                 }
                 else
                 {
                     // MailBox Vazio ou Página não encontrada
-                    Player.Send(HandlePacket_RESPONSE.pacote211(new List<MailBox>(), pagina, 1));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote211(new List<MailBox>(), pagina, 1));
                 }
             }
             catch (exception e)

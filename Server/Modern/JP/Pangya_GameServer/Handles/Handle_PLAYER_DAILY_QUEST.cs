@@ -31,7 +31,7 @@ namespace Pangya_GameServer.Handles
 
 
                 var quest = GameServer.getInstance().DailyQuestsInfo;
-                if (DailyQuestManager.CheckCurrentQuestUser(quest, _session))
+                if (DailyQuestManager.CheckCurrentQuestUser(quest, Player))
                 {
                     // Get Old Quest do Player
                     var old_quest = DailyQuestManager.GetOldQuestUser(Player);
@@ -40,7 +40,7 @@ namespace Pangya_GameServer.Handles
                         Player.UserInfo.Achievements.removeAchievement(el.id);
 
                     // Add nova quest para o Player
-                    var v_ai = DailyQuestManager.NewQuestUser(quest, _session);
+                    var v_ai = DailyQuestManager.NewQuestUser(quest, Player);
 
                     var p = new Packet(0x216);
 
@@ -71,7 +71,7 @@ namespace Pangya_GameServer.Handles
                     //send 216
                     Player.Send(p);
                     //send 225
-                    Player.Send(HandlePacket_RESPONSE.pacote225(Player.UserInfo.DailyQuests, old_quest));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote225(Player.UserInfo.DailyQuests, old_quest));
 
                 }
                 else
@@ -82,7 +82,7 @@ namespace Pangya_GameServer.Handles
                     //send 216
                     Player.Send(p);
                     //send 225
-                    Player.Send(HandlePacket_RESPONSE.pacote225(Player.UserInfo.DailyQuests, null));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote225(Player.UserInfo.DailyQuests, null));
                 }
 
             }

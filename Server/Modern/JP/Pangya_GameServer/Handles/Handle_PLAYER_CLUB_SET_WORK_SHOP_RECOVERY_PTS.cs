@@ -85,7 +85,7 @@ namespace Pangya_GameServer.Handles
                 item.qntd = 1;
                 item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
 
-                if (ItemManager.removeItem(item, _session) <= 0)
+                if (ItemManager.removeItem(item, Player) <= 0)
                 {
                     throw new exception("[RequestClubSetWorkShopRecoveryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou recuperar os pontos de recuperacao do ClubSet[ID=" + (clubset_id) + "], mas nao conseguiu remover item[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         155, 0x5300156));

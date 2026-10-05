@@ -148,7 +148,7 @@ namespace Pangya_GameServer.Server
             _dispatcher.Register(PacketIDClient.PLAYER_REQ_CHANGE_LOBBY, new Handle_PLAYER_CHANGE_LOBBY());
             _dispatcher.Register(PacketIDClient.PLAYER_REQ_RESPONSE_GGCSAUTH, new Handle_DUMMY());//new Handles.Handle_PLAYER_CHECK_GAME_GUARD_AUTH_ANSWER());//esse eo auth da ntreev(nprotect)
             _dispatcher.Register(PacketIDClient.PLAYER_REQ_BS_USABLE_TIMES, new Handle_PLAYER_INIT_SHOT_SENDED());
-            _dispatcher.Register(PacketIDClient.PLAYER_REQ_MESSENGER_SERVER_LIST, new Handle_PLAYER_CONNECT_MSNSERVER());
+            _dispatcher.Register(PacketIDClient.PLAYER_REQ_MESSENGER_SERVER_LIST, new Handle_PLAYER_CONNECT_MSN());
             _dispatcher.Register(PacketIDClient.PLAYER_REQ_GM_COMMAND, new Handle_PLAYER_COMMAND_GM());//dividir em partes. ficou mais bonito e mais legivel.
             _dispatcher.Register(PacketIDClient.PLAYER_REQ_PLAYTIME_UPDATE, new Handle_PLAYER_OPEN_PAPEL_SHOP());
             _dispatcher.Register(PacketIDClient.PLAYER_REQ_UPDATE_PCBANG_MASCOTMSG, new Handle_PLAYER_UPDATE_PCBANG_MASCOT());

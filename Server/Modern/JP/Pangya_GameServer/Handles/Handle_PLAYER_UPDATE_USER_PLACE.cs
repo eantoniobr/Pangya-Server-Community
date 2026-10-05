@@ -16,7 +16,7 @@ namespace Pangya_GameServer.Handles
             {
 
                 // 2. Leitura do 'Place' (Lugar)
-                sbyte newPlace = packet.ReadSByte();
+                sbyte newPlace = Packet.ReadSByte();
 
                 // 3. Atualização em Memória
                 Player.UserInfo.Place = newPlace;

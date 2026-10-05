@@ -72,7 +72,7 @@ namespace Pangya_GameServer.Handles
 
                                 // Add Item no db e no Player
                                 var rt = RetAddItem.INIT_VALUE; 
-                                if ((rt = ItemManager.addItem(item,  _session, 0, 0)) < 0)
+                                if ((rt = ItemManager.addItem(item,  Player, 0, 0)) < 0)
                                 {
                                     throw new exception("[DailyQuestManager::requestTakeRewardQuest][Error] PLAYER[UID=" + Convert.ToString(Player.UserInfo.uid) + "] tentou pegar a recompensa da Quest[TYPEID=" + Convert.ToString(el._typeid) + ", ID=" + Convert.ToString(el.id) + "], mas nao conseguiu adicionar o Item[TYPEID=" + Convert.ToString(item._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST, 1500, 0));
                                 }
@@ -137,7 +137,7 @@ namespace Pangya_GameServer.Handles
                 Player.Send(p);
 
 
-                Player.Send(HandlePacket_RESPONSE.pacote227(v_quest));
+                Player.Send(Handle_PACKET_RESPONSE.pacote227(v_quest));
 
                 // UPADATE Achievement ON SERVER, DB and GAME
                 sys_achievement.finish_and_update(Player);
@@ -153,7 +153,7 @@ namespace Pangya_GameServer.Handles
 
                 _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_TAKE_REWARD_DAILY_QUEST][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                Player.Send(HandlePacket_RESPONSE.pacote227(new List<AchievementInfoEx>(), 1));
+                Player.Send(Handle_PACKET_RESPONSE.pacote227(new List<AchievementInfoEx>(), 1));
                  
                 if (quest_id != null)
                 {

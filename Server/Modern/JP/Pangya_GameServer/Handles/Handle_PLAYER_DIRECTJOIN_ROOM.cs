@@ -15,9 +15,9 @@ namespace Pangya_GameServer.Handles
             var targetChannel = Player.GetChannel();
             try
             { 
-                byte tarGetChannelId = pkt.ReadByte();      // btChannelUID
-                short targetRoomId = pkt.ReadInt16();       // wRoomGUID
-                string password = pkt.ReadString(7);      // Password da sala (7 chars no S4)
+                byte tarGetChannelId = Packet.ReadByte();      // btChannelUID
+                short targetRoomId = Packet.ReadInt16();       // wRoomGUID
+                string password = Packet.ReadString(7);      // Password da sala (7 chars no S4)
 
                 var currentChannelId = targetChannel?.getId();
 
@@ -32,7 +32,7 @@ namespace Pangya_GameServer.Handles
                 //    }
 
                 //    // Verifica se o Player pode entrar no novo canal (Level, Full, etc)
-                //    bool enterCheck = targetChannel.CheckEnterChannel(session);
+                //    bool enterCheck = targetChannel.CheckEnterChannel(Player);
                 //    if (enterCheck)
                 //    {
                 //        SendJoinError(Player, 0);
@@ -42,11 +42,11 @@ namespace Pangya_GameServer.Handles
                 //    // Sai do canal atual
                 //    if (targetChannel != null)
                 //    {
-                //        targetChannel.LeaveChannel(session); 
+                //        targetChannel.LeaveChannel(Player); 
                 //    }
 
                 //    // Entra no novo canal e no Lobby dele
-                //    if (!targetChannel.EnterChannel(session))
+                //    if (!targetChannel.EnterChannel(Player))
                 //    {
                 //        SendJoinError(Player, 4);
                 //        return;
@@ -60,7 +60,7 @@ namespace Pangya_GameServer.Handles
                 //if (Player.UserInfo.mi.sala_numero != -1 && Player.UserInfo.mi.sala_numero != targetRoomId)
                 //{
                 //    // Sai da sala atual antes de migrar
-                //    Player.CurrentRoom?.RemovePlayer(session);
+                //    Player.CurrentRoom?.RemovePlayer(Player);
                 //}
 
                 //// Tenta entrar na sala alvo

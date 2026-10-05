@@ -138,7 +138,7 @@ namespace Pangya_GameServer.Handles
                     }
                 }
 
-                if (ItemManager.removeItem(v_item, _session) <= 0)
+                if (ItemManager.removeItem(v_item, Player) <= 0)
                 {
                     throw new exception("[Lobby::RequestCharacterMasteryExpand][Error] PLAYER [UID=" + Player.UserInfo.uid + "] nao conseguiu excluir os item(ns) do Player", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         661, 0x5200662));

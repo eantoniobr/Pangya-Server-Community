@@ -35,10 +35,10 @@ namespace Pangya_GameServer.Handles
             try
             {
                 // 1. Sincronização de Estado (Capability)
-                UpdatePlayerCapability(session);
+                UpdatePlayerCapability(Player);
 
                 // 2. Identificação do Comando (Int16 padrão Pangya)
-                var cmdId = (COMMON_CMD_GM)packet.ReadInt16();
+                var cmdId = (COMMON_CMD_GM)Packet.ReadInt16();
 
                 // 3. Validação de Segurança (Gatekeeper)
                 if (cmdId != COMMON_CMD_GM.CCG_IDENTITY)//se for diferente, ele confisca.
@@ -66,7 +66,7 @@ namespace Pangya_GameServer.Handles
                         return;
                     }
                     LogCommandExecution(Player, cmdId);
-                    await command.Execute(Player, packet); 
+                    await command.Execute(Player, Packet); 
                     if(cmdId != COMMON_CMD_GM.CCG_DISCONNECT)
                     Player.SendChatNotice("Command Executed.");
                 }

@@ -16,10 +16,10 @@ namespace Pangya_GameServer.Handles
             try
             {
                 // 1. Leitura dos dados do pacote
-                byte opt = packet.ReadByte();
-                uint targetUid = packet.ReadUInt32();
-                byte seq = packet.ReadByte();
-                int itemId = packet.ReadInt32();
+                byte opt = Packet.ReadByte();
+                uint targetUid = Packet.ReadUInt32();
+                byte seq = Packet.ReadByte();
+                int itemId = Packet.ReadInt32();
 
                 // 2. Validações de integridade
                 if (targetUid == 0 || itemId <= 0)

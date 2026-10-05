@@ -117,13 +117,13 @@ namespace Pangya_GameServer.Handles
                         error = 1;
                         break;
                 }
-                Player.Send(HandlePacket_RESPONSE.pacote06B(Player.Inventory, (byte)type, error));
+                Player.Send(Handle_PACKET_RESPONSE.pacote06B(Player.Inventory, (byte)type, error));
 
                 Player.GetChannel()?.UpdatePlayerInfo(Player);
             }
             catch (exception e)
             {
-                Player.Send(HandlePacket_RESPONSE.pacote06B(Player.Inventory, (byte)type, 1));
+                Player.Send(Handle_PACKET_RESPONSE.pacote06B(Player.Inventory, (byte)type, 1));
 
                 _smp.message_pool.getInstance().push(
                     new message(

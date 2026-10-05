@@ -17,7 +17,7 @@ namespace Pangya_GameServer.Handles
             {
                 // Calcula o tempo decorrido desde o último tick (em milisegundos)
                 long lastTick = Player.TicketBot;
-                int currentTick = packet.ReadInt32();
+                int currentTick = Packet.ReadInt32();
                 long diff = currentTick - lastTick;
 
                 //_smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_HEARTBEAT][Log] PLAYER[UID= {Player.UserInfo.uid}, TIME OLD= {diff}ms, TIME NOW= {currentTick}ms", type_msg.CL_FILE_LOG_AND_CONSOLE));

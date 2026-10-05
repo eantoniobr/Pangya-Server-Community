@@ -10,7 +10,7 @@ namespace Pangya_GameServer.Handles
         {
 			try
 			{
-				GameServer.getInstance().SendUpdateServerList(session);
+				GameServer.getInstance().SendUpdateServerList(Player);
 			}
 			catch (Exception)
 			{

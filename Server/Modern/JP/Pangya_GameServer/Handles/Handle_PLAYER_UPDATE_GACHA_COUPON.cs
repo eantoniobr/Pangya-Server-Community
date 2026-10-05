@@ -63,7 +63,7 @@ namespace Pangya_GameServer.Handles
                     }
                 }
 
-                Player.Send(HandlePacket_RESPONSE.pacote102(Player.UserInfo,Player.Inventory.CouponGacha));
+                Player.Send(Handle_PACKET_RESPONSE.pacote102(Player.UserInfo,Player.Inventory.CouponGacha));
 
             }
             catch (exception e)

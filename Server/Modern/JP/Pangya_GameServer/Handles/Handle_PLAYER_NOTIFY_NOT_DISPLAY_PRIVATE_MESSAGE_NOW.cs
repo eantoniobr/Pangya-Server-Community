@@ -16,7 +16,7 @@ namespace Pangya_GameServer.Handles
         {
             try
             { 
-                string nicknameSender = pkt.ReadPStr();
+                string nicknameSender = Packet.ReadPStr();
 
                 if (string.IsNullOrWhiteSpace(nicknameSender))
                 {
@@ -39,7 +39,7 @@ namespace Pangya_GameServer.Handles
                     _smp.message_pool.getInstance().push(new message(
                         $"[WhisperRefuse] Player[{Player.UserInfo.nickname}] recusou automaticamente o whisper de [{nicknameSender}].",
                         type_msg.CL_FILE_LOG_AND_CONSOLE)); 
-                    var response = HandlePacket_RESPONSE.pacote040(nicknameSender, "", eChatMsg.CHAT_REFUSE_WHISPER); 
+                    var response = Handle_PACKET_RESPONSE.pacote040(nicknameSender, "", eChatMsg.CHAT_REFUSE_WHISPER); 
                     senderSession.Send(response);
                 }
             }

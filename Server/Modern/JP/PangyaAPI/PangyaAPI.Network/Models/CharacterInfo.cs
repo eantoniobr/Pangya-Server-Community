@@ -590,27 +590,25 @@ namespace PangyaAPI.Network.Models
         /// <returns></returns>
         public byte[] ToArray()
         {
-            using (var p = new Packet())
-            {
-                p.Write(_typeid);
-                p.Write(id);
-                p.Write(default_hair);
-                p.Write(default_shirts);
-                p.Write(gift_flag);
-                p.Write(purchase);
-                p.WriteUInt32(parts_typeid);
-                p.WriteUInt32(parts_id);
-                for (int i = 0; i < 216; i++)
-                    p.WriteByte(0);
-                p.WriteUInt32(auxparts);
-                p.WriteUInt32(cut_in);
-                p.WriteBytes(pcl);
-                p.WriteUInt32(mastery);
-                p.WriteUInt32(Card_Character);
-                p.WriteUInt32(Card_Caddie);
-                p.WriteUInt32(Card_NPC);
-                return p.GetBytes;
-            }
+            using var p = new Packet();
+            p.Write(_typeid);
+            p.Write(id);
+            p.Write(default_hair);
+            p.Write(default_shirts);
+            p.Write(gift_flag);
+            p.Write(purchase);
+            p.WriteUInt32(parts_typeid);
+            p.WriteUInt32(parts_id);
+            for (int i = 0; i < 216; i++)
+                p.WriteByte(0);
+            p.WriteUInt32(auxparts);
+            p.WriteUInt32(cut_in);
+            p.WriteBytes(pcl);
+            p.WriteUInt32(mastery);
+            p.WriteUInt32(Card_Character);
+            p.WriteUInt32(Card_Caddie);
+            p.WriteUInt32(Card_NPC);
+            return p.GetBytes;
         }
 
         public CharacterInfo ToRead(Packet r)

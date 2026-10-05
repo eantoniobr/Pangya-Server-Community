@@ -26,7 +26,7 @@ namespace Pangya_GameServer.Session
     public class Player : AppSession
     {  
         public HeartBeat m_HeartBeat { get; set; }
-        public ChatPenaltyManager ChatPenalty { get; } = new ChatPenaltyManager();
+        public ChatPenaltyManager ChatPenalty { get; } = new();
         public InventoryInfo? Inventory { get; set; }// inventorio de itens do jogador....
         public PlayerInfo? UserInfo { get; set; }// info do jogador....
         public GMInfo m_gi { get; set; }// info de GM se for GM
@@ -80,7 +80,7 @@ namespace Pangya_GameServer.Session
                 {
                     // Player Info
                     UserInfo.Clear();
-                    Inventory.Clear();
+                    Inventory?.Clear();
                     // Game Master Info
                     m_gi.clear();
                     SetChannel(null);

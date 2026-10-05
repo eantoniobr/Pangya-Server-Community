@@ -108,7 +108,7 @@ namespace Pangya_GameServer.Handles
                                     356, 0x5500357));
                             }
 
-                            if (ItemManager.removeItem(item, _session) <= 0)
+                            if (ItemManager.removeItem(item, Player) <= 0)
                             {
                                 throw new exception("[Handle_PLAYER_USE_CARD_SPECIAL][ErrorSystem] PLAYER [UID=" + Player.UserInfo.uid + "] tentou usar card special[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + "], mas nao conseguiu deletar o card. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     355, 0x5500356));
@@ -125,7 +125,7 @@ namespace Pangya_GameServer.Handles
                                     356, 0x5500357));
                             }
 
-                            if (ItemManager.removeItem(item, _session) <= 0)
+                            if (ItemManager.removeItem(item, Player) <= 0)
                             {
                                 throw new exception("[Handle_PLAYER_USE_CARD_SPECIAL][ErrorSystem] PLAYER [UID=" + Player.UserInfo.uid + "] tentou usar card special[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + "], mas nao conseguiu deletar o card. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     355, 0x5500356));
@@ -142,7 +142,7 @@ namespace Pangya_GameServer.Handles
                                     356, 0x5500357));
                             }
 
-                            if (ItemManager.removeItem(item, _session) <= 0)
+                            if (ItemManager.removeItem(item, Player) <= 0)
                             {
                                 throw new exception("[Handle_PLAYER_USE_CARD_SPECIAL][ErrorSystem] PLAYER [UID=" + Player.UserInfo.uid + "] tentou usar card special[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + "], mas nao conseguiu deletar o card. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     355, 0x5500356));
@@ -186,7 +186,7 @@ namespace Pangya_GameServer.Handles
                     case 33: // Uknown
                     case 34: // ClubSet Mastery %
                         {
-                            if (ItemManager.removeItem(item, _session) <= 0)
+                            if (ItemManager.removeItem(item, Player) <= 0)
                             {
                                 throw new exception("[Handle_PLAYER_USE_CARD_SPECIAL][ErrorSystem] PLAYER [UID=" + Player.UserInfo.uid + "] tentou usar card special[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + "], mas nao conseguiu deletar o card. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     355, 0x5500356));

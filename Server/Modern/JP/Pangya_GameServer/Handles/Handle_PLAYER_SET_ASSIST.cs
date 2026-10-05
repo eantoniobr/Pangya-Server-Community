@@ -65,7 +65,7 @@ namespace Pangya_GameServer.Handles
             }
         }
 
-        private (int rt, stItem? item) AddAssistItem(Player _session)
+        private (int rt, stItem? item) AddAssistItem(Player Player)
         {
             if (Player.Inventory.ItemExist(ASSIST_ITEM_TYPEID))
             {
@@ -76,7 +76,7 @@ namespace Pangya_GameServer.Handles
                 item._typeid = ASSIST_ITEM_TYPEID;
                 item.qntd = 1;
                 item.STDA_C_ITEM_QNTD = 1;
-                if ((rt = ItemManager.addItem(item, _session, 0, 0)) < 0)
+                if ((rt = ItemManager.addItem(item, Player, 0, 0)) < 0)
                 {
                     throw new exception("[Error] PLAYER[UID=" + Player.UserInfo.uid + "] tentou ativar o Assist[TYPEID=" + Convert.ToString(ASSIST_ITEM_TYPEID) + "], mas nao conseguiu adicionar o item. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
                         1, 0x5200801));
@@ -93,7 +93,7 @@ namespace Pangya_GameServer.Handles
 
         }
 
-        private (int rt, stItem? item) RemoveAssistItem(Player _session)
+        private (int rt, stItem? item) RemoveAssistItem(Player Player)
         {
             var pWi = Player.Inventory.FindWarehouseItemByTypeid(ASSIST_ITEM_TYPEID);
 
@@ -109,7 +109,7 @@ namespace Pangya_GameServer.Handles
                 item.id = pWi.id;
                 item.qntd = (int)((pWi.STDA_C_ITEM_QNTD <= 0) ? 1 : pWi.STDA_C_ITEM_QNTD);
                 item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
-                if (ItemManager.removeItem(item, _session) <= 0)
+                if (ItemManager.removeItem(item, Player) <= 0)
                 {
                     throw new exception("[Error] PLAYER[UID=" + Player.UserInfo.uid + "] tentou desativar o Assist[TYPEID=" + Convert.ToString(ASSIST_ITEM_TYPEID) + "], mas nao conseguiu remover o item. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
                         2, 0x5200802));

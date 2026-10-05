@@ -38,7 +38,7 @@ namespace Pangya_GameServer.Handles
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Em caso de erro, podemos enviar o pacote com falha (0)
-                SendError(session);
+                SendError(Player);
             }
         }
 

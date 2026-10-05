@@ -15,8 +15,8 @@ namespace Pangya_GameServer.Handles
 
             try
             { 
-                uint from_uid = pkt.ReadUInt32();
-                uint to_uid = pkt.ReadUInt32();
+                uint from_uid = Packet.ReadUInt32();
+                uint to_uid = Packet.ReadUInt32();
                  
                 bool isSelf = (from_uid == to_uid);
                 bool canEnter = (Player.Inventory.MyRoomConfig.allow_enter == 1);

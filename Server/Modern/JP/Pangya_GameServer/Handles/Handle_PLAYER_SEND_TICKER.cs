@@ -23,7 +23,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 2. Leitura e Sanitização
-                string msg = packet.ReadString();
+                string msg = Packet.ReadString();
 
                 if (string.IsNullOrEmpty(msg))
                 {

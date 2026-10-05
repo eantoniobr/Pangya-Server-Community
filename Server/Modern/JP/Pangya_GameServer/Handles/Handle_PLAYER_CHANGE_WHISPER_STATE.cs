@@ -15,7 +15,7 @@ namespace Pangya_GameServer.Handles
             try
             { 
                 // O pacote envia apenas 1 byte (0 para OFF, 1 para ON)
-                byte whisperState = packet.ReadByte();
+                byte whisperState = Packet.ReadByte();
 
                 // Validação de segurança (Anti-Hacker/Bug)
                 if (whisperState > 1)

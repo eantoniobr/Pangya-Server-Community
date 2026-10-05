@@ -31,10 +31,10 @@ public class Handle_PLAYER_COMET_REFILL : HandleBase<Player, Packet_EXAMPLE>
             var qntd = sCometRefillSystem.getInstance().drawsCometRefill(ctx);
 
             stItem it_rm = new stItem { type = 2, id = (int)pItem.id, _typeid = pItem._typeid, qntd = 1, STDA_C_ITEM_QNTD = -1 };
-            if (ItemManager.removeItem(it_rm, _session) <= 0) throw new exception("Erro remover", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 6, 0x5600106));
+            if (ItemManager.removeItem(it_rm, Player) <= 0) throw new exception("Erro remover", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 6, 0x5600106));
 
             stItem it_add = new stItem { type = 2, id = (int)pBall.id, _typeid = pBall._typeid, qntd = (int)qntd, STDA_C_ITEM_QNTD = (short)qntd };
-            if (ItemManager.addItem(it_add, _session, 0, 0) < 0) throw new exception("Erro add", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 7, 0x5600107));
+            if (ItemManager.addItem(it_add, Player, 0, 0) < 0) throw new exception("Erro add", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 7, 0x5600107));
 
             p.init_plain(0x197);
             p.WriteByte(1);

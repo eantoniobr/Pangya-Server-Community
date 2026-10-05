@@ -103,7 +103,7 @@ namespace Pangya_GameServer.Handles
                     v_remove.Add(new stItem(item));
                 }
 
-                if (ItemManager.removeItem(v_remove, _session) <= 0)
+                if (ItemManager.removeItem(v_remove, Player) <= 0)
                     throw new exception("[Lobby.Room::RequestCadieCauldronExchange][Error] problemas ao remover(s) item(ns) do PLAYER [UID=" + Player.UserInfo.uid + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 461, 5200462));
 
                 if (cmb.Box_Random_ID > 0)
@@ -141,7 +141,7 @@ namespace Pangya_GameServer.Handles
 
                 if (v_item.Count == 0) throw new exception("[Lobby.Room::RequestCadieCauldronExchange][Error] problemas ao inicializar o item[TYPEID=" + (bi._typeid) + "] para o PLAYER [UID=" + Player.UserInfo.uid + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 459, 5200460));
 
-                var rai = ItemManager.addItem(v_item, _session, 0, 0);
+                var rai = ItemManager.addItem(v_item, Player, 0, 0);
                 if (rai.fails.Count > 0 && rai.type != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH) throw new exception("[Lobby.Room::RequestCadieCauldronExchange][Error] problemas ao adicionar o item[TYPEID=" + (bi._typeid) + "] para o PLAYER [UID=" + Player.UserInfo.uid + "] ", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 460, 5200461));
 
                 if (item._typeid == 0x1A000083) Player.Inventory.CouponGacha.partial_ticket += item.STDA_C_ITEM_QNTD;

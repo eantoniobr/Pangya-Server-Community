@@ -9,7 +9,7 @@ namespace Pangya_GameServer.Handles
     {
         public override async Task Handle()
         {
-            Player.Send(HandlePacket_RESPONSE.pacote10E(Player.UserInfo.GameHistory));
+            Player.Send(Handle_PACKET_RESPONSE.pacote10E(Player.UserInfo.GameHistory));
 
             await Task.CompletedTask;
         }

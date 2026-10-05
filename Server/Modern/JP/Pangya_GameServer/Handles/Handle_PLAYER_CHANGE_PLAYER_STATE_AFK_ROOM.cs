@@ -18,7 +18,7 @@ namespace Pangya_GameServer.Handles
             var _channel = Player.GetChannel();
             try
             {
-                byte state = packet.ReadByte();
+                byte state = Packet.ReadByte();
 
                 var room = Player.GetRoom();
 

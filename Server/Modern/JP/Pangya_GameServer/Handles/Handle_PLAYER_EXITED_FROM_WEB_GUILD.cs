@@ -69,11 +69,11 @@ namespace Pangya_GameServer.Handles
                                     {
                                         p.init_plain(0x01);
                                         p.WriteUInt32(el.club_uid);
-                                        p.WriteUInt32(el.Player_uid);
+                                        p.WriteUInt32(el.player_uid);
 
                                         GameServer.getInstance().sendCommandToOtherServerWithAuthServer(p, 3);
 
-                                        var s = GameServer.getInstance().FindPlayer(el.Player_uid);
+                                        var s = GameServer.getInstance().FindPlayer(el.player_uid);
 
                                         if (s != null)
                                         {
@@ -121,7 +121,7 @@ namespace Pangya_GameServer.Handles
                                     {
                                         p.init_plain(0x02);
                                         p.WriteUInt32(el.club_uid);
-                                        p.WriteUInt32(el.Player_uid);
+                                        p.WriteUInt32(el.player_uid);
 
                                         GameServer.getInstance().sendCommandToOtherServerWithAuthServer(p, 3);
 
@@ -144,11 +144,11 @@ namespace Pangya_GameServer.Handles
                                     {
                                         p.init_plain(0x03);
                                         p.WriteUInt32(el.club_uid);
-                                        p.WriteUInt32(el.Player_uid);
+                                        p.WriteUInt32(el.player_uid);
 
                                         GameServer.getInstance().sendCommandToOtherServerWithAuthServer(p, 3);
 
-                                        var s = GameServer.getInstance().FindPlayer(el.Player_uid);
+                                        var s = GameServer.getInstance().FindPlayer(el.player_uid);
 
                                         if (s != null)
                                         {

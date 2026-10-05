@@ -97,7 +97,7 @@ namespace Pangya_GameServer.Handles
                 item.qntd = 1;
                 item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
 
-                if (ItemManager.removeItem(item, _session) <= 0)
+                if (ItemManager.removeItem(item, Player) <= 0)
                 {
                     throw new exception("[Lobby::RequestClubSetReset][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou resetar ClubSet[ID=" + (clubset_id) + "], mas nao conseguiu remover o Item[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + "]. ErrorSystem", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         506, 0x5300507));

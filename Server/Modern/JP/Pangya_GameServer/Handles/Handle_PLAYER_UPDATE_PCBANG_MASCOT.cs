@@ -12,8 +12,7 @@ namespace Pangya_GameServer.Handles
     { 
         public override async Task Handle()
         {
-            var _session = session;
-            var Packet = pkt; 
+            
         await Task.CompletedTask;
         }
     }

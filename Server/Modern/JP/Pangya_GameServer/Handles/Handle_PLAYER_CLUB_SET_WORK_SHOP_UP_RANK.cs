@@ -146,7 +146,7 @@ namespace Pangya_GameServer.Handles
                 // Remove Card
                 if (item._typeid != 0)
                 {
-                    if (ItemManager.removeItem(item, _session) <= 0)
+                    if (ItemManager.removeItem(item, Player) <= 0)
                     {
                         throw new exception("[Lobby::RequestClubSetWorkShopUpRank][Error] PLAYER [UID = " + Player.Inventory.uid + "] tentou upar rank do ClubSet[TYPEID = " + (pClub._typeid) + ", ID = " + (pClub.id) + "], mas nao conseguiu remover Card[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + ", QNTD=" + (item.qntd) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                             356, 0x5300357));

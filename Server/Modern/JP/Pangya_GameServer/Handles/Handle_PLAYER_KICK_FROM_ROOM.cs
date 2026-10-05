@@ -17,7 +17,7 @@ namespace Pangya_GameServer.Handles
             try
             {
                 // Lê o UID do Player que será chutado
-                int targetUid = packet.ReadInt32();
+                int targetUid = Packet.ReadInt32();
 
                 // 1. verifico se ele esta realmente no server....
                 var _Player_server = GameServer.getInstance().FindSessionByOid(targetUid) ?? throw new exception(
@@ -65,7 +65,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 5. agora eu verifico se realmente esta em uma SALA!!!!!!!!!!!!!
-                var _sessionKick = room.FindSessionByOid((uint)targetUid) ?? throw new exception(
+                var PlayerKick = room.FindSessionByOid((uint)targetUid) ?? throw new exception(
                         $"[Handle_PLAYER_KICK_FROM_ROOM][Error] PLAYER[UID={targetUid}] não foi encontrado na sala {room.GetRoomId()}.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 12, 0));
 
@@ -85,7 +85,7 @@ namespace Pangya_GameServer.Handles
                 // 6. Executa a expulsão
                 // O motivo '3' é o padrão para "Kicked by Master" no protocolo Pangya MultiPlayer
                 // Note que o LeaveRoom lidará com o envio dos pacotes para todos os outros Players na sala
-                _sessionKick.GetChannel().LeaveRoomMultiPlayer(PlayerKick, 3);
+                PlayerKick.GetChannel().LeaveRoomMultiPlayer(PlayerKick, 3);
 
                 // Log de auditoria
                 _smp.message_pool.getInstance().push(new message(

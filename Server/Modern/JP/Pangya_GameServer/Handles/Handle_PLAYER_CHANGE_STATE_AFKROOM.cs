@@ -58,7 +58,7 @@ namespace Pangya_GameServer.Handles
 
                 r.SendBroadCast(p);
 
-                m_ci.Lobby.SendBroadCast(HandlePacket_RESPONSE.pacote046(new List<PlayerLobbyInfo>() { (pci == null) ? new PlayerLobbyInfo() : pci }, 3));
+                m_ci.Lobby.SendBroadCast(Handle_PACKET_RESPONSE.pacote046(new List<PlayerLobbyInfo>() { (pci == null) ? new PlayerLobbyInfo() : pci }, 3));
             }
             catch (exception e)
             {

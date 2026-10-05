@@ -41,7 +41,7 @@ namespace Pangya_GameServer.Handles
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 2, 0x5900102));
 
                 // --- 2. SORTEIO E PROCESSAMENTO DE ITENS ---
-                var balls = shopSystem.dropBigBall(session);
+                var balls = shopSystem.dropBigBall(Player);
                 if (balls == null || !balls.Any())
                     throw new exception("[Lobby::HandleBigPlay][Error] PLAYER [UID=" + Player.UserInfo.uid + "] falha ao sortear bolas Big. Bug",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 3, 0x5900103));
@@ -50,14 +50,14 @@ namespace Pangya_GameServer.Handles
                 var v_item = ProcessBigBalls(Player, balls);
 
                 // --- 3. PERSISTÊNCIA (DB E SERVER) ---
-                var rai = ItemManager.addItem(v_item, session, 0, 0);
+                var rai = ItemManager.addItem(v_item, Player, 0, 0);
                 if (rai.fails.Any() && rai.type != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH)
                     throw new exception("[Lobby::HandleBigPlay][Error] Erro ao adicionar itens Big ao DB.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 6, 0x5900106));
 
                 // Pagamento e Atualização de Contagem
                 Player.UserInfo.consomePang(shopSystem.getPriceBig());
-                shopSystem.updatePlayerCount(session);
+                shopSystem.updatePlayerCount(Player);
 
                 // --- 4. LOGS DE ITENS RAROS E ACHIEVEMENTS ---
                 foreach (var el in balls.Where(b => b.ctx_psi.tipo == PAPEL_SHOP_TYPE.PST_RARE))
@@ -70,7 +70,7 @@ namespace Pangya_GameServer.Handles
                 // --- 5. RESPOSTAS DE REDE (NETWORK) ---
                 SendBigResponsePackets(Player, v_item, balls);
 
-                sys_achieve.finish_and_update(session);
+                sys_achieve.finish_and_update(Player);
             }
             catch (exception e)
             {

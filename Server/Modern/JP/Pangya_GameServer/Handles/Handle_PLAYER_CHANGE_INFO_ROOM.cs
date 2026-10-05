@@ -401,7 +401,7 @@ namespace Pangya_GameServer.Handles
 
                 // UserLimit válido? (4,10,20,30) — GMs podem usar 100 ou 200
                 int[] allowedPlayers = [4, 10, 20, 30];
-                if (!allowedPlayers.Contains(ri.max_Player) && !Player.UserInfo.UserCapabilities.game_master)
+                if (!allowedPlayers.Contains(ri.max_player) && !Player.UserInfo.UserCapabilities.game_master)
                     ThrowHackException(Player, "UserLimit inválido no Match");
             }
             else
@@ -418,7 +418,7 @@ namespace Pangya_GameServer.Handles
 
                 // UserLimit válido? (4,20,30) — GMs podem usar 100 ou 200
                 int[] allowedPlayers = [6, 20, 30];
-                if (!allowedPlayers.Contains(ri.max_Player) && !Player.UserInfo.UserCapabilities.game_master)
+                if (!allowedPlayers.Contains(ri.max_player) && !Player.UserInfo.UserCapabilities.game_master)
                     ThrowHackException(Player, "UserLimit inválido Approach");
             }
 
@@ -435,7 +435,7 @@ namespace Pangya_GameServer.Handles
                 ThrowHackException(Player, "HoleNum inválido no Shuffle");
 
             int[] allowedPlayers = [30];
-            if (!allowedPlayers.Contains(ri.max_Player))
+            if (!allowedPlayers.Contains(ri.max_player))
                 ThrowHackException(Player, "UserLimit inválido no Shuffle");
 
             uint[] allowedTime = [2400000 / 60000];
@@ -564,8 +564,8 @@ namespace Pangya_GameServer.Handles
                     break;
             }
 
-            if (allowedPlayers.Length > 0 && Array.IndexOf(allowedPlayers, ri.max_Player) == -1)
-                ThrowHackException(Player, "max_Player inválido: " + ri.max_Player);
+            if (allowedPlayers.Length > 0 && Array.IndexOf(allowedPlayers, ri.max_player) == -1)
+                ThrowHackException(Player, "max_player inválido: " + ri.max_player);
         }
 
         private void ValidateHoleCount(Player session, RoomInfo ri)

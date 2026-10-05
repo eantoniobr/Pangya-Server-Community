@@ -117,7 +117,7 @@ namespace Pangya_GameServer.Handles
                         break;
                 }
 
-                r.SendBroadCast(HandlePacket_RESPONSE.pacote04B(Player, (byte)type, error));
+                r.SendBroadCast(Handle_PACKET_RESPONSE.pacote04B(Player, (byte)type, error));
 
                 if (type == SYNC_ITEM_TYPE.SYNC_ALL && error == 0)// Começa jogo
                     r.StartGame(Player);
@@ -130,11 +130,11 @@ namespace Pangya_GameServer.Handles
                 _smp.message_pool.getInstance().push(new message("[Room::ChangeItem][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Envia erro para o cliente não travar a UI
-                Player.Send(HandlePacket_RESPONSE.pacote04B(Player, 255, 1));
+                Player.Send(Handle_PACKET_RESPONSE.pacote04B(Player, 255, 1));
             }
         }
 
-        private int HandleChangeCaddie(Player _session, int caddieId)
+        private int HandleChangeCaddie(Player Player, int caddieId)
         {
             int error = 0;
             CaddieInfoEx targetCaddie = null;
@@ -182,7 +182,7 @@ namespace Pangya_GameServer.Handles
             return error;
         }
 
-        private int HandleChangeBall(Player _session, uint ballTypeId)
+        private int HandleChangeBall(Player Player, uint ballTypeId)
         {
             int error = 0;
             WarehouseItemEx targetBall = null;
@@ -236,7 +236,7 @@ namespace Pangya_GameServer.Handles
             return error;
         }
 
-        private int HandleChangeClubSet(Player _session, int clubsetId)
+        private int HandleChangeClubSet(Player Player, int clubsetId)
         {
             int error = 0;
             WarehouseItemEx targetClub = null;
@@ -280,7 +280,7 @@ namespace Pangya_GameServer.Handles
             return error;
         }
 
-        private int HandleChangeMascot(Player _session, int mascotId)
+        private int HandleChangeMascot(Player Player, int mascotId)
         {
             MascotInfoEx targetMascot = null;
             int error = 0;
@@ -332,7 +332,7 @@ namespace Pangya_GameServer.Handles
             return error;
         }
 
-        private int HandleChangeItemSpecial(Player _session, int item_id, int effect_lounge)
+        private int HandleChangeItemSpecial(Player Player, int item_id, int effect_lounge)
         {
             // 1. Defesa Inicial: Sem personagem = Erro Crítico
             if (Player.Inventory.UserEquippedItem.CharacterEquiped == null)
@@ -384,7 +384,7 @@ namespace Pangya_GameServer.Handles
             return 0; // SUCCESS
         }
 
-        private int HandleChangeCharacter(Player _session, int characterId)
+        private int HandleChangeCharacter(Player Player, int characterId)
         {
             var p = new Packet();
             CharacterInfo targetChar = null;
@@ -420,7 +420,7 @@ namespace Pangya_GameServer.Handles
 
 
         #region HELPERS
-        private void SyncCharacterToRoom(Player _session, int charId)
+        private void SyncCharacterToRoom(Player Player, int charId)
         {
             var p = new Packet();
             Room? room = Player.GetRoom();
@@ -434,7 +434,7 @@ namespace Pangya_GameServer.Handles
             // Broadcast 0x48 (Update Player)
             if (room?.GetTipo() != ROOM_INFO_TYPE.PRACTICE && room?.GetTipo() != ROOM_INFO_TYPE.GRAND_ZODIAC_PRACTICE)
             {
-                if (HandlePacket_RESPONSE.pacote048(p, _session, new List<PlayerRoomInfoEx>() { pri ?? new PlayerRoomInfoEx() }, 0x103))
+                if (Handle_PACKET_RESPONSE.pacote048(p, Player, new List<PlayerRoomInfoEx>() { pri ?? new PlayerRoomInfoEx() }, 0x103))
                 {
                     room?.SendBroadCast(p);
                 }
@@ -444,14 +444,14 @@ namespace Pangya_GameServer.Handles
             if (room?.GetTipo() == ROOM_INFO_TYPE.LOUNGE)
             {
                 if (Player.UserInfo.CharacterLoungeStates.TryGetValue(charId, out StateCharacterLounge characterLounge))
-                    room?.SendBroadCast(HandlePacket_RESPONSE.pacote196(Player, characterLounge));
+                    room?.SendBroadCast(Handle_PACKET_RESPONSE.pacote196(Player, characterLounge));
             }
         }
 
         /// <summary>
         /// Gerencia a expiração do Caddie e das Parts (roupas) associadas
         /// </summary>
-        private void ProcessCaddieExpiration(Player _session, CaddieInfoEx caddie, ref int caddieId)
+        private void ProcessCaddieExpiration(Player Player, CaddieInfoEx caddie, ref int caddieId)
         {
             var updates = Player.Inventory.FindUpdateItemById(caddie.id);
             if (!updates.Any() || caddie.rent_flag == 1) return;
@@ -480,7 +480,7 @@ namespace Pangya_GameServer.Handles
         /// <summary>
         /// Método auxiliar para validar se o Player tem a parte necessária equipada no personagem atual
         /// </summary>
-        private void ValidateAndApplyEffect(Player _session, uint[] itemPool, Action applyAction)
+        private void ValidateAndApplyEffect(Player Player, uint[] itemPool, Action applyAction)
         {
             var charInfo = Player.Inventory.UserEquippedItem.CharacterEquiped;
 

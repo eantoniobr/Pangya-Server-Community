@@ -81,7 +81,7 @@ namespace Pangya_GameServer.Handles
                 Player.Send(p);
 
 
-                Player.Send(HandlePacket_RESPONSE.pacote226(v_quest));
+                Player.Send(Handle_PACKET_RESPONSE.pacote226(v_quest));
 
                 if (quest_id != null)
                 {
@@ -94,7 +94,7 @@ namespace Pangya_GameServer.Handles
 
                 _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_ACCEPT_DAILY_QUEST][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                Player.Send(HandlePacket_RESPONSE.pacote226(new List<AchievementInfoEx>(), 1));
+                Player.Send(Handle_PACKET_RESPONSE.pacote226(new List<AchievementInfoEx>(), 1));
 
                 if (quest_id != null)
                 {

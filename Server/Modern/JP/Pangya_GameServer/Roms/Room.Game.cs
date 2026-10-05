@@ -1,3 +1,4 @@
+using Microsoft.VisualBasic.FileIO;
 using Pangya_GameServer.Engine;
 using Pangya_GameServer.Flags;
 using Pangya_GameServer.Models;
@@ -1008,15 +1009,15 @@ namespace Pangya_GameServer.Roms
             SendBroadCast(Handle_PACKET_RESPONSE.pacote04A(RoomInfo, -1/*valor constante*/));
         }
 
-        public void SendPlayerInfo(Player session, int option)
+        public void SendPlayerInfo(Player session, int _option)
         {
 
-            option = !(RoomInfo.GetTipo() == ROOM_INFO_TYPE.STROKE ||
+            int option = !(RoomInfo.GetTipo() == ROOM_INFO_TYPE.STROKE ||
                            RoomInfo.GetTipo() == ROOM_INFO_TYPE.MATCH ||
                            RoomInfo.GetTipo() == ROOM_INFO_TYPE.LOUNGE ||
                            RoomInfo.GetTipo() == ROOM_INFO_TYPE.PANG_BATTLE) ? 0x100 : 0;
 
-            option += option;
+            option += _option;
 
             if (option == 0 && RoomInfo.GetTipo() == ROOM_INFO_TYPE.LOUNGE)
                 option = 7;
@@ -1036,12 +1037,12 @@ namespace Pangya_GameServer.Roms
 
                 pri = GetPlayerInfo(session);
 
-                if (pri == null && option != 2)
+                if (pri == null && _option != 2)
                     return;
 
                 var p = new Packet();
 
-                if (Handle_PACKET_RESPONSE.pacote048(p, session, (option == 1 || option == 4 || option == 0x103) ? [pri] : v_element, option))
+                if (Handle_PACKET_RESPONSE.pacote048(p, session, (_option == 1 || _option == 4 || _option == 0x103) ? [pri] : v_element, option))
                     SendBroadCast(p);
             }
             catch

@@ -1,11 +1,6 @@
 ﻿using Pangya_GameServer.Repository;
-using Pangya_GameServer.Session;
 using PangyaAPI.IFF.Flags;
 using PangyaAPI.IFF.Handle.JP;
-using PangyaAPI.Network;
-using PangyaAPI.Network.Core;
-using PangyaAPI.Utilities;
-using PangyaAPI.Utilities.Models;
 
 namespace Pangya_GameServer.Handles
 {
@@ -13,23 +8,23 @@ namespace Pangya_GameServer.Handles
     {
         public override async Task Handle()
         {
-            byte opt = packet.ReadByte();
+            byte opt = Packet.ReadByte();
 
             try
             {
                 switch (opt)
                 {
                     case 0: // Save Definitivo
-                        HandleSaveForever(Player, packet, opt);
+                       await HandleSaveForever(opt);
                         break;
                     case 1: // Info
-                        HandleInfo(Player, packet, opt);
+                        await HandleInfo(opt);
                         break;
                     case 2: // Copiar
-                        HandleCopy(Player, packet, opt);
+                        await HandleCopy(opt);
                         break;
                     case 3: // Save Temporário
-                        HandleSaveTemporary(Player, packet, opt);
+                        await HandleSaveTemporary(opt);
                         break;
                     default:
                         throw new exception($"[UCC] Option {opt} desconhecida para UID={Player.UserInfo.uid}.",
@@ -45,16 +40,16 @@ namespace Pangya_GameServer.Handles
                 Player.Send(response);
             }
 
-        await Task.CompletedTask;
+            await Task.CompletedTask;
         }
 
-        private async Task HandleSaveForever(Player session, Packet packet, byte opt)
+        private async Task HandleSaveForever(byte opt)
         {
-            uint typeid = packet.ReadUInt32();
-            string idx = packet.ReadString();
-            string name = packet.ReadString();
+            uint typeid = Packet.ReadUInt32();
+            string idx = Packet.ReadString();
+            string name = Packet.ReadString();
 
-            ValidateUCC(Player, typeid, idx);
+            ValidateUCC(typeid, idx);
 
             if (string.IsNullOrEmpty(name))
                 throw new exception("[UCC] Nome inválido.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 7, 0x5200107));
@@ -82,10 +77,10 @@ namespace Pangya_GameServer.Handles
             Player.Send(response);
         }
 
-        private async Task HandleInfo(Player session, Packet packet, byte opt)
+        private async Task HandleInfo(byte opt)
         {
-            int uccId = packet.ReadInt32();
-            byte owner = packet.ReadByte();
+            int uccId = Packet.ReadInt32();
+            byte owner = Packet.ReadByte();
 
             var item = Player.Inventory.FindWarehouseItemById(uccId);
 
@@ -104,12 +99,12 @@ namespace Pangya_GameServer.Handles
             Player.Send(response);
         }
 
-        private async Task HandleSaveTemporary(Player session, Packet packet, byte opt)
+        private async Task HandleSaveTemporary(byte opt)
         {
-            uint typeid = packet.ReadUInt32();
-            string idx = packet.ReadString();
+            uint typeid = Packet.ReadUInt32();
+            string idx = Packet.ReadString();
 
-            ValidateUCC(Player, typeid, idx);
+            ValidateUCC(typeid, idx);
 
             var item = Player.Inventory.WarehouseItems.Values.FirstOrDefault(el => el._typeid == typeid);
             if (item == null) throw new exception("UCC não encontrada.", 0x5200105);
@@ -127,14 +122,14 @@ namespace Pangya_GameServer.Handles
             Player.Send(response);
         }
 
-        private async Task HandleCopy(Player session, Packet packet, byte opt)
+        private async Task HandleCopy(byte opt)
         {
-            uint typeid = packet.ReadUInt32();   // UCC de origem
-            string idx = packet.ReadString();    // UCC de origem
-            ushort seq = packet.ReadUInt16();    // Sequência
-            int targetId = packet.ReadInt32();   // ID da UCC "vazia" que receberá a cópia
+            uint typeid = Packet.ReadUInt32();   // UCC de origem
+            string idx = Packet.ReadString();    // UCC de origem
+            ushort seq = Packet.ReadUInt16();    // Sequência
+            int targetId = Packet.ReadInt32();   // ID da UCC "vazia" que receberá a cópia
 
-            ValidateUCC(Player, typeid, idx);
+            ValidateUCC(typeid, idx);
 
             // 1. Localiza a UCC de origem no Warehouse
             var sourceItem = Player.Inventory.WarehouseItems.Values.FirstOrDefault(el => el._typeid == typeid && el.ucc.idx == idx);
@@ -170,7 +165,7 @@ namespace Pangya_GameServer.Handles
             Player.Send(response);
         }
 
-        private void ValidateUCC(Player session, uint typeid, string idx)
+        private void ValidateUCC(uint typeid, string idx)
         {
             if (typeid == 0 || string.IsNullOrEmpty(idx))
                 throw new exception("[UCC] TypeID ou IDX inválidos.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 4, 0x5200104));

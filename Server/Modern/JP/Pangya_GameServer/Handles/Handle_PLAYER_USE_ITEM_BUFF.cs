@@ -26,7 +26,7 @@ public class Handle_PLAYER_USE_ITEM_BUFF : HandleBase<Player, Packet_EXAMPLE>
             if (tli == null) throw new exception("Item nao existe no IFF Buff", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 403, 0x5500404));
 
             stItem item_rm = new stItem { type = 2, id = (int)pWi.id, _typeid = pWi._typeid, qntd = 1, STDA_C_ITEM_QNTD = -1 };
-            if (ItemManager.removeItem(item_rm, _session) <= 0) throw new exception("Erro ao deletar", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 405, 0x5500406));
+            if (ItemManager.removeItem(item_rm, Player) <= 0) throw new exception("Erro ao deletar", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 405, 0x5500406));
 
             ItemBuffEx ib = Player.Inventory.FindItemBuff(item_typeid);
             if (ib != null)

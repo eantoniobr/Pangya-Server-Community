@@ -17,11 +17,11 @@ namespace Pangya_GameServer.Handles
             try
             {
             var _channel = Player.GetChannel();
-                byte option = pkt.ReadByte();
-                short roomId = pkt.ReadInt16();
-                uint gamePang = pkt.ReadUInt32();
-                uint gameBonus = pkt.ReadUInt32();
-                byte[] roomKey = pkt.ReadBytes(8);
+                byte option = Packet.ReadByte();
+                short roomId = Packet.ReadInt16();
+                uint gamePang = Packet.ReadUInt32();
+                uint gameBonus = Packet.ReadUInt32();
+                byte[] roomKey = Packet.ReadBytes(8);
 
                 var code = _channel?.LeaveRoomMultiPlayer(Player, 1);
                 if (code > Channels.Channel.LEAVE_ROOM_STATE.DO_NOTHING)

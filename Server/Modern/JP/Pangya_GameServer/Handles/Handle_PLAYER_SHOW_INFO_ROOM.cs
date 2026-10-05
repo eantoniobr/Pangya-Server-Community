@@ -25,7 +25,7 @@ namespace Pangya_GameServer.Handles
                 var ri = r.GetInfo();
 
                 Packet p = new(0x86);
-                p.WriteUInt32(ri.num_Player);
+                p.WriteUInt32(ri.num_player);
                 p.WriteByte(ri.qntd_hole);
                 p.WriteUInt32((ri.GetTipo() == ROOM_INFO_TYPE.STROKE || ri.GetTipo() == ROOM_INFO_TYPE.MATCH || ri.GetTipo() == ROOM_INFO_TYPE.PANG_BATTLE) ? ri.time_vs : ((ri.GetTipo() == ROOM_INFO_TYPE.GUILD_BATTLE) ? 0 : ri.time_30s));
                 p.WriteByte((byte)ri.course);
@@ -33,19 +33,19 @@ namespace Pangya_GameServer.Handles
                 p.WriteByte(ri.modo);
                 p.WriteUInt32(ri.trofel);
 
-                List<Player> v_session = r.GetSessions();
+                List<Player> vPlayer = r.GetSessions();
                 PlayerLobbyInfo pci = null;
 
                 for (var i = 0; i < vPlayer.Count; ++i)
                 {
-                    var _channel = v_session[i].GetChannel();
+                    var _channel = vPlayer[i].GetChannel();
 
-                    pci = _channel?.GetPlayerInfo(v_session[i]) ?? throw new exception("[Handle_PLAYER_SHOW_INFO_ROOM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] nao tem o info do Player na sala[NUMERO=" + (sala_numero) + "].", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    pci = _channel?.GetPlayerInfo(vPlayer[i]) ?? throw new exception("[Handle_PLAYER_SHOW_INFO_ROOM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] nao tem o info do Player na sala[NUMERO=" + (sala_numero) + "].", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                             11, 0)); 
 
                     p.WriteInt32(pci?.oid ?? -1);
                     p.WriteByte(pci?.level ?? 0);
-                    p.WriteByte(GetGameHole(v_session[i])); // se estiver jogando, aqui fica o número do hole
+                    p.WriteByte(GetGameHole(vPlayer[i])); // se estiver jogando, aqui fica o número do hole
                     p.WriteInt32(pci?.capability.ulCapability ?? 0);
                     p.WriteUInt32(pci?.title ?? 0);
                     p.WriteUInt32(pci?.ladder_point ?? 0);

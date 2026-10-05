@@ -24,34 +24,24 @@ namespace Pangya_GameServer.Handles
 
             try
             {
-                // --- Variáveis / estruturas ---
-                uint packetVersion = 0;
-                var kol = new KeysOfLogin();
-                string clientVersion = string.Empty;
-                string macAddress = string.Empty; // TODO: preencher se você medir MAC do client
-
-                // --- Ler packet ---
-                //nao usamos mais
-                //ReadLoginPacket(Player, PacketResult, out uint ntreevUID, out ushort command,
-                //                out kol.keys[0], out clientVersion, out bool hasClientVersion,
-                //                out packetVersion, out macAddress, out bool hasMac, out kol.keys[1], out bool hasAuthKeyGame);
-
-                bool hasAuthKeyLogin = !string.IsNullOrEmpty(kol.keys[0]);
-
-                Player.ResetHandShake(); // Reseta o handshake para evitar problemas de sincronização
-
-                // --- Validações básicas do pacote e do cliente ---
-                if (!ValidateLoginPacket(PacketResult.HasClientVersion, clientVersion, packetVersion, hasAuthKeyLogin, kol.keys[0], PacketResult.HasMAC, PacketResult.MacAddress, PacketResult.HasGKey, kol.keys[1]))
+                // --- Variáveis / estruturas --- 
+                // Injeta os Info limpos Do PacketResult no Player
+                Player.UserInfo.id = PacketResult.Login; 
+                Player.UserInfo.uid = PacketResult.UID;
+                Player.MacAdress = PacketResult.MacAddress;
+                Player.ResetHandShake();
+                // Validação De integridade dos parâmetros Do pacote
+                if (!ValidateLoginPacket(PacketResult.HasClientVersion, PacketResult.ClientVersion, PacketResult.PacketVersion, PacketResult.HasLKey, PacketResult.LKey, PacketResult.HasMAC, Player.MacAdress, PacketResult.HasGKey, PacketResult.GKey))
                 {
-                    _smp.message_pool.getInstance().push(new message("[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID=" + (Player.UserInfo.uid) + $", UserID= {Player.UserInfo.id}, AuthKey[1]= {kol.keys[0]},  AuthKey[2]= {kol.keys[1]}, NtreevUID= {PacketResult.Command}, CVersion= {clientVersion}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message("[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID=" + (Player.UserInfo.uid) + $", UserID= {Player.UserInfo.id}, AuthKey[1]= {PacketResult.LKey},  AuthKey[2]= {PacketResult.GKey}, NtreevUID= {PacketResult.Command}, CVersion= {PacketResult.ClientVersion}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
                     Player.Authorized = false;
                     SendLoginAck(eLoginAck.ACK_INVALID_VERSION);
                     return;
                 }
 
                 // --- Ban checks (IP / MAC) ---
-                if (GameServer.getInstance().haveBanList(Player.GetIP(), macAddress))
-                    throw new exception($"PLAYER[UID={Player.UserInfo.uid}, IP={Player.GetIP()}, MAC={macAddress}] blocked by banlist.");
+                if (GameServer.getInstance().haveBanList(Player.GetIP(), Player.MacAdress))
+                    throw new exception($"PLAYER[UID={Player.UserInfo.uid}, IP={Player.GetIP()}, MAC={Player.MacAdress}] blocked by banlist.");
 
                 // --- sanity: id non-empty ---
                 if (string.IsNullOrEmpty(Player.UserInfo.id))
@@ -95,13 +85,12 @@ namespace Pangya_GameServer.Handles
                 // --- Account block checks (temporary / forever / all-ip) ---
                 CheckAccountBlock();
 
-                // --- Packet version validation (after decrypt) ---
-                packetVersion = PacketVersion(packetVersion);
+                // --- Packet version validation (after decrypt) --- 
                 var serverPacketVersion = GameServer.getInstance().getInfo().packet_version;
-                if (!GameServer.getInstance().canSameIDLogin() && packetVersion != serverPacketVersion)
+                if (!GameServer.getInstance().canSameIDLogin() && PacketResult.PacketVersion != serverPacketVersion)
                 {
                     _smp.message_pool.getInstance().push(new message(
-                        $"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={Player.UserInfo.uid}]. Client Packet Version not match. Server: {serverPacketVersion} != Client: {packetVersion}",
+                        $"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={Player.UserInfo.uid}]. Client Packet Version not match. Server: {serverPacketVersion} != Client: {PacketResult.PacketVersion}",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     Player.Authorized = false;
@@ -115,7 +104,7 @@ namespace Pangya_GameServer.Handles
                 if (cmdAkli.getException().getCodeError() != 0) throw cmdAkli.getException();
 
                 // NOTE: security: previously code used bitwise & and inverted booleans -> fixed
-                if (!GameServer.getInstance().canSameIDLogin() && (!string.Equals(kol.keys[0], cmdAkli.getInfo().key, StringComparison.Ordinal) || cmdAkli.getInfo().valid == 0))
+                if (!GameServer.getInstance().canSameIDLogin() && (!string.Equals(PacketResult.LKey, cmdAkli.getInfo().key, StringComparison.Ordinal) || cmdAkli.getInfo().valid == 0))
                 {
                     _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={Player.UserInfo.uid}]. LKey invalid or reused.", type_msg.CL_FILE_LOG_AND_CONSOLE));
                     Player.Authorized = false;
@@ -128,7 +117,7 @@ namespace Pangya_GameServer.Handles
                 NormalManagerDB.getInstance().add(0, cmdAkgi);
                 if (cmdAkgi.getException().getCodeError() != 0) throw cmdAkgi.getException();
 
-                if (!GameServer.getInstance().canSameIDLogin() && (!string.Equals(kol.keys[1], cmdAkgi.getInfo().key, StringComparison.Ordinal) || cmdAkgi.getInfo().valid == 0))
+                if (!GameServer.getInstance().canSameIDLogin() && (!string.Equals(PacketResult.GKey, cmdAkgi.getInfo().key, StringComparison.Ordinal) || cmdAkgi.getInfo().valid == 0))
                 {
                     _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={Player.UserInfo.uid}]. GKey invalid or reused.", type_msg.CL_FILE_LOG_AND_CONSOLE));
                     Player.Authorized = false;
@@ -138,7 +127,7 @@ namespace Pangya_GameServer.Handles
 
                 // --- Client version checks (region/season/high/low) ---
                 var cvServer = ClientVersion.MakeVersion(GameServer.getInstance().m_si.version_client);
-                var cvClient = ClientVersion.MakeVersion(clientVersion);
+                var cvClient = ClientVersion.MakeVersion(PacketResult.ClientVersion);
                 EvaluateClientVersion(cvServer, cvClient);
 
                 // --- Member Info ---
@@ -199,7 +188,7 @@ namespace Pangya_GameServer.Handles
                 // Anti-bot timestamp
                 Player.TicketBot = Environment.TickCount;
                 
-                Player.Send(HandlePacket_RESPONSE.pacote044(GameServer.getInstance().m_si, eLoginAck.ACK_AUTO_RECONNECT, Player));
+                Player.Send(Handle_PACKET_RESPONSE.pacote044(GameServer.getInstance().m_si, eLoginAck.ACK_AUTO_RECONNECT, Player));
             }
             catch (exception ex)
             {
@@ -326,23 +315,7 @@ namespace Pangya_GameServer.Handles
                 }
             }
         }
-
-        public uint PacketVersion(uint packet_version)
-        {
-            string PacketVerKey = "{782AE110-2EEF-4c61-B030-A53F17634F7D}";
-
-            byte[] tmpPVer = BitConverter.GetBytes(packet_version);
-            int index = 0;
-
-            for (int i = 0; i < PacketVerKey.Length; i++)
-            {
-                tmpPVer[index] ^= (byte)PacketVerKey[i];
-                index = (index == 3) ? 0 : index + 1;
-            }
-            return BitConverter.ToUInt32(tmpPVer, 0);
-        }
-
-
+         
         private void EvaluateClientVersion(ClientVersion serverVer, ClientVersion clientVer)
         {
             if (clientVer.flag == ClientVersion.COMPLETE_VERSION &&

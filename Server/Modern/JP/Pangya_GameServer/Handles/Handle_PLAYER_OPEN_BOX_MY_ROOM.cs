@@ -180,7 +180,7 @@ namespace Pangya_GameServer.Handles
                 stBox.qntd = 1;
                 stBox.STDA_C_ITEM_QNTD = (short)(stBox.qntd * -1);
 
-                if (ItemManager.removeItem(stBox, _session) <= 0)
+                if (ItemManager.removeItem(stBox, Player) <= 0)
                 {
                     throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu deletar Box. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         10, 0x6300210));
@@ -190,7 +190,7 @@ namespace Pangya_GameServer.Handles
 
                 // Coloca Item ganho no My Room do Player
                 var rai = ItemManager.addItem(v_item,
-                    _session, 0, 0);
+                    Player, 0, 0);
 
                 if (rai.fails.Count > 0 && rai.type != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH)
                 {

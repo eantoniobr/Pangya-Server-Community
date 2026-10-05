@@ -18,10 +18,10 @@ namespace Pangya_GameServer.Handles
             try
             {
  
-                if (packet.Size != 576)
+                if (Packet.Size != 576)
                 {
                     throw new exception(
-                        $"[Handle_PLAYER_CHANGE_CHAT_MACRO][Error] PLAYER[UID={Player.UserInfo.uid}] Tamanho de pacote inválido: {packet.Size}.",
+                        $"[Handle_PLAYER_CHANGE_CHAT_MACRO][Error] PLAYER[UID={Player.UserInfo.uid}] Tamanho de pacote inválido: {Packet.Size}.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 1, 1));
                 }
 
@@ -32,7 +32,7 @@ namespace Pangya_GameServer.Handles
                 for (int i = 0; i < 9; i++)
                 {
                     // Lê a string com tamanho fixo de 64 bytes
-                    var macro = packet.ReadPStr(64);
+                    var macro = Packet.ReadPStr(64);
 
                     if (macro == null)
                         throw new exception($"[Handle_PLAYER_CHANGE_CHAT_MACRO][Error] Macro {i} é nula.");
@@ -60,7 +60,7 @@ namespace Pangya_GameServer.Handles
                         $"[Handle_PLAYER_CHANGE_CHAT_MACRO][Security] UID={Player.UserInfo.uid} tentou injeção de código. Desconectando.",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                    GameServer.getInstance().Disconnect(session);
+                    GameServer.getInstance().Disconnect(Player);
                 }
             }
             catch (exception e)

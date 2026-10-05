@@ -34,7 +34,7 @@ namespace Pangya_GameServer.Handles
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 9, 0x790001));
                 }
 
-                CardEquip ce = new CardEquip().ToRead(packet);
+                CardEquip ce = new CardEquip().ToRead(Packet);
 
                 // 2. Validação do Card no IFF
                 var cardIff = sIff.getInstance().findCard(ce.card_typeid);
@@ -79,7 +79,7 @@ namespace Pangya_GameServer.Handles
                     new stItem { type = 2, id = pCardInfo.id, _typeid = pCardInfo._typeid, qntd = 1, STDA_C_ITEM_QNTD = -1 }
                 };
 
-                if (ItemManager.removeItem(itemsToRemove, session) <= 0)
+                if (ItemManager.removeItem(itemsToRemove, Player) <= 0)
                 {
                     throw new exception("[EquipCard] Erro ao excluir card do inventário.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 757, 0x5200758));
@@ -104,7 +104,7 @@ namespace Pangya_GameServer.Handles
                 SendSuccessPackets(Player, item, cei);
 
                 // 10. Sistema de Conquistas
-                UpdateAchievements(session);
+                UpdateAchievements(Player);
             }
             catch (exception e)
             {
@@ -199,7 +199,7 @@ namespace Pangya_GameServer.Handles
         {
             AchievementSystem sys = new AchievementSystem();
             sys.incrementCounter(0x6C400087u);
-            sys.finish_and_update(session);
+            sys.finish_and_update(Player);
         }
 
         private void HandleException(Player session, exception e)

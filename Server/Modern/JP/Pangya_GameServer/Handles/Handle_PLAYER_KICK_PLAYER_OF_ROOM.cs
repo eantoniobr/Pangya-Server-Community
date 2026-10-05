@@ -56,7 +56,7 @@ namespace Pangya_GameServer.Handles
                         13, 0));
                 }
 
-                var _sessionKick = r.FindSessionByOid(uid);
+                var PlayerKick = r.FindSessionByOid(uid);
 
                 if (PlayerKick == null)
                 {
@@ -80,7 +80,7 @@ namespace Pangya_GameServer.Handles
                 // Não precisa verifica se é Grand Prix o multiPlayer,
                 // o pacote do multiPlayer serve para kikar o Player da sala. O pacote do GP no GP buga
                 // Nota: Assumindo que LeaveRoomMultiPlayer esteja acessível via contexto ou classe estática correspondente
-                _sessionKick.GetChannel().LeaveRoomMultiPlayer(PlayerKick, 3);
+                PlayerKick.GetChannel().LeaveRoomMultiPlayer(PlayerKick, 3);
             }
             catch (exception e)
             {

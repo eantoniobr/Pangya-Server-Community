@@ -17,7 +17,7 @@ namespace Pangya_GameServer.Handles
         {
             try
             { 
-                var pri = BuildPlayerRoomInfo(session);
+                var pri = BuildPlayerRoomInfo(Player);
 
                 // Envio do Pacote 0x168 (Dados do Personagem/Estado)
                 var p168 = new Packet(0x168);

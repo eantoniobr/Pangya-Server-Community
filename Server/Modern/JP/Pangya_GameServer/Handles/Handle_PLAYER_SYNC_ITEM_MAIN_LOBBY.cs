@@ -54,19 +54,19 @@ namespace Pangya_GameServer.Handles
                 Player.GetChannel().UpdatePlayerInfo(Player);
 
                 // 2. Envia confirmação (0x4B) para o cliente
-                Player.Send(HandlePacket_RESPONSE.pacote04B(Player, (byte)type, error));
+                Player.Send(Handle_PACKET_RESPONSE.pacote04B(Player, (byte)type, error));
 
             }
             catch (exception e)
             {
                 _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_SYNC_ITEM_MAIN_LOBBY][ErrorSystem] {e.getFullMessageError()}", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                Player.Send(HandlePacket_RESPONSE.pacote04B(Player, (byte)type,
+                Player.Send(Handle_PACKET_RESPONSE.pacote04B(Player, (byte)type,
                     (int)(ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL
                         ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 1)));
             }
         }
-        private int HandleChangeCaddie(Player _session, int item_id)
+        private int HandleChangeCaddie(Player Player, int item_id)
         {
             CaddieInfoEx pCi = (item_id != 0) ? Player.Inventory.FindCaddieById(item_id) : null;
             int error = 0;
@@ -112,7 +112,7 @@ namespace Pangya_GameServer.Handles
             return UnequipCaddie(Player, error);
         }
 
-        private int HandleChangeComet(Player _session, uint item_id)
+        private int HandleChangeComet(Player Player, uint item_id)
         {
             WarehouseItemEx pWi = null;
             int error = 0;
@@ -151,7 +151,7 @@ namespace Pangya_GameServer.Handles
             return CreateDefaultComet(Player, error);
         }
 
-        private int HandleChangeClubSet(Player _session, int item_id)
+        private int HandleChangeClubSet(Player Player, int item_id)
         {
             WarehouseItemEx pWi = Player.Inventory.FindWarehouseItemById(item_id);
             
@@ -190,7 +190,7 @@ namespace Pangya_GameServer.Handles
         }
          
 
-        private int HandleChangeCharacter(Player _session, int item_id)
+        private int HandleChangeCharacter(Player Player, int item_id)
         {
             CharacterInfo pCe = (item_id != 0) ? Player.Inventory.FindCharacterById(item_id) : null;
             int error = 0;
@@ -206,7 +206,7 @@ namespace Pangya_GameServer.Handles
             return error;
         }
 
-        private int HandleChangeMascot(Player _session, int item_id)
+        private int HandleChangeMascot(Player Player, int item_id)
         {
             MascotInfoEx pMi = null;
             int error = 0;
@@ -290,7 +290,7 @@ namespace Pangya_GameServer.Handles
             NormalManagerDB.getInstance().add(0, new CmdUpdateBallEquiped(uid, item_typeid));
         }
 
-        private int CreateDefaultClubSet(Player _session, int original_id, int error_code)
+        private int CreateDefaultClubSet(Player Player, int original_id, int error_code)
         {
             var pWi = Player.Inventory.FindWarehouseItemByTypeid(DEFAULT_CLUB_TYPEID);
 
@@ -312,7 +312,7 @@ namespace Pangya_GameServer.Handles
             return error_code; // Falha total
         }
 
-        private int CreateDefaultComet(Player _session, int error_code)
+        private int CreateDefaultComet(Player Player, int error_code)
         {
             var pWi = Player.Inventory.FindWarehouseItemByTypeid(DEFAULT_COMET_TYPEID);
 
@@ -333,7 +333,7 @@ namespace Pangya_GameServer.Handles
             return error_code; // Falha total
         }
           
-        private void ProcessCaddieUpdateItems(Player _session, CaddieInfoEx pCi, Dictionary<int, UpdateItem> updates)
+        private void ProcessCaddieUpdateItems(Player Player, CaddieInfoEx pCi, Dictionary<int, UpdateItem> updates)
         {
             foreach (var el in updates)
             {
@@ -358,7 +358,7 @@ namespace Pangya_GameServer.Handles
             }
         }
 
-        private int UnequipCaddie(Player _session, int error)
+        private int UnequipCaddie(Player Player, int error)
         {
             if (error > 1)
                 _smp.message_pool.getInstance().push(new message($"[Caddie] Erro {error} para UID={Player.UserInfo.uid}. Desequipando.", type_msg.CL_FILE_LOG_AND_CONSOLE));

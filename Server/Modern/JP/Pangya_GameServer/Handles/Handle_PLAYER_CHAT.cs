@@ -57,7 +57,7 @@ namespace Pangya_GameServer.Handles
                             if (((el.m_gi.channel > 0 && el.UserInfo.Channel == m_ci.getId()) || el.m_gi.whisper.IsTrue() || el.m_gi.isOpenPlayerWhisper(Player.UserInfo.uid))
                                 && (el.UserInfo.Channel != Player.UserInfo.Channel || el.UserInfo.Member.sala_numero != Player.UserInfo.Member.sala_numero))
                             {
-                                el.Send(HandlePacket_RESPONSE.pacote040(from, msg_gm, 0));
+                                el.Send(Handle_PACKET_RESPONSE.pacote040(from, msg_gm, 0));
                             }
                         }
                     }
@@ -69,12 +69,12 @@ namespace Pangya_GameServer.Handles
                     {
                         var r = Player.GetRoom();
 
-                        r?.SendBroadCast(HandlePacket_RESPONSE.pacote040(Player.UserInfo.nickname, msg, ((Player.UserInfo.UserCapabilities.game_master) ? eChatMsg.CHAT_GM : 0)));
+                        r?.SendBroadCast(Handle_PACKET_RESPONSE.pacote040(Player.UserInfo.nickname, msg, ((Player.UserInfo.UserCapabilities.game_master) ? eChatMsg.CHAT_GM : 0)));
                     }
                     else
                     {
                         var flag = Player.UserInfo.UserCapabilities.game_master ? eChatMsg.CHAT_GM : 0;
-                        m_ci.SendBroadcast(HandlePacket_RESPONSE.pacote040(Player.UserInfo.nickname, msg, flag));
+                        m_ci.SendBroadcast(Handle_PACKET_RESPONSE.pacote040(Player.UserInfo.nickname, msg, flag));
                     }
                     if (Player.UserInfo.UserCapabilities.game_master)
                         m_ci.CommandByChat(Player, comando);

@@ -55,7 +55,7 @@ namespace Pangya_GameServer.Handles
             }
         }
 
-        private async Task HandlesSendNote(Player _session, Packet Packet, MSN_PROTOCOL_FLAGS subId)
+        private async Task HandlesSendNote(Player Player, Packet Packet, MSN_PROTOCOL_FLAGS subId)
         {
             try
             {
@@ -91,7 +91,7 @@ namespace Pangya_GameServer.Handles
             }
         }
 
-        private async Task HandleRequestFriendList(Player _session, MSN_PROTOCOL_FLAGS subId)
+        private async Task HandleRequestFriendList(Player Player, MSN_PROTOCOL_FLAGS subId)
         {
             // 1. Busca a lista de amigos no Banco de Dados 
             var friends = Player.UserInfo.Friends;

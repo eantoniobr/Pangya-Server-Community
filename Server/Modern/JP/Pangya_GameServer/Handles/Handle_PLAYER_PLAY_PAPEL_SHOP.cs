@@ -40,19 +40,19 @@ namespace Pangya_GameServer.Handles
                  ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 0x5900101));
 
                 // --- 2. PAGAMENTO E SORTEIO ---
-                var coupon = shopSystem.hasCoupon(session);
+                var coupon = shopSystem.hasCoupon(Player);
                 if (coupon == null && Player.UserInfo.Statistics.pang < shopSystem.getPriceNormal())
                     throw new exception("[Lobby::HandlePlay][Error] Sem fundos.",
                  ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 2, 0x5900102));
 
-                var balls = shopSystem.dropBalls(session);
+                var balls = shopSystem.dropBalls(Player);
                 if (!balls.Any()) throw new exception("[Lobby::HandlePlay][Error] Erro no sorteio.",
                 ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 3, 0x5900103));
                 // --- 3. PROCESSAMENTO DE ITENS ---
                 var v_item = ProcessBallsToItems(Player, balls);
 
                 // Add ao Server e DB
-                var rai = ItemManager.addItem(v_item, session, 0, 0);
+                var rai = ItemManager.addItem(v_item, Player, 0, 0);
                 if (rai.fails.Any() && rai.type != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH)
                     throw new exception("[Lobby::HandlePlay][Error] Erro ao adicionar itens ao DB.",
                  ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 6, 0x5900106));
@@ -63,7 +63,7 @@ namespace Pangya_GameServer.Handles
                     var itemRemover = new stItem { type = 2, id = coupon.id, _typeid = coupon._typeid, qntd = 1 };
                     itemRemover.STDA_C_ITEM_QNTD = (short)(itemRemover.qntd * -1);
 
-                    if (ItemManager.removeItem(itemRemover, session) <= 0)
+                    if (ItemManager.removeItem(itemRemover, Player) <= 0)
                         throw new exception("[Lobby::HandlePlay][Error] Erro ao deletar Cupom.",
                       ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 5, 0x5900105));
 
@@ -75,7 +75,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // --- 4. ATUALIZAÇÕES E LOGS ---
-                shopSystem.updatePlayerCount(session);
+                shopSystem.updatePlayerCount(Player);
                 sys_achieve.incrementCounter(0x6C40004Au); // Play Papel Shop
 
                 foreach (var ball in balls.Where(b => b.ctx_psi.tipo == PAPEL_SHOP_TYPE.PST_RARE))
@@ -87,7 +87,7 @@ namespace Pangya_GameServer.Handles
                 // --- 5. RESPOSTAS  ---
                 SendResponsePackets(Player, v_item, balls, coupon?.id?? 0);
 
-                sys_achieve.finish_and_update(session);
+                sys_achieve.finish_and_update(Player);
             }
             catch (Exception e)
             {

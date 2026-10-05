@@ -90,7 +90,7 @@ namespace Pangya_GameServer.Handles
             // Atualiza Info no Lobby/Sala
             channel?.Lobby.UpdatePlayerInfo(s);
             room?.UpdatePlayerInfo(s);
-            s.Send(HandlePacket_RESPONSE.pacote09A(s.UserInfo.UserCapabilities.ulCapability));
+            s.Send(Handle_PACKET_RESPONSE.pacote09A(s.UserInfo.UserCapabilities.ulCapability));
 
             // Broadcast (Tipo 3: State Update)
             channel?.Lobby.SendUpdatePlayerInfo(s, 3);

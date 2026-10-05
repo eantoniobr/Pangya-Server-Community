@@ -44,7 +44,7 @@ namespace Pangya_GameServer.Handles
                         {
                             _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_TAKE_ITEM_FROM_MAIL][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou inicializar o item que pegou do mailbox[MAIL_ID=" + (email_id) + "].", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                            Player.Send(HandlePacket_RESPONSE.pacote214(3));
+                            Player.Send(Handle_PACKET_RESPONSE.pacote214(3));
                             return;
                         }
 
@@ -98,7 +98,7 @@ namespace Pangya_GameServer.Handles
                     Player.UserInfo.MailBox.leftItensFromEmail(email_id);
 
                     // Adiciona itens ao Warehouse do jogador
-                    var rai = ItemManager.addItem(v_item, _session, 1, 0);
+                    var rai = ItemManager.addItem(v_item, Player, 1, 0);
 
                     if (rai.fails.Count > 0 && rai.type != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH)
                     {
@@ -107,13 +107,13 @@ namespace Pangya_GameServer.Handles
                             _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_TAKE_ITEM_FROM_MAIL][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou mover o item[TYPEID=" + (fail._typeid) + "] do MailBox para o MyRoom, mas falhou.", type_msg.CL_FILE_LOG_AND_CONSOLE));
                         }
 
-                        Player.Send(HandlePacket_RESPONSE.pacote214(2));
+                        Player.Send(Handle_PACKET_RESPONSE.pacote214(2));
                         return;
                     }
 
                     // Envia atualizações para o cliente
-                    Player.Send(HandlePacket_RESPONSE.pacote216(v_item));
-                    Player.Send(HandlePacket_RESPONSE.pacote214());
+                    Player.Send(Handle_PACKET_RESPONSE.pacote216(v_item));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote214());
 
                     // Se subiu de nível, sincroniza com o canal/lobby
                     if (tmp_level != Player.UserInfo.Member.level)
@@ -125,7 +125,7 @@ namespace Pangya_GameServer.Handles
                             var pi = m_ci?.GetPlayerInfo(Player);
                             if (pi != null)
                             {
-                                m_ci?.SendBroadcast(HandlePacket_RESPONSE.pacote046(new List<PlayerLobbyInfo>() { pi }, 3), 1);
+                                m_ci?.SendBroadcast(Handle_PACKET_RESPONSE.pacote046(new List<PlayerLobbyInfo>() { pi }, 3), 1);
                             }
                         }
                     }
@@ -133,7 +133,7 @@ namespace Pangya_GameServer.Handles
                 else
                 {
                     // Email sem itens
-                    Player.Send(HandlePacket_RESPONSE.pacote214(1));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote214(1));
                 }
             }
             catch (exception e)
@@ -144,7 +144,7 @@ namespace Pangya_GameServer.Handles
                     ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError())
                     : 0x5500100);
 
-                Player.Send(HandlePacket_RESPONSE.pacote214(errCode));
+                Player.Send(Handle_PACKET_RESPONSE.pacote214(errCode));
             }
         } 
     }

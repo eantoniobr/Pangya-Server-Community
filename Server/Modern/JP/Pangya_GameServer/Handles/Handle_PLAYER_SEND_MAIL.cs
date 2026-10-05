@@ -157,13 +157,13 @@ namespace Pangya_GameServer.Handles
                         v_item.Add(new stItem(item));
                     }
 
-                    if (ItemManager.giveItem(v_item, _session, 1) <= 0)
+                    if (ItemManager.giveItem(v_item, Player, 1) <= 0)
                     {
                         throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] nao conseguiu presentear o PLAYER [UID=" + (to_uid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                             159, 5100090));
                     }
 
-                    Player.Send(HandlePacket_RESPONSE.pacote216(v_item));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote216(v_item));
 
                     var msg_id = MailManager.SendMailWithItem(from_uid,
                         to_uid, to_msg, aItem,

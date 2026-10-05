@@ -110,7 +110,7 @@ namespace Pangya_GameServer.Handles
                     sys_achieve.incrementCounter(0x6C4000C1u);
                 }
 
-                if (ItemManager.removeItem(v_item, _session) <= 0)
+                if (ItemManager.removeItem(v_item, Player) <= 0)
                 {
                     throw new exception("[Lobby.Room::RequestTikiShopExchangeItem][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou trocar item(ns)(" + s_item + "), mas nao conseguiu deletar ele(s).", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 902, 0x5200903));
                 }
@@ -123,7 +123,7 @@ namespace Pangya_GameServer.Handles
 
                 if (item.STDA_C_ITEM_QNTD != 0)
                 {
-                    var rt = ItemManager.addItem(item, _session, 0, 0);
+                    var rt = ItemManager.addItem(item, Player, 0, 0);
                     if (rt < 0) throw new exception("[Lobby.Room::RequestTikiShopExchangeItem][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou adicionar item[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + ", QNTD=" + (item.STDA_C_ITEM_QNTD) + "], mas nao conseguiu.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 903, 0x5200904));
                     if (rt != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH) v_item.Add(item);
                 }
@@ -140,7 +140,7 @@ namespace Pangya_GameServer.Handles
                     pWi = Player.Inventory.FindWarehouseItemByTypeid(TIKI_POINT_TYPEID);
                     if (pWi != null) item.id = pWi.id;
 
-                    var rt = ItemManager.addItem(item, _session, 0, 0);
+                    var rt = ItemManager.addItem(item, Player, 0, 0);
                     if (rt < 0) throw new exception("[Lobby.Room::RequestTikiShopExchangeItem][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou adicionar item[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + ", QNTD=" + (item.STDA_C_ITEM_QNTD) + "], mas nao conseguiu.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 903, 0x5200904));
 
                     if (item.id == -1) _smp.message_pool.getInstance().push(new message("[TikiShopExchangeItem][Bug] PLAYER [UID=" + Player.UserInfo.uid + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));

@@ -59,7 +59,7 @@ namespace Pangya_GameServer.Handles
                 if (trsi == null) throw new Exception("Dados do ticket retornaram nulos.");
 
                 // 1. Calcular EXP ANTES de remover o item
-                var PlayerStat = trsi.v_Players.FirstOrDefault(_el => _el.uid == Player.UserInfo.uid);
+                var PlayerStat = trsi.v_players.FirstOrDefault(_el => _el.uid == Player.UserInfo.uid);
                 int expToGain = (PlayerStat != null && PlayerStat.exp > 0) ? (int)PlayerStat.exp : 0;
 
                 // 2. Remover o Item
@@ -69,7 +69,7 @@ namespace Pangya_GameServer.Handles
                 itemRem._typeid = pWi._typeid;
                 itemRem.STDA_C_ITEM_QNTD = (short)(pWi.STDA_C_ITEM_QNTD * -1);
 
-                if (ItemManager.removeItem(itemRem, _session) <= 0)
+                if (ItemManager.removeItem(itemRem, Player) <= 0)
                 {
                     throw new exception("[item_manager::openTicketReportScroll][Error] Falha ao deletar item.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE._ITEM_MANAGER, 2503, 0));
@@ -96,9 +96,9 @@ namespace Pangya_GameServer.Handles
 
                 // Envia pacote de resposta do Ticket
                 p = new Packet(0x11A);
-                p.WriteInt32(trsi.v_Players.Count());
+                p.WriteInt32(trsi.v_players.Count());
                 p.WriteTime(trsi.date);
-                foreach (var el in trsi.v_Players)
+                foreach (var el in trsi.v_players)
                 { p.WriteBytes(el.ToArray()); }
 
                 Player.Send(p);

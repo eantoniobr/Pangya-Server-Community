@@ -45,15 +45,15 @@ namespace Pangya_AuthServer.Handles.Commands
 
                 if (s == null)
                 {
-                    var _sessions = AuthServer.getInstance().FindPlayersByType(el.target);
-                    if (_sessions.Count > 0)
+                    var Players = AuthServer.getInstance().FindPlayersByType(el.target);
+                    if (Players.Count > 0)
                     {
                         _smp.message_pool.getInstance().push(new message(
                             $"[HandleNotice][Log] Send Broadcast Notice[MESSAGE={msg}] For Server[UID={el.target}]",
                             type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                         // Chame seu método de Broadcast global
-                        CommandSender.Broadcast(_sessions, p);
+                        CommandSender.Broadcast(Players, p);
                     }
                     else
                     {

@@ -132,7 +132,7 @@ namespace Pangya_GameServer.Handles
                 item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
 
                 // Remove Card Removedor Item
-                if (ItemManager.removeItem(item, _session) <= 0)
+                if (ItemManager.removeItem(item, Player) <= 0)
                 {
                     throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] nao conseguiu excluir/(atualizar qntd) item[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         858, 0x5200859));
@@ -153,7 +153,7 @@ namespace Pangya_GameServer.Handles
                 // Add Card Desequipado
                 var rt = RetAddItem.INIT_VALUE;
 
-                if ((rt = ItemManager.addItem(item, _session, 0, 0)) < 0)
+                if ((rt = ItemManager.addItem(item, Player, 0, 0)) < 0)
                 {
                     throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] nao conseguiu adicionar item[TYPEID=" + (item._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         856, 0x5200857));

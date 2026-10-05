@@ -23,7 +23,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 3. Leitura da Mensagem
-                string notice = packet.ReadPStr(); // O Pangya costuma usar PStr (Prefixed String)
+                string notice = Packet.ReadPStr(); // O Pangya costuma usar PStr (Prefixed String)
 
                 if (string.IsNullOrEmpty(notice))
                 {

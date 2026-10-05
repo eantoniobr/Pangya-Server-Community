@@ -15,7 +15,7 @@ namespace Pangya_GameServer.Handles
         {
             try
             {
-                var server_uid = packet.ReadUInt32();
+                var server_uid = Packet.ReadUInt32();
 
                 // Busca o servidor alvo na lista global
                 var targetServer = GameServer.getInstance().m_server_list.FirstOrDefault(c => c.uid == server_uid);
@@ -43,7 +43,7 @@ namespace Pangya_GameServer.Handles
                 CommandDB.UpdateAuthKeyLogin(Player.UserInfo.uid); 
 
                 // 3. Resposta ao Cliente (0x1D4) 
-                Player.Send(HandlePacket_RESPONSE.pacote1D4(auth_key_game));
+                Player.Send(Handle_PACKET_RESPONSE.pacote1D4(auth_key_game));
             }
             catch (exception e)
             {
@@ -52,7 +52,7 @@ namespace Pangya_GameServer.Handles
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Falha crítica: Reenvia lista de servidores para o Player recuperar o estado da UI
-                GameServer.getInstance().SendUpdateServerList(session);
+                GameServer.getInstance().SendUpdateServerList(Player);
             } 
         }
     }

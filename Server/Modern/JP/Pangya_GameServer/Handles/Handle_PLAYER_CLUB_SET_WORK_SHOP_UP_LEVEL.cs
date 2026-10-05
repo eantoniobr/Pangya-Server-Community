@@ -179,7 +179,7 @@ namespace Pangya_GameServer.Handles
                     stat = Convert.ToUInt32(lc.Value);
                 }
 
-                if (ItemManager.removeItem(item, _session) <= 0)
+                if (ItemManager.removeItem(item, Player) <= 0)
                 {
                     throw new exception("[Lobby::RequestClubSetWorkShopUpLevel][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou upar ClubSet[ID=" + (cwul.clubset_id) + "] Level, nao conseguiu remover item[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         207, 0x5300208));

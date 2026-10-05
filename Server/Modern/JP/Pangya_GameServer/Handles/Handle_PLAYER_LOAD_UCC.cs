@@ -53,13 +53,13 @@ namespace Pangya_GameServer.Handles
                 }
                 else
                 {
-                    SendEmptyUccLoad(session);
+                    SendEmptyUccLoad(Player);
                 }
             }
             catch (Exception e)
             {
                 _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_LOAD_UCC][Error] {e.Message}", type_msg.CL_ONLY_FILE_LOG));
-                SendEmptyUccLoad(session);
+                SendEmptyUccLoad(Player);
             }
 
         await Task.CompletedTask;

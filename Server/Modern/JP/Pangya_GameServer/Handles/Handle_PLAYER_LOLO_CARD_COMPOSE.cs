@@ -121,7 +121,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 5. Execução: Remover cartas antigas
-                if (ItemManager.removeItem(v_items_to_remove, _session) <= 0)
+                if (ItemManager.removeItem(v_items_to_remove, Player) <= 0)
                 {
                     throw new exception("[Handle] Falha crítica ao remover as cartas do inventário.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 156, 0x5400157));
@@ -133,7 +133,7 @@ namespace Pangya_GameServer.Handles
                 BuyItem bi = new BuyItem { id = -1, _typeid = new_card._typeid, qntd = 1 };
                 ItemManager.initItemFromBuyItem(Player.UserInfo, item_ganho, bi, false, 0, 0, 1);
 
-                var rt = ItemManager.addItem(item_ganho, _session, 0, 0);
+                var rt = ItemManager.addItem(item_ganho, Player, 0, 0);
                 if (rt < 0)
                 {
                     throw new exception("[Handle] Falha ao adicionar a nova carta sorteada.",

@@ -22,7 +22,7 @@ namespace Pangya_GameServer.Handles
             try
             {
                 // Lê o TypeID do Grand Prix que o Player quer entrar/criar
-                uint _typeid_gp = pkt.ReadUInt32();
+                uint _typeid_gp = Packet.ReadUInt32();
 
                 // 1. Validações de Permissão (Flags)
                 var flag = Player.UserInfo.block_flag.m_flag;
@@ -78,9 +78,9 @@ namespace Pangya_GameServer.Handles
                 {
                     // CRIAÇÃO DE SALA NOVA
                     var ri = CreateGP_RoomInfo(gp);
-                    channel.DeleteInviteTimeResquestByInvited(session);
+                    channel.DeleteInviteTimeResquestByInvited(Player);
 
-                    r = GameServer.getInstance().MakeRoomGrandPrix(channel, ri, session, gp, 1);
+                    r = GameServer.getInstance().MakeRoomGrandPrix(channel, ri, Player, gp, 1);
                     if (r == null) throw new Exception("Falha ao criar instância de sala GP.");
                 }
                 else
@@ -92,14 +92,14 @@ namespace Pangya_GameServer.Handles
                             ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 3, 0x6700005));
                     }
 
-                    channel.DeleteInviteTimeResquestByInvited(session);
-                    r.EnterToRoom(session);
+                    channel.DeleteInviteTimeResquestByInvited(Player);
+                    r.EnterToRoom(Player);
                 }
 
                 // 5. Finalização e Pacotes de Resposta
-                channel.UpdatePlayerInfo(session);
+                channel.UpdatePlayerInfo(Player);
                 r.SendHeadRoom();
-                r.SendMakeRoom(session);
+                r.SendMakeRoom(Player);
                 r.SendPlayerInfo(Player, 0);
 
                 if (r.GetTipo() != ROOM_INFO_TYPE.PRACTICE)
@@ -133,7 +133,7 @@ namespace Pangya_GameServer.Handles
         {
             var ri = new RoomInfo
             {
-                max_Player = 30,
+                max_player = 30,
                 tipo = (byte)ROOM_INFO_TYPE.GRAND_PRIX,
                 qntd_hole = gp.course_info.Qntd_hole,
                 course = (ROOM_INFO_COURSE)gp.course_info.Course,

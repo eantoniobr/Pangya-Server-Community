@@ -65,7 +65,7 @@ namespace Pangya_GameServer.Handles
                 item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
 
                 // Delete ClubSet que vai ser transformado no ClubSet Special
-                if (ItemManager.removeItem(item, _session) <= 0)
+                if (ItemManager.removeItem(item, Player) <= 0)
                 {
                     throw new exception("[Lobby::RequestClubSetWorkShopUpRankTransformConfirm][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transformar ClubSet[ID=" + (Player.Inventory.WorkshopTransform.clubset_id) + "] no ClubSet[TYPEID=" + (Player.Inventory.WorkshopTransform.transform_typeid) + "] Special, nao conseguiu deletar o ClubSet[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + "] que vai ser transformado no Special. System Error", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         453, 0x5300454));
@@ -94,7 +94,7 @@ namespace Pangya_GameServer.Handles
                 var rt = RetAddItem.INIT_VALUE;
 
                 if ((rt = ItemManager.addItem(item,
-                    _session, 0, 0)) < 0)
+                    Player, 0, 0)) < 0)
                 {
                     throw new exception("[Lobby::RequestClubSetWorkShopUpRankTransformConfirm][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transformar ClubSet[ID=" + (Player.Inventory.WorkshopTransform.clubset_id) + "] no ClubSet[TYPEID=" + (Player.Inventory.WorkshopTransform.transform_typeid) + "] Special, nao conseguiu adicionar o ClubSet[TYPEID=" + (item._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         455, 0x5300456));

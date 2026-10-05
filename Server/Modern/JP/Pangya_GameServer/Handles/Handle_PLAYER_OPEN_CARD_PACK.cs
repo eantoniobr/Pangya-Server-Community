@@ -57,7 +57,7 @@ namespace Pangya_GameServer.Handles
                     STDA_C_ITEM_QNTD = -1
                 };
 
-                if (ItemManager.removeItem(item_rm, _session) <= 0)
+                if (ItemManager.removeItem(item_rm, Player) <= 0)
                     throw new exception("Erro ao remover o Card Pack do inventário.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 104, 0x5400105));
 
                 // 6. Preparação dos ganhos
@@ -93,7 +93,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 7. Salvar no Banco de Dados
-                var rai = ItemManager.addItem(v_item_add, _session, 0, 0);
+                var rai = ItemManager.addItem(v_item_add, Player, 0, 0);
                 if (rai.fails.Count > 0) throw new exception("Erro ao persistir cards no DB.");
 
                 // 8. Sincronizar IDs reais vindos do DB para o pacote de resposta
