@@ -8,32 +8,30 @@ using System.Threading.Tasks;
 
 namespace Pangya_AuthServer.Handles
 {
-    public class Handle_SEND_REPLY_TO_OTHER_SERVER : IAuthPacketHandler<Player>
-    {
-        // Manager de jogadores/servidores injetado ou acessado via Singleton
-        // Se você tiver uma classe global para isso, use-a aqui.
+    public class Handle_SEND_REPLY_TO_OTHER_SERVER : HandleBase<Player, Packet_EXAMPLE>
+    { 
 
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
                 // 1. Ler o cabeçalho do comando (Substituindo o Marshal antigo)
                 // O Pangya costuma enviar: [TargetUID (4 bytes)][CommandID (2 bytes)]
-                uint targetServerUid = _packet.ReadUInt32();
-                ushort commandId = _packet.ReadUInt16();
+                uint targetServerUid = Packet.ReadUInt32();
+                ushort commandId = Packet.ReadUInt16();
 
                 // 2. Calcular o tamanho do buffer restante
                 // O que sobrar no pacote é o dado que deve ser repassado
-                int remainingDataSize = _packet.Size;//pega o restante
+                int remainingDataSize = Packet.Size;//pega o restante
                 byte[] commandBuff = null;
 
                 if (remainingDataSize > 0)
                 {
-                    commandBuff = _packet.ReadBytes(remainingDataSize);
+                    commandBuff = Packet.ReadBytes(remainingDataSize);
                 }
 
                 // Log de operação
-                Console.WriteLine($"[Relay] Server {_session.UserInfo.uid} enviando Resposta ID {commandId} para o Server {targetServerUid}");
+                Console.WriteLine($"[Relay] Server {Player.UserInfo.uid} enviando Resposta ID {commandId} para o Server {targetServerUid}");
 
                 // 3. Localizar o servidor de destino
                 // Usando o seu player_manager que agora deve estar acessível
@@ -49,7 +47,7 @@ namespace Pangya_AuthServer.Handles
                 using (var response = new Packet(0x0E))
                 {
                     // Quem enviou originalmente
-                    response.WriteUInt32(_session.UserInfo.uid);
+                    response.WriteUInt32(Player.UserInfo.uid);
 
                     // ID do Comando
                     response.WriteUInt16(commandId);

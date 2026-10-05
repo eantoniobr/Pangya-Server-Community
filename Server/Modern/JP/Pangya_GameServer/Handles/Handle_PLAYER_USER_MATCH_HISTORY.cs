@@ -5,11 +5,11 @@ using PangyaAPI.Network.Core;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_USER_MATCH_HISTORY : IPacketHandler<Player>
+    public class Handle_PLAYER_USER_MATCH_HISTORY : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
-            session.Send(Handle_PACKET_RESPONSE.pacote10E(session.UserInfo.GameHistory));
+            Player.Send(HandlePacket_RESPONSE.pacote10E(Player.UserInfo.GameHistory));
 
             await Task.CompletedTask;
         }

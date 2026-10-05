@@ -11,22 +11,22 @@ using System.Text.RegularExpressions;
 
 namespace Pangya_LoginServer.Handles
 {
-    public class Handle_PLAYER_CONFIRM_NICKNAME : IPacketHandler<Player>
+    public class Handle_PLAYER_CONFIRM_NICKNAME : HandleBase<Player, Packet_EXAMPLE>
     {
         /// <summary>
         /// Handler para verificar a disponibilidade de um Nickname (0x07)
         /// </summary>
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             string wnick = "";
             NICK_CHECK status = NICK_CHECK.SUCCESS;
 
             try
             {
-                wnick = _packet.ReadString();
+                wnick = Packet.ReadString();
 
                 // 1. Validações de Regra de Negócio
-                status = ValidateNickname(_session, wnick);
+                status = ValidateNickname(wnick);
 
                 // 2. Se as regras passaram, verifica no Banco de Dados
                 if (status == NICK_CHECK.SUCCESS)
@@ -45,15 +45,15 @@ namespace Pangya_LoginServer.Handles
                 _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_CONFIRM_NICKNAME] Erro ao validar nick '{wnick}': {e.Message}", type_msg.CL_ONLY_CONSOLE));
             }
              
-            _session.Send(Handle_PACKET_RESPONSE.pacote00E(_session, wnick, (int)status, 0));
+            Player.Send(Handle_PACKET_RESPONSE.pacote00E(Player, wnick, (int)status, 0));
 
             await Task.CompletedTask;
         }
 
-        private static NICK_CHECK ValidateNickname(Player session, string nick)
+        private NICK_CHECK ValidateNickname(string nick)
         {
             // Nick igual ao ID de login? Não pode.
-            if (nick.Equals(session.UserInfo.id, StringComparison.OrdinalIgnoreCase))
+            if (nick.Equals(Player.UserInfo.id, StringComparison.OrdinalIgnoreCase))
                 return NICK_CHECK.SAME_NICK_USED;
 
             // Contém espaços?
@@ -69,7 +69,7 @@ namespace Pangya_LoginServer.Handles
                 return NICK_CHECK.INCORRECT_NICK;
 
             // Proteção contra nomes de Staff (Se não for GM/ADM)
-            if (session.UserInfo.m_cap < 4) // m_cap < 4 geralmente não é Staff no seu sistema
+            if (Player.UserInfo.m_cap < 4) // m_cap < 4 geralmente não é Staff no seu sistema
             {
                 if (Regex.IsMatch(nick, "(GM|ADM|MOD|ADMIN|STAFF)", RegexOptions.IgnoreCase))
                     return NICK_CHECK.HAVE_BAD_WORD;

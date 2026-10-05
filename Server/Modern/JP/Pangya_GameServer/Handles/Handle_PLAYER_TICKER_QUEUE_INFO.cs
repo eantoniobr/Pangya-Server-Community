@@ -7,16 +7,16 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_TICKER_QUEUE_INFO : IPacketHandler<Player>
+    public class Handle_PLAYER_TICKER_QUEUE_INFO : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             try
             { 
-                if (session.UserInfo.block_flag.m_flag.ticker)
+                if (Player.UserInfo.block_flag.m_flag.ticker)
                 {
                     throw new exception(
-                        $"[Handle_PLAYER_TICKER_QUEUE_INFO][Error] PLAYER[UID={session.UserInfo.uid}] tentou consultar fila, mas está bloqueado.",
+                        $"[Handle_PLAYER_TICKER_QUEUE_INFO][Error] PLAYER[UID={Player.UserInfo.uid}] tentou consultar fila, mas está bloqueado.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 10, 1));
                 }
 
@@ -33,7 +33,7 @@ namespace Pangya_GameServer.Handles
                     response.init_plain(0xCA);
                     response.WriteUInt16(Convert.ToUInt16(count));      // Quantidade de pessoas na fila
                     response.WriteUInt32(timeLeftMs);         // Tempo estimado em milissegundos 
-                    session.Send(response);
+                    Player.Send(response);
                 }
             }
             catch (exception e)
@@ -43,7 +43,7 @@ namespace Pangya_GameServer.Handles
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Resposta de erro genérica (0x50)
-                SendErrorResponse(session, e);
+                SendErrorResponse(Player, e);
             }
 
         await Task.CompletedTask;
@@ -58,7 +58,7 @@ namespace Pangya_GameServer.Handles
                                  ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError())
                                  : 1;
                 p.WriteUInt32(errorCode);
-                session.Send(p);
+                Player.Send(p);
             }
         }
     }

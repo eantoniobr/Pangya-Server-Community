@@ -9,24 +9,24 @@ using System.Threading.Tasks;
 
 namespace Pangya_AuthServer.Handles
 {
-    public class Handle_CONFIRM_SEND_INFO_PLAYER : IAuthPacketHandler<Player>
+    public class Handle_CONFIRM_SEND_INFO_PLAYER : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
                 // 1. Read packet data
-                uint reqServerUid = _packet.ReadUInt32();
-                int option = _packet.ReadInt32();
-                uint playerUid = _packet.ReadUInt32();
+                uint reqServerUid = Packet.ReadUInt32();
+                int option = Packet.ReadInt32();
+                uint playerUid = Packet.ReadUInt32();
 
                 string playerId = string.Empty;
                 string playerIp = string.Empty;
 
                 if (option == 1)
                 {
-                    playerId = _packet.ReadString();
-                    playerIp = _packet.ReadString();
+                    playerId = Packet.ReadString();
+                    playerIp = Packet.ReadString();
                 }
 
                 // 2. Check if the target is the AuthServer itself
@@ -38,20 +38,20 @@ namespace Pangya_AuthServer.Handles
                     return;
                 }
 
-                // 3. Find the target server session
+                // 3. Find the target server Player
                 var targetServer = AuthServer.getInstance().FindPlayer(reqServerUid);
 
                 if (targetServer != null)
                 {
                     // Success Log
                     _smp.message_pool.getInstance().push(new message(
-                        $"[Handle_CONFIRM_SEND_INFO_PLAYER][Sucess] Routing confirmation: SOURCE[Server: {_session.UserInfo.uid}] -> DEST[Server: {reqServerUid}] PLAYER: {playerUid}",
+                        $"[Handle_CONFIRM_SEND_INFO_PLAYER][Sucess] Routing confirmation: SOURCE[Server: {Player.UserInfo.uid}] -> DEST[Server: {reqServerUid}] PLAYER: {playerUid}",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     // 4. Build response (OpCode 0x0C)
                     using (var p = new Packet(0x0C))
                     {
-                        p.WriteUInt32(_session.UserInfo.uid); // Sender UID
+                        p.WriteUInt32(Player.UserInfo.uid); // Sender UID
                         p.WriteInt32(option);
                         p.WriteUInt32(playerUid);
 

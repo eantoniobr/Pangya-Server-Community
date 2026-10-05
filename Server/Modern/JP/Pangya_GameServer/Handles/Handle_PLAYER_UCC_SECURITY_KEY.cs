@@ -7,9 +7,9 @@ using PangyaAPI.Utilities;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_UCC_SECURITY_KEY : IPacketHandler<Player>
+    public class Handle_PLAYER_UCC_SECURITY_KEY : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             var response = new Packet();
 
@@ -24,14 +24,14 @@ namespace Pangya_GameServer.Handles
                 // 2. Validações de integridade
                 if (targetUid == 0 || itemId <= 0)
                 {
-                    throw new exception($"[UCC_SECURITY] Dados inválidos enviados por UID={session.UserInfo.uid}.",
+                    throw new exception($"[UCC_SECURITY] Dados inválidos enviados por UID={Player.UserInfo.uid}.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 1, 0x5100101));
                 }
 
                 // 3. Verificação de permissão GM (UserInfo)
-                if (!session.UserInfo.UserCapabilities.game_master)
+                if (!Player.UserInfo.UserCapabilities.game_master)
                 {
-                    throw new exception($"[UCC_SECURITY][Error] PLAYER[UID={session.UserInfo.uid}] não é GM.",
+                    throw new exception($"[UCC_SECURITY][Error] PLAYER[UID={Player.UserInfo.uid}] não é GM.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 1, 0x5700100));
                 }
 
@@ -54,7 +54,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 6. Geração da Chave no Banco de Dados
-                var key = CommandDB.GenerationSecurityKey(session.UserInfo.uid, warehouseItem.id);
+                var key = CommandDB.GenerationSecurityKey(Player.UserInfo.uid, warehouseItem.id);
 
                 // 7. Resposta de Sucesso (Packet 0x153)
                 response.init_plain(0x153);
@@ -64,9 +64,9 @@ namespace Pangya_GameServer.Handles
                 response.WriteString(key);
                 response.WriteByte(seq);
 
-                session.Send(response);
+                Player.Send(response);
 
-                Console.WriteLine($"[UCC-Security] Chave gerada com sucesso para {targetPlayer.UserInfo.nickname} por {session.UserInfo.nickname}");
+                Console.WriteLine($"[UCC-Security] Chave gerada com sucesso para {targetPlayer.UserInfo.nickname} por {Player.UserInfo.nickname}");
             }
             catch (exception e)
             {
@@ -82,7 +82,7 @@ namespace Pangya_GameServer.Handles
 
                 response.WriteUInt32(errorType);
 
-                session.Send(response);
+                Player.Send(response);
             }
 
         await Task.CompletedTask;

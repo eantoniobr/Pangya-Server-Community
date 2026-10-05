@@ -9,25 +9,25 @@ using System.Threading.Tasks;
 
 namespace Pangya_AuthServer.Handles
 {
-    public class Handle_SEND_COMMAND_TO_OTHER_SERVER : IAuthPacketHandler<Player>
+    public class Handle_SEND_COMMAND_TO_OTHER_SERVER : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             { 
-                uint targetUidOrType = _packet.ReadUInt32();
-                ushort commandId = _packet.ReadUInt16();
+                uint targetUidOrType = Packet.ReadUInt32();
+                ushort commandId = Packet.ReadUInt16();
 
                 // 2. Extrair o Payload (o que sobrou no pacote)
-                int payloadSize = _packet.Size;
+                int payloadSize = Packet.Size;
                 byte[] commandData = null;
 
                 if (payloadSize > 0)
                 {
-                    commandData = _packet.ReadBytes(payloadSize);
+                    commandData = Packet.ReadBytes(payloadSize);
                 }
 
-                Console.WriteLine($"[Command Relay] Server {_session.UserInfo.uid} -> Alvo {targetUidOrType} | Cmd: {commandId}");
+                Console.WriteLine($"[Command Relay] Server {Player.UserInfo.uid} -> Alvo {targetUidOrType} | Cmd: {commandId}");
 
                 // 3. Lógica de busca de destino (UID específico ou Tipo)
                 var target = AuthServer.getInstance().FindPlayer(targetUidOrType);
@@ -35,19 +35,19 @@ namespace Pangya_AuthServer.Handles
                 if (target != null)
                 {
                     // Envia para um servidor específico (Unicast)
-                    await SendRelay(target, _session.UserInfo.uid, commandId, commandData);
+                    await SendRelay(target, Player.UserInfo.uid, commandId, commandData);
                 }
                 else
                 {
                     // Se não achou por UID, tenta buscar todos do mesmo Tipo (Excluindo o remetente)
-                    var serversOfType = AuthServer.getInstance().FindPlayerByTypeExcludeUID(targetUidOrType, _session.UserInfo.uid);
+                    var serversOfType = AuthServer.getInstance().FindPlayerByTypeExcludeUID(targetUidOrType, Player.UserInfo.uid);
 
                     if (serversOfType != null && serversOfType.Count > 0)
                     {
                         // Envia para todos (Broadcast)
                         foreach (var srv in serversOfType)
                         {
-                            await SendRelay(srv, _session.UserInfo.uid, commandId, commandData);
+                            await SendRelay(srv, Player.UserInfo.uid, commandId, commandData);
                         }
                     }
                     else

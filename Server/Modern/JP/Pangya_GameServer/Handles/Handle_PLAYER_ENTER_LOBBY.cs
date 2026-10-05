@@ -18,16 +18,16 @@ using System;
 using System.Threading.Tasks;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ENTER_LOBBY : IPacketHandler<Player>
+    public class Handle_PLAYER_ENTER_LOBBY : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
-            var _channel = _session.GetChannel();
+            var _channel = Player.GetChannel();
             try
             {
 
                 if (_channel != null)
-                    _channel.Lobby.EnterMultiPlayer(_session);
+                    _channel.Lobby.EnterMultiPlayer(Player);
                 else
                 {
                     //faz alguma coisa...

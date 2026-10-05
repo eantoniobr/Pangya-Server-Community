@@ -18,17 +18,17 @@ using System;
 using System.Threading.Tasks;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ACTIVE_RING_GROUND : IPacketHandler<Player>
+    public class Handle_PLAYER_ACTIVE_RING_GROUND : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                var r = _session.GetGameRoom() ?? throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "]  tentou ativar Anel de Terreno no jogo na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                var r = Player.GetGameRoom() ?? throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "]  tentou ativar Anel de Terreno no jogo na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         1, 0x6201101));
 
 
-                r.RequestActiveRingGround(_session, _packet);
+                r.RequestActiveRingGround(Player, Packet);
             }
             catch (exception e)
             {

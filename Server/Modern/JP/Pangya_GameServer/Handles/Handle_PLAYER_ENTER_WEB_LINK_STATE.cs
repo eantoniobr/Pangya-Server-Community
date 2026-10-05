@@ -20,14 +20,14 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ENTER_WEB_LINK_STATE : IPacketHandler<Player>
+    public class Handle_PLAYER_ENTER_WEB_LINK_STATE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                // Att Lugar que o player está, ele está vendo weblink
-                _session.UserInfo.Place = _packet.ReadSByte();
+                // Att Lugar que o Player está, ele está vendo weblink
+                Player.UserInfo.Place = Packet.ReadSByte();
             }
             catch (exception e)
             {

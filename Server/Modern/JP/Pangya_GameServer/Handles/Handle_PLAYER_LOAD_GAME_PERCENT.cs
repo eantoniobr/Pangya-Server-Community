@@ -9,18 +9,18 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_LOAD_GAME_PERCENT : IPacketHandler<Player>
+    public class Handle_PLAYER_LOAD_GAME_PERCENT : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
            
             try
             {
-                var r = _session.GetGameRoom() ?? throw new exception("[Error] PLAYER[UID: " + _session.UserInfo.uid + "] tentou mandar a porcentagem do jogo carregado na sala[NUMEROR=" + (_session.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                var r = Player.GetGameRoom() ?? throw new exception("[Error] PLAYER[UID: " + Player.UserInfo.uid + "] tentou mandar a porcentagem do jogo carregado na sala[NUMEROR=" + (Player.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         1, 0x551001));
 
 
-                r.RequestLoadGamePercent(_session, _packet);
+                r.RequestLoadGamePercent(Player, Packet);
             }
             catch (exception e)
             {

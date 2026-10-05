@@ -9,26 +9,26 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_LEAVE_CHIP_IN_PRACTICE : IPacketHandler<Player>
+    public class Handle_PLAYER_LEAVE_CHIP_IN_PRACTICE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                var r = _session.GetGameRoom() ?? throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "]  tentou sair do Chip-in Practice na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhum sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                var r = Player.GetGameRoom() ?? throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "]  tentou sair do Chip-in Practice na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhum sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         1, 0x6207701));
 
 
                 if (r.GetTipo() != ROOM_INFO_TYPE.GRAND_ZODIAC_PRACTICE)
                 {
-                    throw new exception("[Error] PLAYER[UID=" + _session.UserInfo.uid + "] tentou sair do Chip-in Practice na sala[NUMERO=" + r.GetRoomId() + "], mas TIPO=" + Convert.ToString((ushort)r.GetTipo()) + " de jogo da sala nao é Chip-in Practice", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
+                    throw new exception("[Error] PLAYER[UID=" + Player.UserInfo.uid + "] tentou sair do Chip-in Practice na sala[NUMERO=" + r.GetRoomId() + "], mas TIPO=" + Convert.ToString((ushort)r.GetTipo()) + " de jogo da sala nao é Chip-in Practice", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
                         2, 0x6701002));
                 }
 
                 // Acabou o tempo /*Sai do Chip-in Practice*/
-                if (r.FinishGame(_session, 2))
+                if (r.FinishGame(Player, 2))
                 {
-                    _session.GetRoom().FinishGame();
+                    Player.GetRoom().FinishGame();
                 } 
             }
             catch (exception e)

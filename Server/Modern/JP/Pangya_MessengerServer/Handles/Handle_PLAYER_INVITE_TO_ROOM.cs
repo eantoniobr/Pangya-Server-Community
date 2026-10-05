@@ -6,23 +6,23 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_PLAYER_INVITE_ROOM : IPacketHandler<Player>//<Packet_PLAYER_INVITE_TO_ROOM, MPlayer>
+    public class Handle_PLAYER_INVITE_ROOM : HandleBase<Player, Packet_EXAMPLE>//<Packet_PLAYER_INVITE_TO_ROOM, MPlayer>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                uint player_invited_uid = _packet.ReadUInt32();
+                uint player_invited_uid = Packet.ReadUInt32();
 
                 // Validação de Segurança: O UID enviado no pacote deve ser o do próprio player da sessão
-                if (player_invited_uid != _session.UserInfo.uid)
+                if (player_invited_uid != Player.UserInfo.uid)
                 {
-                    throw new exception($"[MessengerService::HandleNotifyInvited][Error] Player[UID={_session.UserInfo.uid}] informou um convite para UID={player_invited_uid} (divergente). Hacker ou Bug.",
+                    throw new exception($"[MessengerService::HandleNotifyInvited][Error] Player[UID={Player.UserInfo.uid}] informou um convite para UID={player_invited_uid} (divergente). Hacker ou Bug.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 3749, 0));
                 }
 
                 // Log de rastreio para o Pangya Fun
-                _smp.message_pool.getInstance().push(new message($"[MessengerService::HandleNotifyInvited][Log] Player[UID={_session.UserInfo.uid}] foi convidado para uma sala no jogo.",
+                _smp.message_pool.getInstance().push(new message($"[MessengerService::HandleNotifyInvited][Log] Player[UID={Player.UserInfo.uid}] foi convidado para uma sala no jogo.",
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Como este pacote é apenas uma notificação do Cliente -> Server (Notify), 

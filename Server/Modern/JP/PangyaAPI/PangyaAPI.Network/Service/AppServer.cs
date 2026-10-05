@@ -1,6 +1,7 @@
 ﻿using PangyaAPI.DataBase;
 using PangyaAPI.Network.Config;
 using PangyaAPI.Network.Core;
+using PangyaAPI.Network.Handle;
 using PangyaAPI.Network.Models;
 using PangyaAPI.Network.Repository;
 using PangyaAPI.Network.Security;
@@ -21,7 +22,7 @@ namespace PangyaAPI.Network.Service
         public List<ServerInfo> m_server_list;
         public ServerInfo getInfo() => m_si;
 
-        protected AppServer(AppSessionManager<T> sessionManager, IAppPacketDispatcher<T, TId> dispatcher, TypeServer typeServer) : base(sessionManager, dispatcher, typeServer)
+        protected AppServer(AppSessionManager<T> sessionManager, PacketDispatcher<T, TId> dispatcher, TypeServer typeServer) : base(sessionManager, dispatcher, typeServer)
         {
         }
 

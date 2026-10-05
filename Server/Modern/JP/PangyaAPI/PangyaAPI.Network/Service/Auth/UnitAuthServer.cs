@@ -1,6 +1,7 @@
 using PangyaAPI.DataBase;
 using PangyaAPI.Network.Config;
 using PangyaAPI.Network.Core;
+using PangyaAPI.Network.Handle;
 using PangyaAPI.Network.Models;
 using PangyaAPI.Network.Repository;
 using PangyaAPI.Network.Security;
@@ -24,7 +25,7 @@ namespace PangyaAPI.Network.Service.Auth
         public TypeServer ServerType { get; set; }
 
         public bool IsRunning { get; private set; }
-        protected readonly IAuthPacketDispatcher<T, AuthClientDispatcher> _dispatcher;
+        protected readonly PacketDispatcher<T, AuthClientDispatcher> _dispatcher;
         public readonly AppSessionManager<T> SessionsManager;  
         private List<ServerInfo> m_server_list; 
         public ServerInfo m_si { get; private set; }
@@ -45,7 +46,7 @@ namespace PangyaAPI.Network.Service.Auth
 
         protected UnitServer(
        AppSessionManager<T> sessionManager,
-       IAuthPacketDispatcher<T, AuthClientDispatcher> dispatcher, TypeServer typeServer)
+       PacketDispatcher<T, AuthClientDispatcher> dispatcher, TypeServer typeServer)
         {
             ServerType = typeServer;
             SessionsManager = sessionManager;

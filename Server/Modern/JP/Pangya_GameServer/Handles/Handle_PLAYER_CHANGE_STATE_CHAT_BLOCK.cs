@@ -9,22 +9,22 @@ using Pangya_GameServer.Server;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHANGE_STATE_CHAT_BLOCK : IPacketHandler<Player>
+    public class Handle_PLAYER_CHANGE_STATE_CHAT_BLOCK : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
-            var m_ci = _session.GetChannel();
+            var m_ci = Player.GetChannel();
             try
             {
-                var r = _session.GetGameRoom();
+                var r = Player.GetGameRoom();
 
                 if (r == null)
                 {
-                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou mudar estado so chat block no jogo na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou mudar estado so chat block no jogo na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         1, 0x5901301));
                 }
 
-               r.RequestChangeStateChatBlock(_session, _packet);
+               r.RequestChangeStateChatBlock(Player, Packet);
             }
             catch (exception e)
             {

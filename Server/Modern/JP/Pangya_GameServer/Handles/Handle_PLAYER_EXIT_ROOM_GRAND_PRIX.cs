@@ -18,30 +18,30 @@ using System;
 using System.Threading.Tasks;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_EXIT_ROOM_GRAND_PRIX : IPacketHandler<Player>
+    public class Handle_PLAYER_EXIT_ROOM_GRAND_PRIX : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet pkt)
+        public override async Task Handle()
         {
             try
             {
-                var _channel = _session.GetChannel();
+                var _channel = Player.GetChannel();
                 byte option = pkt.ReadByte();
                 short roomId = pkt.ReadInt16();
                 uint gamePang = pkt.ReadUInt32();
                 uint gameBonus = pkt.ReadUInt32();
                 byte[] roomKey = pkt.ReadBytes(8); 
-                if (_session.GetRoom() != null)
+                if (Player.GetRoom() != null)
                 {
                     // Log de depuração
                     _smp.message_pool.getInstance().push(new message(
-                        $"[Handle_PLAYER_EXIT_ROOM_GRAND_PRIX][Sucess] PLAYER[UID: {_session.UserInfo.uid}, RID: {_session.UserInfo.Member.sala_numero}] EXIT TO ROOM. Option: {option}, Pang: {gamePang}",
+                        $"[Handle_PLAYER_EXIT_ROOM_GRAND_PRIX][Sucess] PLAYER[UID: {Player.UserInfo.uid}, RID: {Player.UserInfo.Member.sala_numero}] EXIT TO ROOM. Option: {option}, Pang: {gamePang}",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                    _channel.Lobby.LeaveRoomGrandPrix(_session, 1);
-                    _session.SetRoom(null);
+                    _channel.Lobby.LeaveRoomGrandPrix(Player, 1);
+                    Player.SetRoom(null);
                     //atualiza.
-                    _channel.UpdatePlayerInfo(_session);
-                    _channel.SendUpdatePlayerInfo(_session, 3);
+                    _channel.UpdatePlayerInfo(Player);
+                    _channel.SendUpdatePlayerInfo(Player, 3);
                 } 
             }
             catch (exception e)

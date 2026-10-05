@@ -27,7 +27,7 @@ namespace Pangya_AuthServer.Server
         #endregion
 
         #region Constructor
-        public AuthService() : base(new PlayerManager(500), new AppAuthPacketDispatcher<Player, AuthClientDispatcher>(), TypeServer.AuthServer)
+        public AuthService() : base(new PlayerManager(500), new PacketDispatcher<Player, AuthClientDispatcher>(), TypeServer.AuthServer)
         {
             _playerManager = (PlayerManager)SessionsManager;
             LoadConfig();

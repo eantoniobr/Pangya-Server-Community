@@ -10,29 +10,29 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_PLAYER_BLOCK_FRIEND : IPacketHandler<Player>
+    public class Handle_PLAYER_BLOCK_FRIEND : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         { 
             var p = new Packet();
 
             try
             {
-                uint uid = _packet.ReadUInt32(); 
+                uint uid = Packet.ReadUInt32(); 
                 if (uid == 0)
-                    throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (_session.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
+                    throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (Player.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
                             + (uid) + "], mas o uid is invalid(zero). Hacker ou Bug",
                             ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 1, 0x5300101));
 
-                var pFi = _session.UserInfo.m_friend_manager.findFriend(uid);
+                var pFi = Player.UserInfo.m_friend_manager.findFriend(uid);
 
                 if (pFi == null)
-                    throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (_session.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
+                    throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (Player.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
                         + (uid) + "], mas o player nao eh amigo dele. Hacker ou Bug",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 2, 0x5300102));
 
                 if (pFi.state.block == 1)
-                    throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (_session.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
+                    throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (Player.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
                             + (uid) + "], mas o amigo ja esta bloqueado. Hacker ou Bug",
                             ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 3, 0x5300103));
 
@@ -42,8 +42,8 @@ namespace Pangya_MessengerServer.Handles
 
                 if (s != null)
                 {   // Player está online
-                    if ((pFi2 = s.UserInfo.m_friend_manager.findFriend(_session.UserInfo.uid)) == null)
-                        throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (_session.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
+                    if ((pFi2 = s.UserInfo.m_friend_manager.findFriend(Player.UserInfo.uid)) == null)
+                        throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (Player.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
                                 + (uid) + "], mas o amigo nao tem ele na lista de amigos. Hacker ou Bug",
                                 ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 4, 0x5300104));
 
@@ -51,10 +51,10 @@ namespace Pangya_MessengerServer.Handles
                     pFi.state.block = 1;
 
                     // UPDATE ON DB
-                    _session.UserInfo.m_friend_manager.requestUpdateFriendInfo(pFi);
+                    Player.UserInfo.m_friend_manager.requestUpdateFriendInfo(pFi);
 
                     // Log
-                    _smp.message_pool.getInstance().push(new message("[BlockFriend][Log] player[UID=" + (_session.UserInfo.uid) + "] bloqueou o Amigo[UID="
+                    _smp.message_pool.getInstance().push(new message("[BlockFriend][Log] player[UID=" + (Player.UserInfo.uid) + "] bloqueou o Amigo[UID="
                             + (s.UserInfo.uid) + ", NICKNAME=" + (s.UserInfo.nickname) + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     // Resposta para o block friend REQUEST (0x30 / 0x10C)
@@ -62,12 +62,12 @@ namespace Pangya_MessengerServer.Handles
                     p.Write((ushort)0x10C); // Sub packet Id
                     p.Write((uint)0);       // OK
                     p.Write((uint)s.UserInfo.uid);
-                    _session.Send(p);
+                    Player.Send(p);
 
                     // Resposta para o amigo bloqueado (Envia que o player deslogou/bloqueou 0x10F)
                     p.init_plain(0x30);
                     p.Write((ushort)0x10F); // Sub packet Id
-                    p.Write((uint)_session.UserInfo.uid);
+                    p.Write((uint)Player.UserInfo.uid);
                     s.Send(p);
                 }
                 else
@@ -81,7 +81,7 @@ namespace Pangya_MessengerServer.Handles
                     var pi = cmd_pi.getInfo();
 
                     if (pi.uid == 0)
-                        throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (_session.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
+                        throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (Player.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
                                 + (uid) + "], mas player nao existe. Hacker ou Bug",
                                 ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 5, 0x5300105));
 
@@ -89,29 +89,29 @@ namespace Pangya_MessengerServer.Handles
                     fm.init(pi);
 
                     if (!fm.isInitialized())
-                        throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (_session.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
+                        throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (Player.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
                                 + (uid) + "], nao conseguiu inicializar Friend Manager do amigo. Bug",
                                 ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 6, 0x5300106));
 
-                    if ((pFi2 = fm.findFriend(_session.UserInfo.uid)) == null)
-                        throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (_session.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
+                    if ((pFi2 = fm.findFriend(Player.UserInfo.uid)) == null)
+                        throw new exception("[MessengerService::requestBlockFriend][Error] player[UID=" + (Player.UserInfo.uid) + "] tentou bloqueiar Amigo[UID="
                                 + (uid) + "], mas o amigo nao tem ele na lista de amigos. Hacker ou Bug",
                                 ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 4, 0x5300104));
 
                     pFi.state.block = 1;
 
                     // UPDATE ON DB
-                    _session.UserInfo.m_friend_manager.requestUpdateFriendInfo(pFi);
+                    Player.UserInfo.m_friend_manager.requestUpdateFriendInfo(pFi);
 
                     // Log
-                    _smp.message_pool.getInstance().push(new message("[BlockFriend][Log] player[UID=" + (_session.UserInfo.uid) + "] bloqueou o Amigo[UID="
+                    _smp.message_pool.getInstance().push(new message("[BlockFriend][Log] player[UID=" + (Player.UserInfo.uid) + "] bloqueou o Amigo[UID="
                             + (pi.uid) + ", NICKNAME=" + (pi.nickname) + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     p.init_plain(0x30);
                     p.Write((ushort)0x10C);
                     p.Write((uint)0); // OK
                     p.Write((uint)pi.uid);
-                    _session.Send(p);
+                    Player.Send(p);
                 }
             }
             catch (exception e)
@@ -126,7 +126,7 @@ namespace Pangya_MessengerServer.Handles
                                   : 0x5300100;
 
                 p.Write((uint)error_code);
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

@@ -15,9 +15,9 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_DOLFINI_LOCKER_PANG : IPacketHandler<Player>
+    public class Handle_PLAYER_DOLFINI_LOCKER_PANG : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
@@ -25,8 +25,8 @@ namespace Pangya_GameServer.Handles
             {
                 // Inicia o pacote 0x172 (Dolfini Locker Pang Info)
                 p.init_plain(0x172); 
-                p.WriteUInt64(_session.Inventory.DolfineLocker.pang); 
-                _session.Send(p);
+                p.WriteUInt64(Player.Inventory.DolfineLocker.pang); 
+                Player.Send(p);
             }
             catch (exception e)
             {
@@ -38,7 +38,7 @@ namespace Pangya_GameServer.Handles
                 // Em caso de erro, envia 0 pangs para evitar que o cliente fique aguardando ou dê crash
                 p.WriteUInt64(0);
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

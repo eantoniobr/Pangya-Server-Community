@@ -10,29 +10,29 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_LEAVE_PRACTICE : IPacketHandler<Player>
+    public class Handle_PLAYER_LEAVE_PRACTICE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         { 
             try
             {
-                var game = _session.GetGameRoom();
+                var game = Player.GetGameRoom();
 
                 if (game == null)
                 {
-                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "]  tentou sair do practice na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "]  tentou sair do practice na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         1, 0x6202001));
                 }
 
                 if (game.GetTipo() != ROOM_INFO_TYPE.PRACTICE)
                 {
-                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "]  tentou sair do practice na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + ", TIPO=" + (game.GetTipo()) + "], mas a sala nao é um tipo de sala do practice. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "]  tentou sair do practice na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + ", TIPO=" + (game.GetTipo()) + "], mas a sala nao é um tipo de sala do practice. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         2, 0x6202002));
                 }
 
                 if (game is not TourneyBase)
                 {
-                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "]  tentou sair do practice na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + ", TIPO=" + (game.GetTipo()) + "], mas a sala nao é um tipo de sala do practice. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "]  tentou sair do practice na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + ", TIPO=" + (game.GetTipo()) + "], mas a sala nao é um tipo de sala do practice. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         2, 0x6202002));
                 }
 

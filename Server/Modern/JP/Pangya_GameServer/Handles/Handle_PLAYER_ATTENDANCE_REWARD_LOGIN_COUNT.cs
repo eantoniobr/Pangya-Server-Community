@@ -15,9 +15,9 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ATTENDANCE_REWARD_LOGIN_COUNT : IPacketHandler<Player>
+    public class Handle_PLAYER_ATTENDANCE_REWARD_LOGIN_COUNT : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         { 
             try
             {
@@ -27,7 +27,7 @@ namespace Pangya_GameServer.Handles
                     sAttendanceRewardSystem.getInstance().load();
                 }
 
-                sAttendanceRewardSystem.getInstance().requestUpdateCountLogin(_session, _packet);
+                sAttendanceRewardSystem.getInstance().requestUpdateCountLogin(Player, Packet);
             }
             catch (exception e)
             {

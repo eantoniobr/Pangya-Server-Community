@@ -19,18 +19,18 @@ using System.Threading.Tasks;
 using System.Threading.Tasks;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_EXIT_LOBBY_GRAND_PRIX : IPacketHandler<Player>
+    public class Handle_PLAYER_EXIT_LOBBY_GRAND_PRIX : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
 
-            var _channel = _session.GetChannel();
+            var _channel = Player.GetChannel();
             try
             {
 
                 if (_channel != null)
                 {
-                    _channel.Lobby.LeaveGrandPrix(_session);
+                    _channel.Lobby.LeaveGrandPrix(Player);
                 }
                 else
                 {

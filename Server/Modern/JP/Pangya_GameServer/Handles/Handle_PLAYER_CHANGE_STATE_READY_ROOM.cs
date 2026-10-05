@@ -25,42 +25,42 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHANGE_STATE_READY_ROOM : IPacketHandler<Player>
+    public class Handle_PLAYER_CHANGE_STATE_READY_ROOM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
-            var m_ci = _session.GetChannel();
+            var m_ci = Player.GetChannel();
             try
             {
-                var r = _session.GetRoom();
+                var r = Player.GetRoom();
 
                 if (r == null)
                 {
-                    throw new exception("[Handle_PLAYER_CHANGE_PLAYER_STATE_READY_ROOM][Error] PLAYER[UID=" + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + "] sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "] nao existe.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 10, 0));
+                    throw new exception("[Handle_PLAYER_CHANGE_PLAYER_STATE_READY_ROOM][Error] PLAYER[UID=" + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + "] sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "] nao existe.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 10, 0));
                 }
 
-                if (_packet.Size == 0)
+                if (Packet.Size == 0)
                 {
-                    throw new exception("[Handle_PLAYER_CHANGE_PLAYER_STATE_READY_ROOM][Error] Size PLAYER[UID=" + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + "] sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "] nao existe.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 10, 0));
+                    throw new exception("[Handle_PLAYER_CHANGE_PLAYER_STATE_READY_ROOM][Error] Size PLAYER[UID=" + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + "] sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "] nao existe.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 10, 0));
                 }
 
-                byte ready = _packet.ReadByte();
+                byte ready = Packet.ReadByte();
 
-                PlayerRoomInfo pri = r.GetPlayerInfo(_session);
+                PlayerRoomInfo pri = r.GetPlayerInfo(Player);
                 // Update state of ready
                 pri.state_flag.ready = (byte)(ready == 0 ? 1 : 0);//invertido
 
-                Packet p = new(0x78); // Estado de Ready do player na sala
+                Packet p = new(0x78); // Estado de Ready do Player na sala
 
-                p.WriteInt32(_session.ConnectionID);
+                p.WriteInt32(Player.ConnectionID);
                 p.WriteByte(ready);
                 r.SendBroadCast(p);
 
-                r.UpdatePlayerInfo(_session);
+                r.UpdatePlayerInfo(Player);
             }
             catch (exception e)
             {
-                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_CHANGE_PLAYER_STATE_READY_ROOM][ErrorSystem] PLAYER[UID=" + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + "] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_CHANGE_PLAYER_STATE_READY_ROOM][ErrorSystem] PLAYER[UID=" + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + "] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
             }
         }
     }

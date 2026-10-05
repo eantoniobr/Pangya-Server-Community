@@ -17,33 +17,33 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_EXTEND_RENTAL : IPacketHandler<Player>
+    public class Handle_PLAYER_EXTEND_RENTAL : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
-                int item_id = _packet.ReadInt32();
+                int item_id = Packet.ReadInt32();
 
                 if (item_id <= 0)
                 {
-                    throw new exception("[Lobby::RequestExtendRental][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou extend rental, mas o item[ID=" + (item_id) + "] is invalid. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestExtendRental][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou extend rental, mas o item[ID=" + (item_id) + "] is invalid. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         350, 5200351));
                 }
 
-                var pWi = _session.Inventory.FindWarehouseItemById(item_id);
+                var pWi = Player.Inventory.FindWarehouseItemById(item_id);
 
                 if (pWi == null)
                 {
-                    throw new exception("[Lobby::RequestExtendRental][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou extend rental, mas o player nao tem o item[ID=" + (item_id) + "]. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestExtendRental][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou extend rental, mas o Player nao tem o item[ID=" + (item_id) + "]. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         351, 5200352));
                 }
 
                 if (sIff.getInstance().getItemGroupIdentify(pWi._typeid) != IFF_GROUP.PART)
                 {
-                    throw new exception("[Lobby::RequestExtendRental][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou extend rental, mas o item[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "] nao é um Part. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestExtendRental][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou extend rental, mas o item[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "] nao é um Part. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         352, 5200353));
                 }
 
@@ -51,13 +51,13 @@ namespace Pangya_GameServer.Handles
 
                 if (part == null)
                 {
-                    throw new exception("[Lobby::RequestExtendRental][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou extender um rental Item[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "] que nao esta no IFF_STRUCT do server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestExtendRental][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou extender um rental Item[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "] que nao esta no IFF_STRUCT do server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         353, 5200354));
                 }
 
                 if (part.valor_rental <= 0)
                 {
-                    throw new exception("[Lobby::RequestExtendRental][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou extender um rental Item[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "] que nao é um rental no IFF_STRUCT do server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestExtendRental][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou extender um rental Item[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "] que nao é um rental no IFF_STRUCT do server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         354, 5200355));
                 }
 
@@ -69,13 +69,13 @@ namespace Pangya_GameServer.Handles
                 var end_date = UtilTime.FormatDateLocal(pWi.end_date_unix_local);
 
                 // Cmd Extend Rental + 7 dias no DB
-                NormalManagerDB.getInstance().add(5, new CmdExtendRental(_session.UserInfo.uid, pWi.id, end_date), null, null);
+                NormalManagerDB.getInstance().add(5, new CmdExtendRental(Player.UserInfo.uid, pWi.id, end_date), null, null);
 
                 // Tira os pangs do valor de renovar o Rental Item
-                _session.UserInfo.consomePang(part.valor_rental);
+                Player.UserInfo.consomePang(part.valor_rental);
 
                 // Verifica se o Parts já tem um item update do parts
-                var v_it = _session.Inventory.FindUpdateItemById(pWi.id);
+                var v_it = Player.Inventory.FindUpdateItemById(pWi.id);
 
                 if (v_it.Any())
                 {
@@ -84,21 +84,21 @@ namespace Pangya_GameServer.Handles
                         if (el.Value.type == UpdateItem.UI_TYPE.WAREHOUSE)
                         {
                             // Tira esse Update Item do map
-                            _session.Inventory.UpdateItems.Remove(el.Key);
+                            Player.Inventory.UpdateItems.Remove(el.Key);
                         }
                     }
                 }
 
                 // Log
-                _smp.message_pool.getInstance().push(new message("[Rental::Extend][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] extendeu o Rental Item[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[Rental::Extend][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] extendeu o Rental Item[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Att pang no Jogo
                 p.init_plain(0xC8);
 
-                p.WriteUInt64(_session.UserInfo.Statistics.pang);
+                p.WriteUInt64(Player.UserInfo.Statistics.pang);
                 p.WriteUInt64(part.valor_rental);
 
-                _session.Send(p);
+                Player.Send(p);
 
                 // Att Rental Item no Jogo
                 p.init_plain(0x18F);
@@ -108,7 +108,7 @@ namespace Pangya_GameServer.Handles
                 p.WriteUInt32(pWi._typeid);
                 p.WriteInt32(pWi.id);
 
-                _session.Send(p);
+                Player.Send(p);
             }
             catch (exception e)
             {
@@ -118,7 +118,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteByte(1); // Error
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

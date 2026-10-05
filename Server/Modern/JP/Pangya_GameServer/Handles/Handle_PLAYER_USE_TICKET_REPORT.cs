@@ -9,27 +9,27 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_USE_TICKET_REPORT : IPacketHandler<Player>
+    public class Handle_PLAYER_USE_TICKET_REPORT : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
-            if (!_session.getState())
+            if (!Player.getState())
             {
-                throw new exception("[Error] player nao esta connectado", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
+                throw new exception("[Error] Player nao esta connectado", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
                     12, 0));
             }
-            if (_packet == null)
+            if (Packet == null)
             {
-                throw new exception("[Error] _packet is null", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
+                throw new exception("[Error] Packet is null", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
                     12, 0));
             }
 
             try
             {
-                var gameRoom = _session.GetGameRoom() ?? throw new exception("[Error] PLAYER[UID=" + _session.UserInfo.uid + "] tentou usar Ticket Report no Tourney no jogo na sala[NUMERO=" + _session.GetRoom()?.GetRoomId() + "], mas a sala nao tem nenhum jogo inicializado. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
+                var gameRoom = Player.GetGameRoom() ?? throw new exception("[Error] PLAYER[UID=" + Player.UserInfo.uid + "] tentou usar Ticket Report no Tourney no jogo na sala[NUMERO=" + Player.GetRoom()?.GetRoomId() + "], mas a sala nao tem nenhum jogo inicializado. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
                         1, 0x6301001));
 
-                gameRoom.RequestUseTicketReport(_session, _packet);
+                gameRoom.RequestUseTicketReport(Player, Packet);
             }
             catch (exception e)
             {

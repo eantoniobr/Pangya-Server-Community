@@ -11,60 +11,57 @@ using PangyaAPI.Utilities.Log;
 using System.Text.RegularExpressions;
 namespace Pangya_LoginServer.Handles
 {
-    public class Handle_PLAYER_LOGIN : IPacketHandler<Player>
+    public class Handle_PLAYER_LOGIN : HandleBase<Player, Packet_EXAMPLE>
     {
         private static readonly Regex InvalidIdRegex = new(@".*[\^$&,\\?`´~\|""@#¨'%*!\\].*", RegexOptions.Compiled);
 
-        public async Task Handle(Player player, Packet packet)
+        public override async Task Handle()
         {
             try
-            { 
-                // 1. Extração de Dados
-                var login = new LoginData(packet); 
-
-                player.ResetHandShake(); // Reseta o handshake para evitar problemas de sincronização
-
+            {  
+                Player.ResetHandShake(); // Reseta o handshake para evitar problemas de sincronização
+                var login = new LoginData(Packet);
                 if (!ValidatePacket(login))
                     return;
 
                 // 2. Validações de Fluxo (Early Return)
-                if (!ValidateInput(player, login.id, login.password))
+                if (!ValidateInput(Player, login.id, login.password))
                 {
-                    player.SafeClose();
+                    Player.SafeClose();
                     return;
                 }
 
-                player.UserInfo.MacAddress = login.mac_address; 
+                Player.UserInfo.MacAddress = login.mac_address; 
                 // 3. Verificação de Segurança (IP/Ban/Manutenção)
-                if (!CheckServerStatus(player))
+                if (!CheckServerStatus(Player))
                 {
-                    player.SafeClose();
+                    Player.SafeClose();
                     return;
                 }
 
                 // 4. Autenticação no Banco
-                var uid = Authenticate(player, login.id, login.password);
+                var uid = Authenticate(Player, login.id, login.password);
                 if (uid == 0)
                 {
-                    player.SafeClose();
+                    Player.SafeClose();
                     return;
                 }
 
 
                 // 5. Verificação de Multi-Login (Kick ou Bloqueio)
-                if (!HandleDuplicateLogin(player, (uint)uid))
+                if (!HandleDuplicateLogin(Player, (uint)uid))
                 {
-                    player.SafeClose();
+                    Player.SafeClose();
                     return;
                 }
                 // 6. Carregamento de Dados
-                await ProcessPlayerState(player, (uint)uid);
+                await ProcessPlayerState(Player, (uint)uid);
 
             }
             catch (exception e)
             {
 
-                LoginServer.getInstance().Disconnect(player);
+                LoginServer.getInstance().Disconnect(Player);
 
                 _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_LOGIN][Error] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
             }
@@ -102,30 +99,30 @@ namespace Pangya_LoginServer.Handles
             return true;
         }
 
-        private bool ValidateInput(Player player, string id, string pw)
+        private bool ValidateInput(Player Player, string id, string pw)
         {
             if (string.IsNullOrEmpty(id) || id.Length <= 2 || InvalidIdRegex.IsMatch(id))
             {
                 // Erro de ID Inválido (Packet 0x01, erro 6)
-                player.Send(Handle_PACKET_RESPONSE.pacote001(player, 0x6));
+                Player.Send(Handle_PACKET_RESPONSE.pacote001(Player, 0x6));
                 return false;
             }
             return true;
         }
 
-        private bool CheckServerStatus(Player player)
+        private bool CheckServerStatus(Player Player)
         {
             // Aqui você move a lógica de m_access_flag e IsUnderMaintenance
-            if (LoginServer.getInstance().IsUnderMaintenance && !player.IsGM())
+            if (LoginServer.getInstance().IsUnderMaintenance && !Player.IsGM())
             {
-                player.Send(Handle_PACKET_RESPONSE.pacote001(player, 0x01, 7));
+                Player.Send(Handle_PACKET_RESPONSE.pacote001(Player, 0x01, 7));
                 return false;
             }
 
-            if (LoginServer.getInstance().haveBanList(player.GetIP(), player.UserInfo.MacAddress))
+            if (LoginServer.getInstance().haveBanList(Player.GetIP(), Player.UserInfo.MacAddress))
             {
-                player.Send(Handle_PACKET_RESPONSE.pacote001(player, 16)); 
-                _smp.message_pool.getInstance().push("[HANDLE_PLAYER_LOGIN::CheckServerStatus][Log] Block por Regiao o IP/MAC: " + player.GetIP() + "/" + player.UserInfo.MacAddress, type_msg.CL_FILE_LOG_AND_CONSOLE);
+                Player.Send(Handle_PACKET_RESPONSE.pacote001(Player, 16)); 
+                _smp.message_pool.getInstance().push("[HANDLE_PLAYER_LOGIN::CheckServerStatus][Log] Block por Regiao o IP/MAC: " + Player.GetIP() + "/" + Player.UserInfo.MacAddress, type_msg.CL_FILE_LOG_AND_CONSOLE);
                   
                 return false;
             }
@@ -133,20 +130,20 @@ namespace Pangya_LoginServer.Handles
             return true;
         }
 
-        private int Authenticate(Player player, string id, string pw)
+        private int Authenticate(Player Player, string id, string pw)
         {
             var uid = CommandDB.VerifyID(id);
             if (uid <= 0)
             {
                 // Lógica de auto-create ou erro de senha
-                player.Send(Handle_PACKET_RESPONSE.pacote001(player, 0x06, 1));
+                Player.Send(Handle_PACKET_RESPONSE.pacote001(Player, 0x06, 1));
                 return 0;
             }
             //so em modo release... para evitar problemas de teste com contas não confirmadas
 #if RELEASE
  if (uid > 0 && !CommandDB.AccountConfirm(id))//verifica antes
             {
-                player.Send(Handle_PACKET_RESPONSE.pacote001(player, 0x07, 0, "Confirm you accout in Email"));
+                Player.Send(Handle_PACKET_RESPONSE.pacote001(Player, 0x07, 0, "Confirm you accout in Email"));
                 _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN::Authenticate][Log] PLAYER[ID: {id}, BETA ACCOUNT: FALSE]", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 return 0;
             }
@@ -156,16 +153,16 @@ namespace Pangya_LoginServer.Handles
             // Valida senha (MD5/SHA1 conforme seu banco)
             if (!CommandDB.VerifyPass((uint)uid, pwd_md5))
             {
-                player.Send(Handle_PACKET_RESPONSE.pacote001(player, 0x06, 1));
+                Player.Send(Handle_PACKET_RESPONSE.pacote001(Player, 0x06, 1));
                 return 0;
             }
 
             return uid;
         }
 
-        private bool HandleDuplicateLogin(Player player, uint uid)
+        private bool HandleDuplicateLogin(Player Player, uint uid)
         { 
-            var manager = LoginServer.getInstance().HasLoggedWithOuterSocket(player);
+            var manager = LoginServer.getInstance().HasLoggedWithOuterSocket(Player);
             if (manager != null)
             {
                 if (!LoginServer.getInstance().canSameIDLogin())
@@ -180,10 +177,10 @@ namespace Pangya_LoginServer.Handles
                 var lc = CommandDB.IsLogonCheck(uid);
                 if (lc.getLastCheck)//login duplicado...
                 {
-                    player.Authorized = true;
+                    Player.Authorized = true;
                     // Carrega o PlayerInfo (m_pi)
-                    player.UserInfo.Set(CommandDB.GetPlayerInfo(uid));
-                    player.Send(Handle_PACKET_RESPONSE.pacote001(player, 4));
+                    Player.UserInfo.Set(CommandDB.GetPlayerInfo(uid));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote001(Player, 4));
                     return true;//tem que ser true
                 }
             }
@@ -191,41 +188,41 @@ namespace Pangya_LoginServer.Handles
             return true;
         }
 
-        private async Task ProcessPlayerState(Player player, uint uid)
+        private async Task ProcessPlayerState(Player Player, uint uid)
         { 
-            player.Authorized = true;
+            Player.Authorized = true;
             // Carrega o PlayerInfo (m_pi)
-            player.UserInfo.Set(CommandDB.GetPlayerInfo(uid));
+            Player.UserInfo.Set(CommandDB.GetPlayerInfo(uid));
             //atualiza o mac adress
-            CommandDB.UpdatePlayerMacAddress(uid, player.UserInfo.MacAddress);
+            CommandDB.UpdatePlayerMacAddress(uid, Player.UserInfo.MacAddress);
             // Lógica de Estados que estava no LoginServer.cs
             if (!CommandDB.IsFirstLogin(uid))
             {
                 // Movemos o FIRST_LOGIN para cá
-                player.UserInfo.m_state = 2;
-                player.Send(Handle_PACKET_RESPONSE.pacote00F(player, 1));
-                player.Send(Handle_PACKET_RESPONSE.pacote001(player, 0xD8));//seta o nick
+                Player.UserInfo.m_state = 2;
+                Player.Send(Handle_PACKET_RESPONSE.pacote00F(Player, 1));
+                Player.Send(Handle_PACKET_RESPONSE.pacote001(Player, 0xD8));//seta o nick
                 return;
             }
 
             if (!CommandDB.IsFirstSet(uid))
             {
                 // Movemos o FIRST_SET para cá
-                player.UserInfo.m_state = 3;
-                player.Send(Handle_PACKET_RESPONSE.pacote00F(player, 1));
-                player.Send(Handle_PACKET_RESPONSE.pacote001(player, 0xD9));//cria o personagem
+                Player.UserInfo.m_state = 3;
+                Player.Send(Handle_PACKET_RESPONSE.pacote00F(Player, 1));
+                Player.Send(Handle_PACKET_RESPONSE.pacote001(Player, 0xD9));//cria o personagem
                 return;
             }
 
             // Se chegou aqui, login com sucesso total 
-            await SUCCESS_LOGIN(player);
+            await SUCCESS_LOGIN(Player);
         }
 
-        public static async Task SUCCESS_LOGIN(Player _session, byte option = 0)
+        public static async Task SUCCESS_LOGIN(Player Player, byte option = 0)
         {
-            _session.UserInfo.m_state = 1;
+            Player.UserInfo.m_state = 1;
 
-            _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_LOGIN][Log] PLAYER[UID: {_session.UserInfo.uid}, ID: {_session.UserInfo.id}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+            _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_LOGIN][Log] PLAYER[UID: {Player.UserInfo.uid}, ID: {Player.UserInfo.id}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
             // Inicializamos as variáveis para evitar null reference
             List<ServerInfo> sis = new List<ServerInfo>();
@@ -237,13 +234,13 @@ namespace Pangya_LoginServer.Handles
             {  
                 sis = CommandDB.GetGame();
                 msns = CommandDB.GetMsn();
-                auth_key_login = CommandDB.GetAuthKeyLogin(_session.UserInfo.uid);
+                auth_key_login = CommandDB.GetAuthKeyLogin(Player.UserInfo.uid);
 
                 if (option == 0)
-                    _cmu = CommandDB.GetMacroUser(_session.UserInfo.uid);
+                    _cmu = CommandDB.GetMacroUser(Player.UserInfo.uid);
 
                 // Registro de Login (Pode ser await ou não, dependendo se você precisa confirmar o sucesso)
-                CommandDB.RegisterPlayerLogin(_session.UserInfo.uid, _session.GetIP(), LoginServer.getInstance().getUID());
+                CommandDB.RegisterPlayerLogin(Player.UserInfo.uid, Player.GetIP(), LoginServer.getInstance().getUID());
             }
             catch (Exception e) // Use Exception padrão do sistema ou a sua customizada
             {
@@ -259,24 +256,24 @@ namespace Pangya_LoginServer.Handles
             // --- ENVIO DE PACOTES (A ordem importa no Pangya) ---
 
             // 1. Envia Auth Key (Pacote 0x10)
-            _session.Send(Handle_PACKET_RESPONSE.pacote010(auth_key_login));
+            Player.Send(Handle_PACKET_RESPONSE.pacote010(auth_key_login));
 
             // 2. Cookie/Session Confirm (Pacote 0x01)
             if (option == 0)
             {
-                _session.Send(Handle_PACKET_RESPONSE.pacote001(_session));
+                Player.Send(Handle_PACKET_RESPONSE.pacote001(Player));
             }
 
             // 3. Server List (Pacote 0x02)
-            _session.Send(Handle_PACKET_RESPONSE.pacote002(sis));
+            Player.Send(Handle_PACKET_RESPONSE.pacote002(sis));
 
             // 4. Messenger List (Pacote 0x09)
-            _session.Send(Handle_PACKET_RESPONSE.pacote009(msns));
+            Player.Send(Handle_PACKET_RESPONSE.pacote009(msns));
 
             // 5. Chat Macros (Pacote 0x06)
             if (option == 0)
             {
-                _session.Send(Handle_PACKET_RESPONSE.pacote006(_cmu));
+                Player.Send(Handle_PACKET_RESPONSE.pacote006(_cmu));
             }
         }
     }

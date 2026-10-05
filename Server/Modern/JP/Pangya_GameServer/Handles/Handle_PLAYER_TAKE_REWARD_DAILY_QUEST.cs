@@ -12,9 +12,9 @@ using PangyaAPI.Utilities.Log;
 using static Pangya_GameServer.Models.DefineConstants;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_TAKE_REWARD_DAILY_QUEST : IPacketHandler<Player>
+    public class Handle_PLAYER_TAKE_REWARD_DAILY_QUEST : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
 
             var p = new Packet();
@@ -23,13 +23,13 @@ namespace Pangya_GameServer.Handles
 
             try
             {
-                if (_packet == null)
+                if (Packet == null)
                 {
-                    throw new exception("_packet is null", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST,
+                    throw new exception("Packet is null", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST,
                         2, 0));
                 }
 
-                int num_quest = _packet.ReadInt32();
+                int num_quest = Packet.ReadInt32();
 
                 if (num_quest <= 0u)
                 {
@@ -37,9 +37,9 @@ namespace Pangya_GameServer.Handles
                         5005, 0));
                 }
 
-                quest_id = _packet.ReadInt32(4 * num_quest);
+                quest_id = Packet.ReadInt32(4 * num_quest);
 
-                var v_quest = DailyQuestManager.LeaveQuestUser(_session, quest_id, num_quest);
+                var v_quest = DailyQuestManager.LeaveQuestUser(Player, quest_id, num_quest);
 
                 QuestItem qi = null;
 
@@ -49,11 +49,11 @@ namespace Pangya_GameServer.Handles
                 // UPADATE Achievement ON SERVER, DB and GAME
                 AchievementSystem sys_achievement = new AchievementSystem();
 
-                // Add Reward Item do player
+                // Add Reward Item do Player
                 foreach (var el in v_quest)
                 {
 
-                    // Item Reward, d� para o player
+                    // Item Reward, d� para o Player
                     if ((qi = sIff.getInstance().findQuestItem(el._typeid)) != null)
                     {
                         for (var i = 0; i < (qi.reward._typeid.Length); ++i)
@@ -70,11 +70,11 @@ namespace Pangya_GameServer.Handles
                                 item.c[0] = (short)item.qntd;
                                 item.c[3] = (short)qi.reward.time[i];
 
-                                // Add Item no db e no player
+                                // Add Item no db e no Player
                                 var rt = RetAddItem.INIT_VALUE; 
                                 if ((rt = ItemManager.addItem(item,  _session, 0, 0)) < 0)
                                 {
-                                    throw new exception("[DailyQuestManager::requestTakeRewardQuest][Error] PLAYER[UID=" + Convert.ToString(_session.UserInfo.uid) + "] tentou pegar a recompensa da Quest[TYPEID=" + Convert.ToString(el._typeid) + ", ID=" + Convert.ToString(el.id) + "], mas nao conseguiu adicionar o Item[TYPEID=" + Convert.ToString(item._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST, 1500, 0));
+                                    throw new exception("[DailyQuestManager::requestTakeRewardQuest][Error] PLAYER[UID=" + Convert.ToString(Player.UserInfo.uid) + "] tentou pegar a recompensa da Quest[TYPEID=" + Convert.ToString(el._typeid) + ", ID=" + Convert.ToString(el.id) + "], mas nao conseguiu adicionar o Item[TYPEID=" + Convert.ToString(item._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST, 1500, 0));
                                 }
 
                                 if (rt != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH)
@@ -92,7 +92,7 @@ namespace Pangya_GameServer.Handles
                     }
                 }
 
-                // Add os Counter Item Excluido do player
+                // Add os Counter Item Excluido do Player
                 foreach (var el in v_quest)
                 {
 
@@ -117,7 +117,7 @@ namespace Pangya_GameServer.Handles
                     }
                 }
 
-                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_TAKE_REWARD_DAILY_QUEST][Sucess] PLAYER[UID: {_session.UserInfo.uid}] Pegou recompensa da Daily Quest com sucesso.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_TAKE_REWARD_DAILY_QUEST][Sucess] PLAYER[UID: {Player.UserInfo.uid}] Pegou recompensa da Daily Quest com sucesso.", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
 
                 // UPDATE ON GAME
@@ -134,13 +134,13 @@ namespace Pangya_GameServer.Handles
                     p.WriteInt32((el.STDA_C_ITEM_TIME > 0) ? el.STDA_C_ITEM_TIME : el.STDA_C_ITEM_QNTD);
                     p.WriteZero(25);
                 }
-                _session.Send(p);
+                Player.Send(p);
 
 
-                _session.Send(Handle_PACKET_RESPONSE.pacote227(v_quest));
+                Player.Send(HandlePacket_RESPONSE.pacote227(v_quest));
 
                 // UPADATE Achievement ON SERVER, DB and GAME
-                sys_achievement.finish_and_update(_session);
+                sys_achievement.finish_and_update(Player);
 
                 if (quest_id != null)
                 {
@@ -153,7 +153,7 @@ namespace Pangya_GameServer.Handles
 
                 _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_TAKE_REWARD_DAILY_QUEST][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                _session.Send(Handle_PACKET_RESPONSE.pacote227(new List<AchievementInfoEx>(), 1));
+                Player.Send(HandlePacket_RESPONSE.pacote227(new List<AchievementInfoEx>(), 1));
                  
                 if (quest_id != null)
                 {

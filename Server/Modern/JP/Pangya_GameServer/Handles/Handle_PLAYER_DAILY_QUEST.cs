@@ -17,15 +17,15 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_DAILY_QUEST : IPacketHandler<Player>
+    public class Handle_PLAYER_DAILY_QUEST : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                if (_packet == null)
+                if (Packet == null)
                 {
-                    throw new exception("_packet is null", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST,
+                    throw new exception("Packet is null", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST,
                         2, 0));
                 }
 
@@ -33,13 +33,13 @@ namespace Pangya_GameServer.Handles
                 var quest = GameServer.getInstance().DailyQuestsInfo;
                 if (DailyQuestManager.CheckCurrentQuestUser(quest, _session))
                 {
-                    // Get Old Quest do player
-                    var old_quest = DailyQuestManager.GetOldQuestUser(_session);
+                    // Get Old Quest do Player
+                    var old_quest = DailyQuestManager.GetOldQuestUser(Player);
 
                     foreach (var el in old_quest)
-                        _session.UserInfo.Achievements.removeAchievement(el.id);
+                        Player.UserInfo.Achievements.removeAchievement(el.id);
 
-                    // Add nova quest para o player
+                    // Add nova quest para o Player
                     var v_ai = DailyQuestManager.NewQuestUser(quest, _session);
 
                     var p = new Packet(0x216);
@@ -69,9 +69,9 @@ namespace Pangya_GameServer.Handles
                         p.WriteUInt32(0u);
                     }
                     //send 216
-                    _session.Send(p);
+                    Player.Send(p);
                     //send 225
-                    _session.Send(Handle_PACKET_RESPONSE.pacote225(_session.UserInfo.DailyQuests, old_quest));
+                    Player.Send(HandlePacket_RESPONSE.pacote225(Player.UserInfo.DailyQuests, old_quest));
 
                 }
                 else
@@ -80,9 +80,9 @@ namespace Pangya_GameServer.Handles
                     p.WriteUInt32((uint)UtilTime.GetSystemTimeAsUnix());
                     p.WriteInt32(0);
                     //send 216
-                    _session.Send(p);
+                    Player.Send(p);
                     //send 225
-                    _session.Send(Handle_PACKET_RESPONSE.pacote225(_session.UserInfo.DailyQuests, null));
+                    Player.Send(HandlePacket_RESPONSE.pacote225(Player.UserInfo.DailyQuests, null));
                 }
 
             }

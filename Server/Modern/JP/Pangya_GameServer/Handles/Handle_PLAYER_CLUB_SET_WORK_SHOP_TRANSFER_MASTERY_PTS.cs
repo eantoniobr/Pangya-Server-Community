@@ -20,53 +20,53 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CLUB_SET_WORK_SHOP_TRANSFER_MASTERY_PTS : IPacketHandler<Player>
+    public class Handle_PLAYER_CLUB_SET_WORK_SHOP_TRANSFER_MASTERY_PTS : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
                 // 300 mastery pts transfere por cada UCIM chip
-                ClubSetWorkShopTransferMasteryPts tmp = new ClubSetWorkShopTransferMasteryPts().ToRead(_packet);
+                ClubSetWorkShopTransferMasteryPts tmp = new ClubSetWorkShopTransferMasteryPts().ToRead(Packet);
 
                 List<stItemEx> v_item = new List<stItemEx>();
                 stItemEx item = new stItemEx();
 
-                var pUCIM_chip = _session.Inventory.FindWarehouseItemByTypeid(tmp.UCIM_chip_typeid);
+                var pUCIM_chip = Player.Inventory.FindWarehouseItemByTypeid(tmp.UCIM_chip_typeid);
 
                 if (pUCIM_chip == null)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou transferir mastery pts do ClubSet[ID=" + (tmp.clubset[0]) + "] para ClubSet[ID=" + (tmp.clubset[1]) + "], mas ele nao tem UCIM Chip[TYPEID=" + (tmp.UCIM_chip_typeid) + "]. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transferir mastery pts do ClubSet[ID=" + (tmp.clubset[0]) + "] para ClubSet[ID=" + (tmp.clubset[1]) + "], mas ele nao tem UCIM Chip[TYPEID=" + (tmp.UCIM_chip_typeid) + "]. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         103, 0x5300104));
                 }
 
                 if (pUCIM_chip.STDA_C_ITEM_QNTD < (short)tmp.qntd)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou transferir mastery pts do ClubSet[ID=" + (tmp.clubset[0]) + "] para ClubSet[ID=" + (tmp.clubset[1]) + "], mas ele nao tem quantidade suficiente de UCIM Chip[TYPEID=" + (tmp.UCIM_chip_typeid) + ", QNTD=" + (pUCIM_chip.STDA_C_ITEM_QNTD) + ", Request=" + (tmp.qntd) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transferir mastery pts do ClubSet[ID=" + (tmp.clubset[0]) + "] para ClubSet[ID=" + (tmp.clubset[1]) + "], mas ele nao tem quantidade suficiente de UCIM Chip[TYPEID=" + (tmp.UCIM_chip_typeid) + ", QNTD=" + (pUCIM_chip.STDA_C_ITEM_QNTD) + ", Request=" + (tmp.qntd) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         104, 0x5300105));
                 }
 
-                var pClub_src = _session.Inventory.FindWarehouseItemById(tmp.clubset[0]);
+                var pClub_src = Player.Inventory.FindWarehouseItemById(tmp.clubset[0]);
 
                 if (pClub_src == null)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou transferir mastery pts do ClubSet[ID=" + (tmp.clubset[0]) + "] mas o player nao tem esse ClubSet. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transferir mastery pts do ClubSet[ID=" + (tmp.clubset[0]) + "] mas o Player nao tem esse ClubSet. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         100, 0x5300101));
                 }
 
-                var pClub_dst = _session.Inventory.FindWarehouseItemById(tmp.clubset[1]);
+                var pClub_dst = Player.Inventory.FindWarehouseItemById(tmp.clubset[1]);
 
                 if (pClub_dst == null)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou transferir mastery pts para o ClubSet[ID=" + (tmp.clubset[1]) + "] mas o player nao tem esse ClubSet. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transferir mastery pts para o ClubSet[ID=" + (tmp.clubset[1]) + "] mas o Player nao tem esse ClubSet. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         100, 0x5300101));
                 }
 
                 if (sIff.getInstance().findClubSet(pClub_src._typeid) == null)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou transferir mastery pts do ClubSet[TYPEID=" + (pClub_src._typeid) + ", ID=" + (pClub_src.id) + "] mas o clubset nao existe no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transferir mastery pts do ClubSet[TYPEID=" + (pClub_src._typeid) + ", ID=" + (pClub_src.id) + "] mas o clubset nao existe no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         101, 0x5300102));
                 }
 
@@ -74,25 +74,25 @@ namespace Pangya_GameServer.Handles
 
                 if (clubset == null)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou transferir mastery pts para o ClubSet[TYPEID=" + (pClub_src._typeid) + ", ID=" + (pClub_src.id) + "] mas o clubset nao existe no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transferir mastery pts para o ClubSet[TYPEID=" + (pClub_src._typeid) + ", ID=" + (pClub_src.id) + "] mas o clubset nao existe no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         101, 0x5300102));
                 }
 
                 if (clubset.work_shop.tipo == -1)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou transferir mastery pts para o ClubSet[TYPEID=" + (pClub_dst._typeid) + ", ID=" + (pClub_dst.id) + "] mas ele nao pode receber mastery de outros ClubSet. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transferir mastery pts para o ClubSet[TYPEID=" + (pClub_dst._typeid) + ", ID=" + (pClub_dst.id) + "] mas ele nao pode receber mastery de outros ClubSet. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         102, 0x5300103));
                 }
 
                 if (pClub_dst.clubset_workshop.calcRank(clubset.SlotStats.getSlot) == 5)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou transferir mastery pts para o ClubSet[TYPEID=" + (pClub_dst._typeid) + ", ID=" + (pClub_dst.id) + "] mas o ClubSet é Rank S nao pode transferir Mastery Pts mais para ele. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transferir mastery pts para o ClubSet[TYPEID=" + (pClub_dst._typeid) + ", ID=" + (pClub_dst.id) + "] mas o ClubSet é Rank S nao pode transferir Mastery Pts mais para ele. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         107, 0x5300108));
                 }
 
                 if ((tmp.qntd * 300) > (uint)pClub_src.clubset_workshop.mastery && (uint)((pClub_src.clubset_workshop.mastery % 300 == 0) ? pClub_src.clubset_workshop.mastery / 300 : pClub_src.clubset_workshop.mastery / 300 + 1) > tmp.qntd)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou transferir mastery pts do ClubSet[ID=" + (tmp.clubset[0]) + "] para ClubSet[ID=" + (tmp.clubset[1]) + "], mas ele tentou usar UCIM chip mais que o necessario. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou transferir mastery pts do ClubSet[ID=" + (tmp.clubset[0]) + "] para ClubSet[ID=" + (tmp.clubset[1]) + "], mas ele tentou usar UCIM chip mais que o necessario. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         105, 0x5300106));
                 }
 
@@ -111,9 +111,9 @@ namespace Pangya_GameServer.Handles
                 item.qntd = (int)tmp.qntd;
                 item.STDA_C_ITEM_QNTD = (short)(item.qntd * -1);
 
-                if (ItemManager.removeItem(item, _session) <= 0)
+                if (ItemManager.removeItem(item, Player) <= 0)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou remover item[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + "] mas nao conseguiu", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopTransferMasteryPts][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou remover item[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + "] mas nao conseguiu", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         106, 0x5300107));
                 }
 
@@ -151,13 +151,13 @@ namespace Pangya_GameServer.Handles
 
                 // Atualiza ON DB
                 NormalManagerDB.getInstance().add(12,
-                     new CmdUpdateClubSetWorkshop(_session.UserInfo.uid,
+                     new CmdUpdateClubSetWorkshop(Player.UserInfo.uid,
                          pClub_src,
                          CmdUpdateClubSetWorkshop.FLAG.F_TRANSFER_MASTERY_PTS),
                     null, null); 
 
                 // Log
-                _smp.message_pool.getInstance().push(new message("[ClubSet Workshop::TransferMasteryPts][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] transferiu mastery pts[value=" + (mastery) + "] do ClubSet[TYPEID=" + (pClub_src._typeid) + ", ID=" + (pClub_src.id) + "] para o ClubSet[TYPEID=" + (pClub_dst._typeid) + ", ID=" + (pClub_dst.id) + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[ClubSet Workshop::TransferMasteryPts][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] transferiu mastery pts[value=" + (mastery) + "] do ClubSet[TYPEID=" + (pClub_src._typeid) + ", ID=" + (pClub_src.id) + "] para o ClubSet[TYPEID=" + (pClub_dst._typeid) + ", ID=" + (pClub_dst.id) + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Atualiza ON Jogo
                 p.init_plain(0x216);
@@ -180,21 +180,21 @@ namespace Pangya_GameServer.Handles
                     }
                 }
 
-                _session.Send(p);
+                Player.Send(p);
 
                 // Resposta do transfer Mastery Pts
                 p.init_plain(0x245);
 
                 p.WriteUInt32(0); // OK
 
-                _session.Send(p);
+                Player.Send(p);
 
                 // Update Achievement ON SERVER, DB and GAME
                 AchievementSystem sys_achieve = new AchievementSystem();
 
                 sys_achieve.incrementCounter(0x6C4000A5u);
 
-                sys_achieve.finish_and_update(_session);
+                sys_achieve.finish_and_update(Player);
 
             }
             catch (exception e)
@@ -205,7 +205,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteUInt32((ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL) ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 0x5300100);
 
-                _session.Send(p);
+                Player.Send(p);
             }
         } 
     }

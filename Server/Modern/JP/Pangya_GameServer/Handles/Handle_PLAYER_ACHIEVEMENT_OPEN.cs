@@ -9,22 +9,22 @@ using PangyaAPI.Network.Core;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ACHIEVEMENT_OPEN : IPacketHandler<Player>
+    public class Handle_PLAYER_ACHIEVEMENT_OPEN : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                uint uid = _packet.ReadUInt32();
-                AchievementManager? mgr = GetManager(uid, _session);
+                uint uid = Packet.ReadUInt32();
+                AchievementManager? mgr = GetManager(uid, Player);
 
                 if (mgr == null)
                 {
-                    _session.Send(Handle_PACKET_RESPONSE.pacote22C(1)); // Falha
+                    Player.Send(HandlePacket_RESPONSE.pacote22C(1)); // Falha
                     return;
                 }
 
-                mgr.sendAchievementGuiToPlayer(_session);
+                mgr.sendAchievementGuiToPlayer(Player);
             }
             catch (Exception)
             {
@@ -35,8 +35,8 @@ namespace Pangya_GameServer.Handles
         private AchievementManager? GetManager(uint uid, Player session)
         {
             // 1. Caso seja o próprio jogador
-            if (session.UserInfo.uid == uid)
-                return session.UserInfo.Achievements;
+            if (Player.UserInfo.uid == uid)
+                return Player.UserInfo.Achievements;
 
             // 2. Caso seja outro jogador online
             var targetPlayer = GameServer.getInstance().FindPlayer(uid);

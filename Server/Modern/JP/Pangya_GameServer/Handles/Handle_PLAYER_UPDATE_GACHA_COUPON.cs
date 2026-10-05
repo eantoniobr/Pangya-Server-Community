@@ -21,15 +21,15 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_UPDATE_GACHA_COUPON : IPacketHandler<Player>
+    public class Handle_PLAYER_UPDATE_GACHA_COUPON : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
-                CmdCouponGacha cmd_cg = new CmdCouponGacha(_session.Inventory.uid); // Waiter
+                CmdCouponGacha cmd_cg = new CmdCouponGacha(Player.Inventory.uid); // Waiter
 
                 NormalManagerDB.getInstance().add(0, cmd_cg, null, null);
 
@@ -38,21 +38,21 @@ namespace Pangya_GameServer.Handles
                     throw cmd_cg.getException();
                 }
 
-                _session.Inventory.CouponGacha = cmd_cg.getCouponGacha();
+                Player.Inventory.CouponGacha = cmd_cg.getCouponGacha();
 
                 // Update no Warehouse Item
                 byte find_ticket_and_sub = 0;
 
-                foreach (var el in _session.Inventory.WarehouseItems)
+                foreach (var el in Player.Inventory.WarehouseItems)
                 {
                     switch (el.Value._typeid)
                     {
                         case 0x1A000080: // Gacha Ticket
-                            el.Value.STDA_C_ITEM_QNTD = (short)_session.Inventory.CouponGacha.normal_ticket;
+                            el.Value.STDA_C_ITEM_QNTD = (short)Player.Inventory.CouponGacha.normal_ticket;
                             find_ticket_and_sub = 1;
                             break;
                         case 0x1A000083: // Gacha Sub Ticket
-                            el.Value.STDA_C_ITEM_QNTD = (short)_session.Inventory.CouponGacha.partial_ticket;
+                            el.Value.STDA_C_ITEM_QNTD = (short)Player.Inventory.CouponGacha.partial_ticket;
                             find_ticket_and_sub |= 2;
                             break;
                     }
@@ -63,7 +63,7 @@ namespace Pangya_GameServer.Handles
                     }
                 }
 
-                _session.Send(Handle_PACKET_RESPONSE.pacote102(_session.UserInfo,_session.Inventory.CouponGacha));
+                Player.Send(HandlePacket_RESPONSE.pacote102(Player.UserInfo,Player.Inventory.CouponGacha));
 
             }
             catch (exception e)
@@ -77,7 +77,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteUInt32((ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL) ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 0x5300600);
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

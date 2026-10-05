@@ -4,47 +4,48 @@ using Pangya_LoginServer.Server;
 using Pangya_LoginServer.Session;
 using PangyaAPI.Network;
 using PangyaAPI.Network.Core;
+using PangyaAPI.Network.Handle;
 using PangyaAPI.Utilities.Log;
 
 namespace Pangya_LoginServer.Handles
 {
-    public class Handle_KICK_PLAYER : IPacketHandler<Player>
+    public class Handle_KICK_PLAYER : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player player, Packet packet)
+        public override async Task Handle()
         {
             try
             {
                 // Log de tentativa de derrubar login duplicado
                 _smp.message_pool.getInstance().push(new message(
-                    $"[Handle_KICK_PLAYER][Log] Player {player.UserInfo.id} (UID: {player.UserInfo.uid}) solicitou derrubar login duplicado.",
+                    $"[Handle_KICK_PLAYER][Log] Player {Player.UserInfo.id} (UID: {Player.UserInfo.uid}) solicitou derrubar login duplicado.",
                     type_msg.CL_FILE_LOG_AND_CONSOLE)); 
 
-                // Derruba o player que está logado no game server
+                // Derruba o Player que está logado no game server
                 // Se o Auth Server Estiver ligado manda por ele, se não tira pelo banco de dados mesmo
                 if (LoginServer.getInstance().m_unit_connect != null)
                 {
 
-                    // [Auth Server] . Game Server UID = _session.m_pi.m_server_uid;
-                    LoginServer.getInstance().m_unit_connect.SendDisconnectPlayer(player.UserInfo.m_server_uid, player.UserInfo.uid);
+                    // [Auth Server] . Game Server UID = Player.m_pi.m_server_uid;
+                    LoginServer.getInstance().m_unit_connect.SendDisconnectPlayer(Player.UserInfo.m_server_uid, Player.UserInfo.uid);
 
                 }
                 else
                 {
 
                     // Auth Server não está online, resolver por aqui mesmo
-                    CommandDB.RegisterLogon(player.UserInfo.uid, 0);
+                    CommandDB.RegisterLogon(Player.UserInfo.uid, 0);
 
-                   await Handle_PLAYER_LOGIN.SUCCESS_LOGIN(player, 0); 
+                   await Handle_PLAYER_LOGIN.SUCCESS_LOGIN(Player, 0); 
                 }
 
             }
             catch (Exception e)
             {
                 // Se falhar (ex: Auth Server offline), envia erro 500053 (Duplicate Login Error)
-                player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500053));
+                Player.Send(Handle_PACKET_RESPONSE.pacote00E(Player, "", 12, 500053));
 
                 _smp.message_pool.getInstance().push(new message(
-                    $"[Handle_KICK_PLAYER][Error] Falha ao derrubar player: {e.Message}",
+                    $"[Handle_KICK_PLAYER][Error] Falha ao derrubar Player: {e.Message}",
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
             }
         }

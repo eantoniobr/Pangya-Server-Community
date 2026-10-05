@@ -1,0 +1,10 @@
+﻿global using Pangya_GameServer.Handles.Packets;
+global using Pangya_GameServer.Manager;
+global using Pangya_GameServer.Models;
+global using Pangya_GameServer.PacketFunc;
+global using Pangya_GameServer.Session;
+global using PangyaAPI.Network;
+global using PangyaAPI.Network.Handle;
+global using PangyaAPI.Utilities;
+global using PangyaAPI.Utilities.Log;
+global using PangyaAPI.Utilities.Models;

@@ -18,16 +18,16 @@ using System;
 using System.Threading.Tasks;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_REPLY_INITIAL_VALUE_GRAND_ZODIAC : IPacketHandler<Player>
+    public class Handle_PLAYER_REPLY_INITIAL_VALUE_GRAND_ZODIAC : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                var r = _session.GetGameRoom() ?? throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "]  tentou responder o valor inicial do Grand Zodiac game na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhum sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                var r = Player.GetGameRoom() ?? throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "]  tentou responder o valor inicial do Grand Zodiac game na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhum sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         1, 0x6207901));
 
-                r.RequestReplyInitialValueGrandZodiac(_session, _packet);
+                r.RequestReplyInitialValueGrandZodiac(Player, Packet);
             }
             catch (exception e)
             {

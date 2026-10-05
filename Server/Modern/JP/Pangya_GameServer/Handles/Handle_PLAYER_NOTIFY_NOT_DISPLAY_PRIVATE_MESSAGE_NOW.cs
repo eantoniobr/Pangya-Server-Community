@@ -9,10 +9,10 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_NOTIFY_NOT_DISPLAY_PRIVATE_MESSAGE_NOW : IPacketHandler<Player>
+    public class Handle_PLAYER_NOTIFY_NOT_DISPLAY_PRIVATE_MESSAGE_NOW : HandleBase<Player, Packet_EXAMPLE>
     {
 
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
             try
             { 
@@ -20,13 +20,13 @@ namespace Pangya_GameServer.Handles
 
                 if (string.IsNullOrWhiteSpace(nicknameSender))
                 {
-                    throw new exception($"[WhisperRefuse] Player[UID={session.UserInfo.uid}] enviou um nickname vazio.",
+                    throw new exception($"[WhisperRefuse] Player[UID={Player.UserInfo.uid}] enviou um nickname vazio.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 0x750050, 0));
                 }
 
                 if (!Tools.Sanitize(nicknameSender))
                 {
-                    throw new exception($"[WhisperRefuse] Player[UID={session.UserInfo.uid}] enviou nickname com caracteres suspeitos: {nicknameSender}",
+                    throw new exception($"[WhisperRefuse] Player[UID={Player.UserInfo.uid}] enviou nickname com caracteres suspeitos: {nicknameSender}",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 1, 1));
                 }
 
@@ -37,9 +37,9 @@ namespace Pangya_GameServer.Handles
                 {
                     // Log do evento
                     _smp.message_pool.getInstance().push(new message(
-                        $"[WhisperRefuse] Player[{session.UserInfo.nickname}] recusou automaticamente o whisper de [{nicknameSender}].",
+                        $"[WhisperRefuse] Player[{Player.UserInfo.nickname}] recusou automaticamente o whisper de [{nicknameSender}].",
                         type_msg.CL_FILE_LOG_AND_CONSOLE)); 
-                    var response = Handle_PACKET_RESPONSE.pacote040(nicknameSender, "", eChatMsg.CHAT_REFUSE_WHISPER); 
+                    var response = HandlePacket_RESPONSE.pacote040(nicknameSender, "", eChatMsg.CHAT_REFUSE_WHISPER); 
                     senderSession.Send(response);
                 }
             }

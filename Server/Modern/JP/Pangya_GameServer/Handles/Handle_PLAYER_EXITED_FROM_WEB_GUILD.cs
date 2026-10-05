@@ -17,35 +17,35 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_EXITED_FROM_WEB_GUILD : IPacketHandler<Player>
+    public class Handle_PLAYER_EXITED_FROM_WEB_GUILD : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
                 // Verifica se tem alteração nos pangs
-                ulong old_pang = _session.UserInfo.Statistics.pang;
+                ulong old_pang = Player.UserInfo.Statistics.pang;
 
                 // Update o pang do server com o valor que está no banco de dados
-                _session.UserInfo.updatePang();
+                Player.UserInfo.updatePang();
 
-                if (old_pang != _session.UserInfo.Statistics.pang)
+                if (old_pang != Player.UserInfo.Statistics.pang)
                 {
-                    // Atualiza o pangs do player no jogo
+                    // Atualiza o pangs do Player no jogo
                     Packet p = new Packet((ushort)0xC8);
 
-                    p.WriteUInt64(_session.UserInfo.Statistics.pang);
+                    p.WriteUInt64(Player.UserInfo.Statistics.pang);
                     p.WriteUInt64(0);
 
-                    _session.Send(p);
+                    Player.Send(p);
                 }
 
-                // Verifica se tem alguma atualização da guild Web para atualizar o player no server e cliente
-                // Só verifica se o player estiver em uma guild
-                if (_session.UserInfo.Guild.uid > 0)
+                // Verifica se tem alguma atualização da guild Web para atualizar o Player no server e cliente
+                // Só verifica se o Player estiver em uma guild
+                if (Player.UserInfo.Guild.uid > 0)
                 {
-                    CmdGuildUpdateActivityInfo cmd_guai = new CmdGuildUpdateActivityInfo(_session.UserInfo.Guild.uid,
-                        _session.UserInfo.uid, true);
+                    CmdGuildUpdateActivityInfo cmd_guai = new CmdGuildUpdateActivityInfo(Player.UserInfo.Guild.uid,
+                        Player.UserInfo.uid, true);
 
                     NormalManagerDB.getInstance().add(0, cmd_guai, null, null);
 
@@ -69,11 +69,11 @@ namespace Pangya_GameServer.Handles
                                     {
                                         p.init_plain(0x01);
                                         p.WriteUInt32(el.club_uid);
-                                        p.WriteUInt32(el.player_uid);
+                                        p.WriteUInt32(el.Player_uid);
 
                                         GameServer.getInstance().sendCommandToOtherServerWithAuthServer(p, 3);
 
-                                        var s = GameServer.getInstance().FindPlayer(el.player_uid);
+                                        var s = GameServer.getInstance().FindPlayer(el.Player_uid);
 
                                         if (s != null)
                                         {
@@ -121,22 +121,22 @@ namespace Pangya_GameServer.Handles
                                     {
                                         p.init_plain(0x02);
                                         p.WriteUInt32(el.club_uid);
-                                        p.WriteUInt32(el.player_uid);
+                                        p.WriteUInt32(el.Player_uid);
 
                                         GameServer.getInstance().sendCommandToOtherServerWithAuthServer(p, 3);
 
-                                        _session.UserInfo.Guild.clear();
-                                        _session.UserInfo.Member.guild_mark_img_no = 0;
-                                        _session.UserInfo.Member.guild_uid = 0;
-                                        _session.UserInfo.Member.guild_pang = 0;
-                                        _session.UserInfo.Member.guild_point = 0;
-                                        _session.UserInfo.Member.guild_name = "";
-                                        _session.UserInfo.Member.guild_mark_img = "";
+                                        Player.UserInfo.Guild.clear();
+                                        Player.UserInfo.Member.guild_mark_img_no = 0;
+                                        Player.UserInfo.Member.guild_uid = 0;
+                                        Player.UserInfo.Member.guild_pang = 0;
+                                        Player.UserInfo.Member.guild_point = 0;
+                                        Player.UserInfo.Member.guild_name = "";
+                                        Player.UserInfo.Member.guild_mark_img = "";
 
-                                        if (_session.GetChannel() != null)
+                                        if (Player.GetChannel() != null)
                                         {
-                                            _session.GetChannel()?.UpdatePlayerInfo(_session);
-                                            _session.GetChannel()?.SendUpdatePlayerInfo(_session, 3);
+                                            Player.GetChannel()?.UpdatePlayerInfo(Player);
+                                            Player.GetChannel()?.SendUpdatePlayerInfo(Player, 3);
                                         }
                                         break;
                                     }
@@ -144,11 +144,11 @@ namespace Pangya_GameServer.Handles
                                     {
                                         p.init_plain(0x03);
                                         p.WriteUInt32(el.club_uid);
-                                        p.WriteUInt32(el.player_uid);
+                                        p.WriteUInt32(el.Player_uid);
 
                                         GameServer.getInstance().sendCommandToOtherServerWithAuthServer(p, 3);
 
-                                        var s = GameServer.getInstance().FindPlayer(el.player_uid);
+                                        var s = GameServer.getInstance().FindPlayer(el.Player_uid);
 
                                         if (s != null)
                                         {

@@ -25,18 +25,18 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHECK_INVITE : IPacketHandler<Player>
+    public class Handle_PLAYER_CHECK_INVITE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
-            var m_ci = _session.GetChannel();
+            var m_ci = Player.GetChannel();
             try
             {
                 // Esse aqui o O Server Original nao retorna nada para o cliente, acho que é só um check
-                uint uid = _packet.ReadUInt32();
+                uint uid = Packet.ReadUInt32();
                 if (m_ci.sInvites.Any(c => c.invited_uid == uid))
                 {
-                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_CHECK_INVITE][Sucess] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] enviou convite para o PLAYER [UID=" + uid + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_CHECK_INVITE][Sucess] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] enviou convite para o PLAYER [UID=" + uid + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
             }
             catch (exception e)

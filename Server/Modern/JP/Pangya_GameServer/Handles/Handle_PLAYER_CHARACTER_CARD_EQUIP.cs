@@ -20,17 +20,17 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHARACTER_CARD_EQUIP : IPacketHandler<Player>
+    public class Handle_PLAYER_CHARACTER_CARD_EQUIP : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             Packet response = new Packet();
             try
             {
                 // 1. Validação de bloqueio do jogador
-                if (session.UserInfo.block_flag.m_flag.char_mastery)
+                if (Player.UserInfo.block_flag.m_flag.char_mastery)
                 {
-                    throw new exception($"[EquipCard] Player UID={session.UserInfo.uid} bloqueado para maestria.",
+                    throw new exception($"[EquipCard] Player UID={Player.UserInfo.uid} bloqueado para maestria.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 9, 0x790001));
                 }
 
@@ -45,23 +45,23 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 3. Validação de Posse (Character e Card)
-                var pCi = session.Inventory.FindCharacterById(ce.char_id);
+                var pCi = Player.Inventory.FindCharacterById(ce.char_id);
                 if (pCi == null || pCi._typeid != ce.char_typeid)
                 {
-                    throw new exception($"[EquipCard] Player UID={session.UserInfo.uid} não possui o Character ID={ce.char_id}.",
+                    throw new exception($"[EquipCard] Player UID={Player.UserInfo.uid} não possui o Character ID={ce.char_id}.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 750, 0x5200751));
                 }
 
-                var pCardInfo = session.Inventory.FindCardById(ce.card_id);
+                var pCardInfo = Player.Inventory.FindCardById(ce.card_id);
                 if (pCardInfo == null || pCardInfo._typeid != ce.card_typeid)
                 {
-                    throw new exception($"[EquipCard] Player UID={session.UserInfo.uid} não possui o Card ID={ce.card_id}.",
+                    throw new exception($"[EquipCard] Player UID={Player.UserInfo.uid} não possui o Card ID={ce.card_id}.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 751, 0x5200752));
                 }
 
                 // 4. Verificação de Segurança (Personal Shop)
-                var room = session.GetRoom();
-                if (room != null && room.CheckPersonalShopItem(session, ce.card_id))
+                var room = Player.GetRoom();
+                if (room != null && room.CheckPersonalShopItem(Player, ce.card_id))
                 {
                     throw new exception($"[EquipCard] Card ID={ce.card_id} está à venda no Shop.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1010, 0x5201010));
@@ -88,9 +88,9 @@ namespace Pangya_GameServer.Handles
                 // 8. Registro de Equipamento e DB
                 CardEquipInfoEx cei = CreateCardEquipInfo(ce, cardIff, group);
 
-                session.Inventory.CardEquipment.Add(cei); 
-                NormalManagerDB.getInstance().add(10, new CmdEquipCard(session.UserInfo.uid, cei, 0));
-                session.Inventory.SyncCharacter(pCi.id, pCi); 
+                Player.Inventory.CardEquipment.Add(cei); 
+                NormalManagerDB.getInstance().add(10, new CmdEquipCard(Player.UserInfo.uid, cei, 0));
+                Player.Inventory.SyncCharacter(pCi.id, pCi); 
 
                 var item = new stItem
                 {
@@ -101,14 +101,14 @@ namespace Pangya_GameServer.Handles
                     type_iff = (byte)cei.slot
                 };
                 // 9. Envio de Pacotes de Resposta
-                SendSuccessPackets(session, item, cei);
+                SendSuccessPackets(Player, item, cei);
 
                 // 10. Sistema de Conquistas
                 UpdateAchievements(session);
             }
             catch (exception e)
             {
-                HandleException(session, e);
+                HandleException(Player, e);
             }
         }
 
@@ -186,13 +186,13 @@ namespace Pangya_GameServer.Handles
             p.WriteZero(10);  // UCC IDX e outras coisas
             p.WriteUInt32(el.price);      // Card typeid
             p.WriteByte(el.type_iff);   // Card Slot
-            session.Send(p);
+            Player.Send(p);
 
             // Pacote 0x271
             p = new Packet(0x271);
             p.WriteUInt32(0); // Código OK
             p.WriteUInt32(cei._typeid);
-            session.Send(p);
+            Player.Send(p);
         }
 
         private void UpdateAchievements(Player session)
@@ -212,7 +212,7 @@ namespace Pangya_GameServer.Handles
                 : 0x5200750;
 
             pErr.WriteUInt32(errorCode);
-            session.Send(pErr);
+            Player.Send(pErr);
         }
     }
 }

@@ -12,25 +12,25 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_OPEN_CARD_PACK : IPacketHandler<Player>
+    public class Handle_PLAYER_OPEN_CARD_PACK : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
             try
             {
                 // 1. Leitura do pacote enviado pelo cliente
-                uint _typeid = _packet.ReadUInt32();
-                int id = _packet.ReadInt32();
+                uint _typeid = Packet.ReadUInt32();
+                int id = Packet.ReadInt32();
 
                 if (!sCardSystem.getInstance().isLoad())
                     sCardSystem.getInstance().load();
 
                 // 2. Validação de posse do item
-                var pCi = _session.Inventory.FindCardById(id);
+                var pCi = Player.Inventory.FindCardById(id);
                 if (pCi == null || pCi.qntd < 1)
                 {
-                    throw new exception($"[Handle_PLAYER_OPEN_CARD_PACK] Player [UID={_session.UserInfo.uid}] não possui o Card Pack.",
+                    throw new exception($"[Handle_PLAYER_OPEN_CARD_PACK] Player [UID={Player.UserInfo.uid}] não possui o Card Pack.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 102, 0x5400103));
                 }
 
@@ -72,7 +72,7 @@ namespace Pangya_GameServer.Handles
                     var item = new stItem();
                     var bi = new BuyItem { id = -1, _typeid = el._typeid, qntd = 1 };
 
-                    ItemManager.initItemFromBuyItem(_session.UserInfo, item, bi, false, 0, 0, 1);
+                    ItemManager.initItemFromBuyItem(Player.UserInfo, item, bi, false, 0, 0, 1);
 
                     if (item._typeid == 0) continue;
 
@@ -132,11 +132,11 @@ namespace Pangya_GameServer.Handles
                         p.WriteUInt32(1);
                 }
 
-                _session.Send(p);
+                Player.Send(p);
 
                 // Finalizar Achievements
                 sys_achieve.incrementCounter(0x6C400078u);
-                sys_achieve.finish_and_update(_session);
+                sys_achieve.finish_and_update(Player);
             }
             catch (exception e)
             {
@@ -144,7 +144,7 @@ namespace Pangya_GameServer.Handles
 
                 p.init_plain(0x154);
                 p.WriteUInt32(1); // Falha
-                _session.Send(p);
+                Player.Send(p);
             }
         }
 

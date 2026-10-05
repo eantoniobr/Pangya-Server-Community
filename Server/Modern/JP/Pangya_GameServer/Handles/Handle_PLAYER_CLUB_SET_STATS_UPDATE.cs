@@ -21,34 +21,34 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CLUB_SET_STATS_UPDATE : IPacketHandler<Player>
+    public class Handle_PLAYER_CLUB_SET_STATS_UPDATE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
-                byte opt = _packet.ReadByte();
-                byte stat = _packet.ReadByte();
-                int item_id = _packet.ReadInt32();
+                byte opt = Packet.ReadByte();
+                byte stat = Packet.ReadByte();
+                int item_id = Packet.ReadInt32();
 
                 if (opt == 1 || opt == 3)
                 { // ClubSet Up/Downgrade
 
                     AchievementSystem sys_achieve = new AchievementSystem();
 
-                    var pWi = _session.Inventory.FindWarehouseItemById(item_id);
+                    var pWi = Player.Inventory.FindWarehouseItemById(item_id);
 
                     if (pWi == null)
                     {
-                        throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou " + (opt == 1 ? "updar" : "desupar") + " stat[value=" + ((ushort)stat) + "] do ClubSet[ID=" + (item_id) + "] que ele nao possui. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                        throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou " + (opt == 1 ? "updar" : "desupar") + " stat[value=" + ((ushort)stat) + "] do ClubSet[ID=" + (item_id) + "] que ele nao possui. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                             600, 0x5200601));
                     }
 
                     if (stat > (int)CharacterInfo.Stats.S_CURVE)
                     {
-                        throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou " + (opt == 1 ? "updar" : "desupar") + " um stat[value=" + ((ushort)stat) + "] que nao existe do ClubSet[ID=" + (item_id) + "]. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                        throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou " + (opt == 1 ? "updar" : "desupar") + " um stat[value=" + ((ushort)stat) + "] que nao existe do ClubSet[ID=" + (item_id) + "]. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                             604, 0x5200605));
                     }
 
@@ -56,7 +56,7 @@ namespace Pangya_GameServer.Handles
 
                     if (clubset == null)
                     {
-                        throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou " + (opt == 1 ? "updar" : "desupar") + " stat[value=" + ((ushort)stat) + "] do ClubSet[ID=" + (item_id) + "] que nao existe no IFF_STRUCT do server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                        throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou " + (opt == 1 ? "updar" : "desupar") + " stat[value=" + ((ushort)stat) + "] do ClubSet[ID=" + (item_id) + "] que nao existe no IFF_STRUCT do server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                             601, 0x5200602));
                     }
 
@@ -65,7 +65,7 @@ namespace Pangya_GameServer.Handles
 
                         if (((clubset.SlotStats.getSlot[stat] - clubset.Stats.getSlot[stat]) + pWi.clubset_workshop.c[stat]) < (pWi.c[stat] + 1))
                         {
-                            throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou upar stat[value=" + ((ushort)stat) + "] do ClubSet[ID=" + (item_id) + "], mas ele ja upou todos os slot's disponiveis. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou upar stat[value=" + ((ushort)stat) + "] do ClubSet[ID=" + (item_id) + "], mas ele ja upou todos os slot's disponiveis. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                 602, 0x5200603));
                         }
 
@@ -75,18 +75,18 @@ namespace Pangya_GameServer.Handles
 
                         if (enchant == null)
                         {
-                            throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou upar stat[value=" + ((ushort)stat) + "] do ClubSet[ID=" + (item_id) + "], mas nao tem o enchant[TYPEID=" + (enchant_typeid) + "] no IFF_STRUCT do server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou upar stat[value=" + ((ushort)stat) + "] do ClubSet[ID=" + (item_id) + "], mas nao tem o enchant[TYPEID=" + (enchant_typeid) + "] no IFF_STRUCT do server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                 603, 0x5200604));
                         }
 
-                        _session.UserInfo.consomePang((ulong)enchant.Pang);
+                        Player.UserInfo.consomePang((ulong)enchant.Pang);
 
                         // Update ON Server
                         pWi.c[stat]++;
 
                         // Update ON DB
                         NormalManagerDB.getInstance().add(8,
-                             new CmdUpdateClubSetStats(_session.UserInfo.uid,
+                             new CmdUpdateClubSetStats(Player.UserInfo.uid,
                                  pWi, (uint)enchant.Pang),
                             null, null);
 
@@ -102,7 +102,7 @@ namespace Pangya_GameServer.Handles
                         p.WriteInt32(item_id);
                         p.WriteInt64(enchant.Pang);
 
-                        _session.Send(p);
+                        Player.Send(p);
 
                     }
                     else if (opt == 3)
@@ -110,7 +110,7 @@ namespace Pangya_GameServer.Handles
 
                         if ((pWi.c[stat] - 1) < 0)
                         {
-                            throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou desupar stat[value=" + ((ushort)stat) + "] do ClubSet[ID=" + (item_id) + "], mas ele ja desupou tudo que podia. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            throw new exception("[Lobby::RequestClubSetStatsUpdate][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou desupar stat[value=" + ((ushort)stat) + "] do ClubSet[ID=" + (item_id) + "], mas ele ja desupou tudo que podia. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                 605, 0x5200606));
                         }
 
@@ -119,7 +119,7 @@ namespace Pangya_GameServer.Handles
 
                         // Update ON DB
                         NormalManagerDB.getInstance().add(8,
-                             new CmdUpdateClubSetStats(_session.UserInfo.uid,
+                             new CmdUpdateClubSetStats(Player.UserInfo.uid,
                                  pWi, 0),
                             null, null);
 
@@ -135,11 +135,11 @@ namespace Pangya_GameServer.Handles
                         p.WriteInt32(item_id);
                         p.WriteUInt64(0);
 
-                        _session.Send(p);
+                        Player.Send(p);
                     }
 
                     // Update Achievement ON SERVER, DB and GAME
-                    sys_achieve.finish_and_update(_session);
+                    sys_achieve.finish_and_update(Player);
                 } // OPT [0 OR 2] é Character Stats para season passada
 
             }
@@ -152,7 +152,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteByte(0); // Error
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

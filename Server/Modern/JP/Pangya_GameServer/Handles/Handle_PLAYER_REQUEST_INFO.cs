@@ -14,39 +14,39 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_REQUEST_INFO : IPacketHandler<Player>
+    public class Handle_PLAYER_REQUEST_INFO : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                uint uid = _packet.ReadUInt32();
-                byte season = _packet.ReadByte();
+                uint uid = Packet.ReadUInt32();
+                byte season = Packet.ReadByte();
 
                 // 1. Tenta obter o PlayerInfo (Online ou Próprio)
                 PlayerInfo? pi = GetOnlinePlayerInfo(uid, _session);
 
                 if (pi != null)
                 {
-                    HandleOnlinePlayerInfo(_session, pi, season);
+                    HandleOnlinePlayerInfo(Player, pi, season);
                 }
                 else
                 {
                     // 2. Se não estiver online, busca no Banco de Dados
-                    HandleOfflinePlayerInfo(_session, uid, season);
+                    HandleOfflinePlayerInfo(Player, uid, season);
                 }
             }
             catch (Exception e)
             {
                 // Log de erro e resposta de falha
                 _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_INFO_REQUEST][Error] {e.Message}", type_msg.CL_FILE_LOG_AND_CONSOLE));
-                _session.Send(Handle_PACKET_RESPONSE.pacote089(0));
+                Player.Send(HandlePacket_RESPONSE.pacote089(0));
             }
         }
 
         private PlayerInfo? GetOnlinePlayerInfo(uint uid, Player session)
         {
-            if (uid == session.UserInfo.uid) return session.UserInfo;
+            if (uid == Player.UserInfo.uid) return Player.UserInfo;
 
             var target = GameServer.getInstance().FindPlayer(uid);
             return target?.UserInfo;
@@ -55,18 +55,18 @@ namespace Pangya_GameServer.Handles
         private void HandleOnlinePlayerInfo(Player session, PlayerInfo pi, byte season)
         {
             // Validação de GM
-            if (IsRestrictedGM(session, pi))
+            if (IsRestrictedGM(Player, pi))
             {
-                session.Send(Handle_PACKET_RESPONSE.pacote089(pi.uid, season, 3));
+                Player.Send(HandlePacket_RESPONSE.pacote089(pi.uid, season, 3));
                 return;
             }
 
-            var inventory = session.Inventory;
+            var inventory = Player.Inventory;
 
             var ci = inventory.FindCharacterById(inventory.UserEquipment.character_id) ?? new CharacterInfo();
 
             // Envio de pacotes para Jogador Online
-            SendPlayerPackets(session, pi.uid, season,
+            SendPlayerPackets(Player, pi.uid, season,
                 pi.Member, ci, inventory.UserEquipment, pi.Statistics, pi.Guild,
                 pi.NaturalMapStatistics.Where(m => m.best_score != 127).ToList(),
                 pi.NaturalMapStatisticsAll.Where(m => m.best_score != 127).ToList(),
@@ -85,9 +85,9 @@ namespace Pangya_GameServer.Handles
             // Busca MemberInfo primeiro para checar GM 
             var mi = CommandDB.LoadMemberInfo(uid);
              
-            if (uid != session.UserInfo.uid && !session.UserInfo.UserCapabilities.game_master && mi.capability.game_master)
+            if (uid != Player.UserInfo.uid && !Player.UserInfo.UserCapabilities.game_master && mi.capability.game_master)
             {
-                session.Send(Handle_PACKET_RESPONSE.pacote089(uid, season, 3));
+                Player.Send(HandlePacket_RESPONSE.pacote089(uid, season, 3));
                 return;
             }
 
@@ -107,7 +107,7 @@ namespace Pangya_GameServer.Handles
             var v_tei = CommandDB.LoadTrophySpecial(uid, (CmdTrophySpecial.TYPE_SEASON)season, CmdTrophySpecial.TYPE.NORMAL);
             var v_tegi = CommandDB.LoadTrophySpecial(uid, (CmdTrophySpecial.TYPE_SEASON)season, CmdTrophySpecial.TYPE.GRAND_PRIX);
 
-            SendPlayerPackets(session, uid, season, mi, ci, ue, ui, gi,
+            SendPlayerPackets(Player, uid, season, mi, ci, ue, ui, gi,
                 ms_na.Normal, ms_na.Assist, ms_gp.Normal, ms_gp.Assist, ms_no.Normal, ms_no.Assist,
                 v_tei, ti, v_tegi);
         }
@@ -120,23 +120,23 @@ namespace Pangya_GameServer.Handles
             List<MapStatisticsEx> ms_no, List<MapStatisticsEx> msa_no,
             List<TrophySpecialInfo> v_tei, TrophyInfo ti, List<TrophySpecialInfo> v_tegi)
         {
-            session.Send(Handle_PACKET_RESPONSE.pacote157(mi, season));
-            session.Send(Handle_PACKET_RESPONSE.pacote15E(uid, ci));
-            session.Send(Handle_PACKET_RESPONSE.pacote156(uid, ue, season));
-            session.Send(Handle_PACKET_RESPONSE.pacote158(uid, ui, season));
-            session.Send(Handle_PACKET_RESPONSE.pacote15D(uid, gi));
-            session.Send(Handle_PACKET_RESPONSE.pacote15C(uid, ms_na, msa_na, (byte)((season != 0) ? 0x33 : 0x0A)));
-            session.Send(Handle_PACKET_RESPONSE.pacote15C(uid, ms_gp, msa_gp, (byte)((season != 0) ? 0x34 : 0x0B)));
-            session.Send(Handle_PACKET_RESPONSE.pacote15B(uid, season));
-            session.Send(Handle_PACKET_RESPONSE.pacote15A(uid, v_tei, season));
-            session.Send(Handle_PACKET_RESPONSE.pacote159(uid, ti, season));
-            session.Send(Handle_PACKET_RESPONSE.pacote15C(uid, ms_no, msa_no, season));
-            session.Send(Handle_PACKET_RESPONSE.pacote257(uid, v_tegi, season));
-            session.Send(Handle_PACKET_RESPONSE.pacote089(uid, season));
+            Player.Send(HandlePacket_RESPONSE.pacote157(mi, season));
+            Player.Send(HandlePacket_RESPONSE.pacote15E(uid, ci));
+            Player.Send(HandlePacket_RESPONSE.pacote156(uid, ue, season));
+            Player.Send(HandlePacket_RESPONSE.pacote158(uid, ui, season));
+            Player.Send(HandlePacket_RESPONSE.pacote15D(uid, gi));
+            Player.Send(HandlePacket_RESPONSE.pacote15C(uid, ms_na, msa_na, (byte)((season != 0) ? 0x33 : 0x0A)));
+            Player.Send(HandlePacket_RESPONSE.pacote15C(uid, ms_gp, msa_gp, (byte)((season != 0) ? 0x34 : 0x0B)));
+            Player.Send(HandlePacket_RESPONSE.pacote15B(uid, season));
+            Player.Send(HandlePacket_RESPONSE.pacote15A(uid, v_tei, season));
+            Player.Send(HandlePacket_RESPONSE.pacote159(uid, ti, season));
+            Player.Send(HandlePacket_RESPONSE.pacote15C(uid, ms_no, msa_no, season));
+            Player.Send(HandlePacket_RESPONSE.pacote257(uid, v_tegi, season));
+            Player.Send(HandlePacket_RESPONSE.pacote089(uid, season));
         }
 
         private bool IsRestrictedGM(Player session, PlayerInfo targetPi)
-            => session.UserInfo.uid != targetPi.uid && !session.UserInfo.UserCapabilities.game_master && targetPi.UserCapabilities.game_master;
+            => Player.UserInfo.uid != targetPi.uid && !Player.UserInfo.UserCapabilities.game_master && targetPi.UserCapabilities.game_master;
          
         private async Task<(List<MapStatisticsEx> Normal, List<MapStatisticsEx> Assist)> GetOfflineStats(uint uid, byte season, CmdMapStatistics.TYPE_MODO modo)
         { 

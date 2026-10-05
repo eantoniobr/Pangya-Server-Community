@@ -9,22 +9,22 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_EXEC_CCG_DESTROY : IPacketHandler<Player>
+    public class Handle_PLAYER_EXEC_CCG_DESTROY : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
-            var m_ci = _session.GetChannel();
+            var m_ci = Player.GetChannel();
             try
             {
-                if (_session.UserInfo.UserCapabilities.game_master)
+                if (Player.UserInfo.UserCapabilities.game_master)
                 {
-                    short sala_numero = _packet.ReadInt16();
+                    short sala_numero = Packet.ReadInt16();
 
                     var r = GameServer.getInstance().FindRoom(sala_numero);
 
                     if (r == null)
                     {
-                        throw new exception("[Lobby.Room::RequestExecCCGDestroy][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou executar o comando destroy, para destruir a sala[NUMERO=" + (sala_numero) + "], mas a sala nao existe.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 16, 0x5700100));
+                        throw new exception("[Lobby.Room::RequestExecCCGDestroy][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou executar o comando destroy, para destruir a sala[NUMERO=" + (sala_numero) + "], mas a sala nao existe.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 16, 0x5700100));
                     }
 
                     if (m_ci.Sessions.Count == 0)
@@ -40,11 +40,11 @@ namespace Pangya_GameServer.Handles
                         }
                     }
 
-                    _smp.message_pool.getInstance().push(new message("[Lobby.Room::RequestExecCCGDestroy][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] destruiu a sala[NUMERO=" + (sala_numero) + "] no canal[NOME=" + (m_ci.getName()) + "].", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message("[Lobby.Room::RequestExecCCGDestroy][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] destruiu a sala[NUMERO=" + (sala_numero) + "] no canal[NOME=" + (m_ci.getName()) + "].", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
                 else
                 {
-                    throw new exception("[Lobby.Room::RequestExecCCGDestroy][Error] PLAYER [UID=" + _session.UserInfo.uid + "] nao tem a capacidade de um GM. hacker ou bug.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 17, 0x5700101));
+                    throw new exception("[Lobby.Room::RequestExecCCGDestroy][Error] PLAYER [UID=" + Player.UserInfo.uid + "] nao tem a capacidade de um GM. hacker ou bug.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 17, 0x5700101));
                 }
             }
             catch (exception e)
@@ -53,10 +53,10 @@ namespace Pangya_GameServer.Handles
 
                 Packet p = new Packet((ushort)0x40);
                 p.WriteByte(7);
-                p.WriteString(_session.UserInfo.nickname);
+                p.WriteString(Player.UserInfo.nickname);
                 p.WriteString("Nao conseguiu executar o comando.");
 
-                _session.Send(p);
+                Player.Send(p);
             }
             await Task.CompletedTask;
         }

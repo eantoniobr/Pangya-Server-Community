@@ -11,53 +11,53 @@ using PangyaAPI.Utilities.Models;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHANGE_AFK_STATE : IPacketHandler<Player>
+    public class Handle_PLAYER_CHANGE_AFK_STATE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet packet)
+        public override async Task Handle()
         {
-            var _channel = _session.GetChannel();
+            var _channel = Player.GetChannel();
             try
             {
                 byte state = packet.ReadByte();
 
-                var room = _session.GetRoom();
+                var room = Player.GetRoom();
 
                 if (room == null)
                 {
                     throw new exception(
-                        $"[AFK][Error] Player[UID={_session.UserInfo.uid}] tentou mudar estado AFK mas não está em uma sala.",
+                        $"[AFK][Error] Player[UID={Player.UserInfo.uid}] tentou mudar estado AFK mas não está em uma sala.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 10, 0));
                 }
 
-                var pri = room.GetPlayerInfo(_session);
+                var pri = room.GetPlayerInfo(Player);
 
                 // PlayerLobbyInfo (Info que o canal enxerga no Lobby) 
-                var pci = _channel?.GetPlayerInfo(_session);
+                var pci = _channel?.GetPlayerInfo(Player);
 
                 if (pri == null || pci == null)
                 {
                     throw new exception(
-                        $"[AFK][Error] Falha ao localizar Info de Sala ou Lobby para UID={_session.UserInfo.uid}.",
+                        $"[AFK][Error] Falha ao localizar Info de Sala ou Lobby para UID={Player.UserInfo.uid}.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 11, 0));
                 }
 
                 //Atualização dos Flags
                 pci.state_flag.away = pri.state_flag.away = state;
 
-                _channel?.UpdatePlayerInfo(_session);
-                room?.UpdatePlayerInfo(_session);
+                _channel?.UpdatePlayerInfo(Player);
+                room?.UpdatePlayerInfo(Player);
 
                 using (var response = new Packet())
                 {
                     response.init_plain(0x8E);
-                    response.WriteInt32(_session.ConnectionID); // OID do jogador
+                    response.WriteInt32(Player.ConnectionID); // OID do jogador
                     response.WriteByte(state);          // Novo estado 
                     room?.SendBroadCast(response);
                 }
 
                 if (_channel != null)
                 {
-                    _channel.Lobby.SendUpdatePlayerInfo(_session, 3);
+                    _channel.Lobby.SendUpdatePlayerInfo(Player, 3);
                 }
 
             }

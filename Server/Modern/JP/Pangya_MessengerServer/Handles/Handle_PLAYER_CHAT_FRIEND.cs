@@ -9,36 +9,36 @@ using PangyaAPI.Utilities.Models;
 
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_PLAYER_CHAT_FRIEND : IPacketHandler<Player>
+    public class Handle_PLAYER_CHAT_FRIEND : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             var p = new Packet();
 
             try
             {
                 // 1. Leitura do Pacote
-                uint targetUid = packet.ReadUInt32();
-                string msg = packet.ReadPStr();
+                uint targetUid = Packet.ReadUInt32();
+                string msg = Packet.ReadPStr();
 
                 // 2. Validações de Segurança (Sanitize e Empty Check)
                 if (string.IsNullOrWhiteSpace(msg) || !Tools.Sanitize(msg))
                 {
-                    throw new exception($"Mensagem inválida ou tentativa de inject de UID: {session.UserInfo.uid}",
+                    throw new exception($"Mensagem inválida ou tentativa de inject de UID: {Player.UserInfo.uid}",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 1, 1));
                 }
 
                 if (targetUid == 0)
                 {
-                    throw new exception($"UID Alvo inválido para player: {session.UserInfo.uid}",
+                    throw new exception($"UID Alvo inválido para player: {Player.UserInfo.uid}",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 1, 0x5200301));
                 }
 
                 // 3. Verificação de Amizade (Quem envia)
-                var friendInfo = session.UserInfo.m_friend_manager.findFriendInAllFriend(targetUid);
+                var friendInfo = Player.UserInfo.m_friend_manager.findFriendInAllFriend(targetUid);
                 if (friendInfo == null || friendInfo.state.block == 1)
                 {
-                    throw new exception($"Amizade não encontrada ou bloqueada. De: {session.UserInfo.uid} Para: {targetUid}",
+                    throw new exception($"Amizade não encontrada ou bloqueada. De: {Player.UserInfo.uid} Para: {targetUid}",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 3, 0x5200303));
                 }
 
@@ -51,10 +51,10 @@ namespace Pangya_MessengerServer.Handles
                 }
 
                 // 5. Verificação de Amizade (Quem recebe)
-                var targetFriendEntry = targetSession.UserInfo.m_friend_manager.findFriendInAllFriend(session.UserInfo.uid);
+                var targetFriendEntry = targetSession.UserInfo.m_friend_manager.findFriendInAllFriend(Player.UserInfo.uid);
                 if (targetFriendEntry == null || targetFriendEntry.state.block == 1)
                 {
-                    throw new exception($"Destinatário não tem remetente na lista ou bloqueou. De: {session.UserInfo.uid} Para: {targetUid}",
+                    throw new exception($"Destinatário não tem remetente na lista ou bloqueou. De: {Player.UserInfo.uid} Para: {targetUid}",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 6, 0x5200306));
                 }
 
@@ -64,13 +64,13 @@ namespace Pangya_MessengerServer.Handles
                 if (gm.Count > 0)
                 {
 
-                    var msg_gm = "\\5" + (session.UserInfo.nickname) + ">" + (targetSession.UserInfo.nickname) + ": '" + msg + "'";
+                    var msg_gm = "\\5" + (Player.UserInfo.nickname) + ">" + (targetSession.UserInfo.nickname) + ": '" + msg + "'";
 
                     foreach (Player el in gm)
                     {
 
                         // Nao envia o log de MSN.PM novamente para o GM que enviou ou recebeu MSN.PM
-                        if (el.UserInfo.uid != session.UserInfo.uid && el.UserInfo.uid != targetSession.UserInfo.uid)
+                        if (el.UserInfo.uid != Player.UserInfo.uid && el.UserInfo.uid != targetSession.UserInfo.uid)
                         {
                             // Responde no chat do player
                             p.init_plain(0x40);
@@ -84,18 +84,18 @@ namespace Pangya_MessengerServer.Handles
                             el.Send(p); 
                         }
                     }
-                    //await DiscordWebhook.ChatLog("[MessengerService::ChatFriend][Log] player[UID=" + (_session.m_pi.nickname) + "] enviou Message[MSG="
+                    //await DiscordWebhook.ChatLog("[MessengerService::ChatFriend][Log] player[UID=" + (Player.m_pi.nickname) + "] enviou Message[MSG="
                     //    + msg + "] para seu Amigo[UID=" + (s.m_pi.nickname) + "]");
                 }
 
                 // 7. Log do Servidor
-                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_CHAT_FRIEND][Log] {session.UserInfo.nickname} -> {targetSession.UserInfo.nickname}: {msg}", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_CHAT_FRIEND][Log] {Player.UserInfo.nickname} -> {targetSession.UserInfo.nickname}: {msg}", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // 8. Resposta: Envia para o Amigo (Packet 0x30, Sub 0x113)
                 p.init_plain(0x30);
                 p.WriteUInt16(0x113);
-                p.WriteUInt32(session.UserInfo.uid);
-                p.WriteString(session.UserInfo.nickname);
+                p.WriteUInt32(Player.UserInfo.uid);
+                p.WriteString(Player.UserInfo.nickname);
                 p.WriteString(msg);
                 p.WriteByte(0); 
                 targetSession.Send(p);
@@ -107,7 +107,7 @@ namespace Pangya_MessengerServer.Handles
                 p.WriteUInt16(0x113);
                 p.WriteInt32(-1); // Status de Erro
 
-                session.Send(p);
+                Player.Send(p);
 
                 _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_CHAT_FRIEND][Error] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
             }

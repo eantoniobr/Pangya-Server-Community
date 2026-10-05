@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_DOLFINI_LOCKER_STATE : IPacketHandler<Player>
+    public class Handle_PLAYER_DOLFINI_LOCKER_STATE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
             try
             {
                 var p = new Packet(0x170);
                 p.WriteUInt32(0);         // Option (Geralmente 0 para consulta simples)
-                p.WriteUInt32(session.Inventory.DolfineLocker.isLocker()); // Estado: 1 = Ativo / 0 = Inativo 
-                session.Send(p);
+                p.WriteUInt32(Player.Inventory.DolfineLocker.isLocker()); // Estado: 1 = Ativo / 0 = Inativo 
+                Player.Send(p);
             }
             catch (exception e)
             {
@@ -30,7 +30,7 @@ namespace Pangya_GameServer.Handles
                 var errorPkt = new Packet(0x170);
                 errorPkt.WriteUInt32(0);
                 errorPkt.WriteUInt32(0);
-                session.Send(errorPkt);
+                Player.Send(errorPkt);
             }
 
         await Task.CompletedTask;

@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHANGE_CHAT_MACRO : IPacketHandler<Player>
+    public class Handle_PLAYER_CHANGE_CHAT_MACRO : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             try
             {
@@ -21,7 +21,7 @@ namespace Pangya_GameServer.Handles
                 if (packet.Size != 576)
                 {
                     throw new exception(
-                        $"[Handle_PLAYER_CHANGE_CHAT_MACRO][Error] PLAYER[UID={session.UserInfo.uid}] Tamanho de pacote inválido: {packet.Size}.",
+                        $"[Handle_PLAYER_CHANGE_CHAT_MACRO][Error] PLAYER[UID={Player.UserInfo.uid}] Tamanho de pacote inválido: {packet.Size}.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 1, 1));
                 }
 
@@ -48,16 +48,16 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 4. Sincronização em Memória
-                session.UserInfo.ChatMacro = cmu;
+                Player.UserInfo.ChatMacro = cmu;
 
                 // 5. Persistência no Banco de Dados (Async) 
-                CommandDB.UpdateMacroUser(session.UserInfo.uid, session.UserInfo.ChatMacro);
+                CommandDB.UpdateMacroUser(Player.UserInfo.uid, Player.UserInfo.ChatMacro);
 
                 // 6. Resposta de Segurança
                 if (detectedInjection)
                 {
                     _smp.message_pool.getInstance().push(new message(
-                        $"[Handle_PLAYER_CHANGE_CHAT_MACRO][Security] UID={session.UserInfo.uid} tentou injeção de código. Desconectando.",
+                        $"[Handle_PLAYER_CHANGE_CHAT_MACRO][Security] UID={Player.UserInfo.uid} tentou injeção de código. Desconectando.",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     GameServer.getInstance().Disconnect(session);

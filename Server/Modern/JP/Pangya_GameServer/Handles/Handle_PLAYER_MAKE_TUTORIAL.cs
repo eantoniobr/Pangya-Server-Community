@@ -11,9 +11,9 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_MAKE_TUTORIAL : IPacketHandler<Player>
+    public class Handle_PLAYER_MAKE_TUTORIAL : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
@@ -27,57 +27,57 @@ namespace Pangya_GameServer.Handles
                 string msg = "";
 
                 //eu poderia fazer melhor, alias sem outras class(structs internas)
-                var rmt = RequestMakeTutorial.Load(_packet.Message);
+                var rmt = RequestMakeTutorial.Load(Packet.Message);
 
                 switch (rmt.uTipo.stTipo.tipo)
                 {
                     case 0: // Rookie
                         {
-                            if (rmt.uTipo.stTipo.tipo == 0 && (_session.UserInfo.Tutorial.rookie & rmt.uValor.stValor.rookie.ucbyte) != 0)
+                            if (rmt.uTipo.stTipo.tipo == 0 && (Player.UserInfo.Tutorial.rookie & rmt.uValor.stValor.rookie.ucbyte) != 0)
                             {
-                                throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele ja concluiu esse tutorial. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele ja concluiu esse tutorial. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     550, 0x5300551));
                             }
 
                             if (rmt.uValor.stValor.rookie.st8bit._bit2 || rmt.uValor.stValor.rookie.st8bit._bit3)
                             {
-                                if (_session.UserInfo.Tutorial.rookie < 3) // Error não concluiu os outros tutoriais para liberar esse
+                                if (Player.UserInfo.Tutorial.rookie < 3) // Error não concluiu os outros tutoriais para liberar esse
                                 {
-                                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         553, 0x5300554));
                                 }
                             }
                             else if (rmt.uValor.stValor.rookie.st8bit._bit4)
                             {
-                                if ((_session.UserInfo.Tutorial.rookie & 7) <= 3) // Error não concluiu os outros tutoriais para liberar esse
+                                if ((Player.UserInfo.Tutorial.rookie & 7) <= 3) // Error não concluiu os outros tutoriais para liberar esse
                                 {
-                                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         553, 0x5300554));
                                 }
                             }
                             else if (rmt.uValor.stValor.rookie.st8bit._bit6)
                             {
-                                if ((_session.UserInfo.Tutorial.rookie & 11) <= 3) // Error não concluiu os outros tutoriais para liberar esse
+                                if ((Player.UserInfo.Tutorial.rookie & 11) <= 3) // Error não concluiu os outros tutoriais para liberar esse
                                 {
-                                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         553, 0x5300554));
                                 }
                             }
                             else if (rmt.uValor.stValor.rookie.st8bit._bit5)
                             {
-                                if ((_session.UserInfo.Tutorial.rookie & 15) <= 3) // Error não concluiu os outros tutoriais para liberar esse
+                                if ((Player.UserInfo.Tutorial.rookie & 15) <= 3) // Error não concluiu os outros tutoriais para liberar esse
                                 {
-                                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         553, 0x5300554));
                                 }
                             }
-                            else if (((rmt.uValor.stValor.rookie.ucbyte - 1) & _session.UserInfo.Tutorial.rookie) != (rmt.uValor.stValor.rookie.ucbyte - 1)) // Error não concluiu os outros tutoriais para liberar esse
+                            else if (((rmt.uValor.stValor.rookie.ucbyte - 1) & Player.UserInfo.Tutorial.rookie) != (rmt.uValor.stValor.rookie.ucbyte - 1)) // Error não concluiu os outros tutoriais para liberar esse
                             {
-                                throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     553, 0x5300554));
                             }
 
-                            _session.UserInfo.Tutorial.rookie |= rmt.uValor.ulValor;
+                            Player.UserInfo.Tutorial.rookie |= rmt.uValor.ulValor;
 
                             // Send Item Reward Clear Tutorial
                             switch (rmt.uValor.stValor.rookie.st8bit.whatBit())
@@ -116,20 +116,20 @@ namespace Pangya_GameServer.Handles
                                     break;
                                 case 0:
                                 default:
-                                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], o valor do tutorial é desconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], o valor do tutorial é desconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         555, 0x5300556));
                             }
 
                             msg = "NICE TUTORIAL ROOKIE CLEAR";
 
-                            // Send Item para mailbox do player que concluiu o Tutorial
+                            // Send Item para mailbox do Player que concluiu o Tutorial
                             MailManager.SendMessageWithItem(0,
-                                _session.UserInfo.uid, msg, item);
+                                Player.UserInfo.uid, msg, item);
 
-                            _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_MAKE_TUTORIAL][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] Concluiu Tutorial Rookie", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                            _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_MAKE_TUTORIAL][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] Concluiu Tutorial Rookie", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                             // Concluiu o Tutorial Rookie
-                            if ((_session.UserInfo.Tutorial.rookie & 0xFF) != 0 && rmt.uTipo.stTipo.finish != 0)
+                            if ((Player.UserInfo.Tutorial.rookie & 0xFF) != 0 && rmt.uTipo.stTipo.finish != 0)
                             {
 
                                 List<stItem> v_item = new List<stItem>();
@@ -152,41 +152,41 @@ namespace Pangya_GameServer.Handles
 
                                 msg = "NICE ALL TUTORIAL ROOKIE CLEAR";
 
-                                // Send Item para mailbox do player que concluiu todos os Tutoriais Rookie
+                                // Send Item para mailbox do Player que concluiu todos os Tutoriais Rookie
                                 MailManager.SendMailWithItem(0,
-                                    _session.UserInfo.uid, msg, v_item);
+                                    Player.UserInfo.uid, msg, v_item);
 
                                 // UPDATE ON DB
                                 NormalManagerDB.getInstance().add(14,
-                                     new CmdTutoEventClear(_session.UserInfo.uid, CmdTutoEventClear.T_ROOKIE),
+                                     new CmdTutoEventClear(Player.UserInfo.uid, CmdTutoEventClear.T_ROOKIE),
                                     null, null);
 
-                                _smp.message_pool.getInstance().push(new message("[Tutorial][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] Concluiu Todos Tutoriais Rookie", type_msg.CL_FILE_LOG_AND_CONSOLE)); // UPDATE ON DB
+                                _smp.message_pool.getInstance().push(new message("[Tutorial][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] Concluiu Todos Tutoriais Rookie", type_msg.CL_FILE_LOG_AND_CONSOLE)); // UPDATE ON DB
                             }
                             break;
                         }
                     case 1: // Beginner
                         {
-                            if (rmt.uTipo.stTipo.tipo == 1 && (_session.UserInfo.Tutorial.beginner & rmt.uValor.stValor.beginner.ucbyte) != 0)
+                            if (rmt.uTipo.stTipo.tipo == 1 && (Player.UserInfo.Tutorial.beginner & rmt.uValor.stValor.beginner.ucbyte) != 0)
                             {
-                                throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele ja concluiu esse tutorial. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele ja concluiu esse tutorial. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     550, 0x5300551));
                             }
 
                             // Check Rookie Concluido
-                            if (_session.UserInfo.Tutorial.rookie == 1 && 0xFF != 0xFF)
+                            if (Player.UserInfo.Tutorial.rookie == 1 && 0xFF != 0xFF)
                             {
-                                throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu o tutorial rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu o tutorial rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     554, 0x5300555));
                             }
 
-                            RequestMakeTutorial.u2 tutu = new RequestMakeTutorial.u2() { ulValor = _session.UserInfo.Tutorial.beginner };
+                            RequestMakeTutorial.u2 tutu = new RequestMakeTutorial.u2() { ulValor = Player.UserInfo.Tutorial.beginner };
 
                             if (rmt.uValor.stValor.beginner.st8bit._bit1 || rmt.uValor.stValor.beginner.st8bit._bit2)
                             {
                                 if (tutu.stValor.beginner.ucbyte < 1)
                                 {
-                                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Beginner. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Beginner. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         553, 0x5300554));
                                 }
                             }
@@ -194,17 +194,17 @@ namespace Pangya_GameServer.Handles
                             {
                                 if (tutu.stValor.beginner.ucbyte < 15)
                                 {
-                                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Beginner. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Beginner. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         553, 0x5300554));
                                 }
                             }
                             else if (((rmt.uValor.stValor.beginner.ucbyte - 1) & tutu.stValor.beginner.ucbyte) != (rmt.uValor.stValor.beginner.ucbyte - 1))
                             {
-                                throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Beginner. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Beginner. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     553, 0x5300554));
                             }
 
-                            _session.UserInfo.Tutorial.beginner |= rmt.uValor.ulValor;
+                            Player.UserInfo.Tutorial.beginner |= rmt.uValor.ulValor;
 
                             // Send Item Reward Clear Tutorial
                             switch (rmt.uValor.stValor.beginner.st8bit.whatBit())
@@ -237,20 +237,20 @@ namespace Pangya_GameServer.Handles
                                 case 8:
                                 case 0:
                                 default:
-                                    throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], o valor do tutorial é desconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                    throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], o valor do tutorial é desconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                         555, 0x5300556));
                             }
 
                             msg = "NICE TUTORIAL BEGINNER CLEAR";
 
-                            // Send Item para mailbox do player que concluiu o Tutorial
+                            // Send Item para mailbox do Player que concluiu o Tutorial
                             MailManager.SendMessageWithItem(0,
-                                _session.UserInfo.uid, msg, item);
+                                Player.UserInfo.uid, msg, item);
 
-                            _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_MAKE_TUTORIAL][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] Concluiu Tutorial Beginner", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                            _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_MAKE_TUTORIAL][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] Concluiu Tutorial Beginner", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                             // Concluiu o Tutorial Beginner
-                            if (_session.UserInfo.Tutorial.beginner == (0x3F << 8))
+                            if (Player.UserInfo.Tutorial.beginner == (0x3F << 8))
                             {
 
                                 List<stItem> v_item = new List<stItem>();
@@ -273,61 +273,61 @@ namespace Pangya_GameServer.Handles
 
                                 msg = "NICE ALL TUTORIAL BEGINNER CLEAR";
 
-                                // Send Item para mailbox do player que concluiu todos os Tutoriais Beginner
+                                // Send Item para mailbox do Player que concluiu todos os Tutoriais Beginner
                                 MailManager.SendMailWithItem(0,
-                                    _session.UserInfo.uid, msg, v_item);
+                                    Player.UserInfo.uid, msg, v_item);
 
                                 // UPDATE ON DB
                                 NormalManagerDB.getInstance().add(14,
-                                     new CmdTutoEventClear(_session.UserInfo.uid, CmdTutoEventClear.T_BEGINNER),
+                                     new CmdTutoEventClear(Player.UserInfo.uid, CmdTutoEventClear.T_BEGINNER),
                                     null, null);
 
-                                _smp.message_pool.getInstance().push(new message("[Tutorial][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] Concluiu Todos Tutoriais Beginner", type_msg.CL_FILE_LOG_AND_CONSOLE)); // UPDATE ON DB
+                                _smp.message_pool.getInstance().push(new message("[Tutorial][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] Concluiu Todos Tutoriais Beginner", type_msg.CL_FILE_LOG_AND_CONSOLE)); // UPDATE ON DB
                             }
                             break;
                         }
                     case 2: // Advancer(ACHO)
                         {
-                            if (rmt.uTipo.stTipo.tipo == 2 && (_session.UserInfo.Tutorial.advancer & rmt.uValor.stValor.advancer.ucbyte) != 0)
+                            if (rmt.uTipo.stTipo.tipo == 2 && (Player.UserInfo.Tutorial.advancer & rmt.uValor.stValor.advancer.ucbyte) != 0)
                             {
-                                throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele ja concluiu esse tutorial. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele ja concluiu esse tutorial. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     550, 0x5300551));
                             }
 
                             // Check Rookie Concluido
-                            if (_session.UserInfo.Tutorial.rookie == 1 && 0xFF != 0xFF)
+                            if (Player.UserInfo.Tutorial.rookie == 1 && 0xFF != 0xFF)
                             {
-                                throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu o tutorial rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu o tutorial rookie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     554, 0x5300555));
                             }
 
                             // Check Beginner Concluido
-                            if (_session.UserInfo.Tutorial.beginner == 1 && 0x3F != 0x3F)
+                            if (Player.UserInfo.Tutorial.beginner == 1 && 0x3F != 0x3F)
                             {
-                                throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu o tutorial Beginner. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu o tutorial Beginner. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     554, 0x5300555));
                             }
 
-                            RequestMakeTutorial.u2 tutu = new RequestMakeTutorial.u2() { ulValor = _session.UserInfo.Tutorial.advancer };
+                            RequestMakeTutorial.u2 tutu = new RequestMakeTutorial.u2() { ulValor = Player.UserInfo.Tutorial.advancer };
 
                             if (((rmt.uValor.stValor.advancer.ucbyte - 1) & tutu.stValor.advancer.ucbyte) != (rmt.uValor.stValor.advancer.ucbyte - 1))
                             {
-                                throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Advancer. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                                throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], mas ele nao concluiu os outros tutoriais para poder completar o Advancer. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                     553, 0x5300554));
                             }
 
-                            _session.UserInfo.Tutorial.advancer |= rmt.uValor.ulValor;
+                            Player.UserInfo.Tutorial.advancer |= rmt.uValor.ulValor;
 
                             msg = "NICE TUTORIAL ADVANCER CLEAR";
 
-                            // Send Item para mailbox do player que concluiu o Tutorial
+                            // Send Item para mailbox do Player que concluiu o Tutorial
                             MailManager.SendMessageWithItem(0,
-                                _session.UserInfo.uid, msg, item);
+                                Player.UserInfo.uid, msg, item);
 
-                            _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_MAKE_TUTORIAL][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] Concluiu Tutorial Advancer", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                            _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_MAKE_TUTORIAL][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] Concluiu Tutorial Advancer", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                             // Concluiu o Tutorial Advancer (ACHO)
-                            if (_session.UserInfo.Tutorial.advancer == (0x7 << 16) && rmt.uTipo.stTipo.finish != 0)
+                            if (Player.UserInfo.Tutorial.advancer == (0x7 << 16) && rmt.uTipo.stTipo.finish != 0)
                             {
 
                                 // Esse não tem estou deixando por questão de quando eu implementar ou só para ter mesmo
@@ -351,27 +351,27 @@ namespace Pangya_GameServer.Handles
 
                                 msg = "NICE ALL TUTORIAL ADVANCER CLEAR";
 
-                                // Send Item para mailbox do player que concluiu todos os Tutoriais Advancer
+                                // Send Item para mailbox do Player que concluiu todos os Tutoriais Advancer
                                 MailManager.SendMailWithItem(0,
-                                    _session.UserInfo.uid, msg, v_item);
+                                    Player.UserInfo.uid, msg, v_item);
 
                                 // UPDATE ON DB
                                 NormalManagerDB.getInstance().add(14,
-                                     new CmdTutoEventClear(_session.UserInfo.uid, CmdTutoEventClear.T_ADVANCER),
+                                     new CmdTutoEventClear(Player.UserInfo.uid, CmdTutoEventClear.T_ADVANCER),
                                     null, null);
 
-                                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_MAKE_TUTORIAL][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] Concluiu Todos Tutoriais Advancer", type_msg.CL_FILE_LOG_AND_CONSOLE)); // UPDATE ON DB
+                                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_MAKE_TUTORIAL][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] Concluiu Todos Tutoriais Advancer", type_msg.CL_FILE_LOG_AND_CONSOLE)); // UPDATE ON DB
                             }
                             break;
                         }
                     default:
-                        throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], tipo desconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                        throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fazer tutorial[tipo=" + (rmt.uTipo.stTipo.tipo) + ", value=" + (rmt.uValor.ulValor) + "], tipo desconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                             551, 0x5300552));
                 }
 
                 // UPDATE ON DB
                 NormalManagerDB.getInstance().add(13,
-                     new CmdUpdateTutorial(_session.UserInfo.uid, _session.UserInfo.Tutorial),
+                     new CmdUpdateTutorial(Player.UserInfo.uid, Player.UserInfo.Tutorial),
                     null, null);
 
                 // Resposta do Make Tutorial
@@ -381,18 +381,18 @@ namespace Pangya_GameServer.Handles
                 switch (rmt.uTipo.stTipo.tipo)
                 {
                     case 0:
-                        p.WriteUInt32(_session.UserInfo.Tutorial.rookie);
+                        p.WriteUInt32(Player.UserInfo.Tutorial.rookie);
                         break;
                     case 1:
-                        p.WriteUInt32(_session.UserInfo.Tutorial.beginner);
+                        p.WriteUInt32(Player.UserInfo.Tutorial.beginner);
                         break;
                     case 2:
-                        p.WriteUInt32(_session.UserInfo.Tutorial.advancer);
+                        p.WriteUInt32(Player.UserInfo.Tutorial.advancer);
                         break;
                     default:
                         break;
                 }
-                _session.Send(p);
+                Player.Send(p);
 
             }
             catch (exception e)
@@ -400,12 +400,12 @@ namespace Pangya_GameServer.Handles
 
                 _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_MAKE_TUTORIAL][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                // Tenho que achar outro pacote que só envie erro para o cliente, esse pacote é de inicializar os info do player
+                // Tenho que achar outro pacote que só envie erro para o cliente, esse pacote é de inicializar os info do Player
                 p.init_plain(0x44); 
                 p.WriteByte(0xE2); // Error
                 p.WriteUInt32((ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL) ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 0x5300550);
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

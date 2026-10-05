@@ -9,7 +9,7 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_COMMAND_GM : IPacketHandler<Player>
+    public class Handle_PLAYER_COMMAND_GM : HandleBase<Player, Packet_EXAMPLE>
     {
         // Registro centralizado de comandos
         private static readonly Dictionary<COMMON_CMD_GM, IGMCommand> _commands = new()
@@ -30,7 +30,7 @@ namespace Pangya_GameServer.Handles
             { COMMON_CMD_GM.CCG_GOLDENBELL, new GoldenBellCommand() }
         };
 
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             try
             {
@@ -43,9 +43,9 @@ namespace Pangya_GameServer.Handles
                 // 3. Validação de Segurança (Gatekeeper)
                 if (cmdId != COMMON_CMD_GM.CCG_IDENTITY)//se for diferente, ele confisca.
                 {
-                    if (!session.UserInfo.UserCapabilities.game_master)
+                    if (!Player.UserInfo.UserCapabilities.game_master)
                     {
-                        LogSecurityAlert(session, cmdId);
+                        LogSecurityAlert(Player, cmdId);
                         return;
                     }
                 }
@@ -53,22 +53,22 @@ namespace Pangya_GameServer.Handles
                 // 4. Despacho para o Comando Específico
                 if (_commands.TryGetValue(cmdId, out var command))
                 {
-                    var room = session.GetRoom();
+                    var room = Player.GetRoom();
 
                     if ((cmdId == COMMON_CMD_GM.CCG_MATCH_HOLE || cmdId == COMMON_CMD_GM.CCG_MATCH_MAP) && room == null)//jogo esta em percuso, nao pode editar.
                     {
-                        session.SendChatNotice("This needs to be in a room first.");
+                        Player.SendChatNotice("This needs to be in a room first.");
                         return;
                     }
                     if ((cmdId == COMMON_CMD_GM.CCG_MATCH_HOLE || cmdId == COMMON_CMD_GM.CCG_MATCH_MAP) && room != null && room.GameRun())//jogo esta em percuso, nao pode editar.
                     {
-                        session.SendChatNotice("It can only be executed if you are not in the classroom.");
+                        Player.SendChatNotice("It can only be executed if you are not in the classroom.");
                         return;
                     }
-                    LogCommandExecution(session, cmdId);
-                    await command.Execute(session, packet); 
+                    LogCommandExecution(Player, cmdId);
+                    await command.Execute(Player, packet); 
                     if(cmdId != COMMON_CMD_GM.CCG_DISCONNECT)
-                    session.SendChatNotice("Command Executed.");
+                    Player.SendChatNotice("Command Executed.");
                 }
                 else
                 {
@@ -79,16 +79,16 @@ namespace Pangya_GameServer.Handles
             {
                 // Tratamento de erro centralizado para evitar crash da Task de rede
                 _smp.message_pool.getInstance().push(new message(
-                    $"[Handle_GM Error] UID:{session.UserInfo.uid} | Ex: {ex.Message}",
+                    $"[Handle_GM Error] UID:{Player.UserInfo.uid} | Ex: {ex.Message}",
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                session.SendChatNotice("command by GM.");
+                Player.SendChatNotice("command by GM.");
             }
         }
 
         private void UpdatePlayerCapability(Player s)
         {
-            // Se o player está invisível (visible > 0), resetamos a capability visual 
+            // Se o Player está invisível (visible > 0), resetamos a capability visual 
             // para garantir que o cliente não exiba ícones de GM indevidamente
             s.UserInfo.Member.capability = (s.m_gi.visible > 0) ? new uCapability() : s.UserInfo.UserCapabilities;
         }

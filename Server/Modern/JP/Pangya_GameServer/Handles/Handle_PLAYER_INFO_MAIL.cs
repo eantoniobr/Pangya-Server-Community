@@ -10,30 +10,30 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_INFO_MAIL : IPacketHandler<Player>
+    public class Handle_PLAYER_INFO_MAIL : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
                 // 1. Leitura do ID do e-mail
-                int email_id = _packet.ReadInt32();
+                int email_id = Packet.ReadInt32();
 
                 // 2. Busca o e-mail no MailBox da sessão
-                var email = _session.UserInfo.MailBox.getEmailInfo(email_id);
+                var email = Player.UserInfo.MailBox.getEmailInfo(email_id);
 
                 if (email.id == 0)
                 {
-                    throw new exception("[Handle_PLAYER_INFO_MAIL][Error] PLAYER [UID=" + _session.UserInfo.uid + "] pediu para ver o info do Mail[ID=" + (email_id) + "], mas ele nao existe no banco de dados. Hacker ou Bug",
+                    throw new exception("[Handle_PLAYER_INFO_MAIL][Error] PLAYER [UID=" + Player.UserInfo.uid + "] pediu para ver o info do Mail[ID=" + (email_id) + "], mas ele nao existe no banco de dados. Hacker ou Bug",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 0x5500251));
                 }
 
                 // 3. Verifica itens atachados ao e-mail
                 try
                 {
-                    ItemManager.CheckSetItemOnEmail(_session, email);
+                    ItemManager.CheckSetItemOnEmail(Player, email);
                 }
                 catch (exception e)
                 {
@@ -45,7 +45,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 4. Envia pacote 212 com as informações do e-mail
-                _session.Send(Handle_PACKET_RESPONSE.pacote212(email));
+                Player.Send(HandlePacket_RESPONSE.pacote212(email));
 
             }
             catch (exception e)
@@ -62,7 +62,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteUInt32(errorCode);
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

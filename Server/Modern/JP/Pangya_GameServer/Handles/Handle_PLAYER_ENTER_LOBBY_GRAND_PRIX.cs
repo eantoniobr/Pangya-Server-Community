@@ -6,11 +6,11 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ENTER_LOBBY_GRAND_PRIX : IPacketHandler<Player>
+    public class Handle_PLAYER_ENTER_LOBBY_GRAND_PRIX : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
-            var _channel = session.GetChannel();
+            var _channel = Player.GetChannel();
 
             var srv = GameServer.getInstance().getInfo();
             try
@@ -18,7 +18,7 @@ namespace Pangya_GameServer.Handles
                 if (!srv.propriedade.grand_prix)
                 {
                     throw new exception(
-                        $"[GrandPrix] Player[UID={session.UserInfo.uid}] tentou entrar no Lobby GP desativado.",
+                        $"[GrandPrix] Player[UID={Player.UserInfo.uid}] tentou entrar no Lobby GP desativado.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 0x750001)
                     );
                 }
@@ -35,15 +35,15 @@ namespace Pangya_GameServer.Handles
                 {
                     p.WriteUInt32(eventType);
                 }
-                p.WriteInt32(session.UserInfo.GrandPrixHistory.Count);
-                foreach (var entry in session.UserInfo.GrandPrixHistory)
+                p.WriteInt32(Player.UserInfo.GrandPrixHistory.Count);
+                foreach (var entry in Player.UserInfo.GrandPrixHistory)
                 {
                     p.WriteUInt32(entry._typeid);
                     p.WriteUInt32(entry.position); // Rank/Posição final obtida
                 }
 
-                p.WriteFloat(session.UserInfo.Statistics.getMediaScore());
-                session.Send(p);
+                p.WriteFloat(Player.UserInfo.Statistics.getMediaScore());
+                Player.Send(p);
             }
             catch (exception e)
             {
@@ -59,7 +59,7 @@ namespace Pangya_GameServer.Handles
                     : 0x750000;
 
                 errorPkt.WriteUInt32(errorCode);
-                session.Send(errorPkt);
+                Player.Send(errorPkt);
             }
 
             await Task.CompletedTask;

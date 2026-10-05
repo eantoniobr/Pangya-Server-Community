@@ -15,9 +15,9 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_OPEN_LEGACY_TIKI_SHOP : IPacketHandler<Player>
+    public class Handle_PLAYER_OPEN_LEGACY_TIKI_SHOP : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
@@ -25,9 +25,9 @@ namespace Pangya_GameServer.Handles
             {
                 // 1. Verificação de bloqueio (Block Flag)
                 // Verifica se o jogador possui alguma restrição específica para abrir esta loja
-                if (_session.UserInfo.block_flag.m_flag.legacy_tiki_shop)
+                if (Player.UserInfo.block_flag.m_flag.legacy_tiki_shop)
                 {
-                    throw new exception("[Handle_PLAYER_OPEN_LEGACY_TIKI_SHOP][Error] PLAYER [UID=" + _session.UserInfo.uid + "] está bloqueado no Legacy Tiki Shop.",
+                    throw new exception("[Handle_PLAYER_OPEN_LEGACY_TIKI_SHOP][Error] PLAYER [UID=" + Player.UserInfo.uid + "] está bloqueado no Legacy Tiki Shop.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 4000, 1));
                 }
 
@@ -38,10 +38,10 @@ namespace Pangya_GameServer.Handles
                 p.WriteUInt32(0);
 
                 // 3. Envio da resposta
-                _session.Send(p);
+                Player.Send(p);
 
                 // Log opcional de acesso
-                _smp.message_pool.getInstance().push(new message("[Legacy Tiki Shop::Open][Success] PLAYER [UID=" + _session.UserInfo.uid + "] abriu a loja com sucesso.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[Legacy Tiki Shop::Open][Success] PLAYER [UID=" + Player.UserInfo.uid + "] abriu a loja com sucesso.", type_msg.CL_FILE_LOG_AND_CONSOLE));
             }
             catch (exception e)
             {
@@ -57,7 +57,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteUInt32(errorCode);
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

@@ -17,16 +17,16 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHANGE_LOBBY : IPacketHandler<Player>
+    public class Handle_PLAYER_CHANGE_LOBBY : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                var c = GameServer.getInstance().EnterChannel(_session, _packet.ReadSByte()); 
+                var c = GameServer.getInstance().EnterChannel(Player, Packet.ReadSByte()); 
 
                 if (c != null)
-                    c.Lobby.EnterLobby(_session, _session.UserInfo.Lobby);
+                    c.Lobby.EnterLobby(Player, Player.UserInfo.Lobby);
             }
             catch (exception e)
             {

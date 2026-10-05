@@ -11,16 +11,16 @@ using PangyaAPI.Utilities.Log;
 using System.Text.RegularExpressions;
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_PLAYER_LOGIN : IPacketHandler<Player>
+    public class Handle_PLAYER_LOGIN : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             try
             { 
-                uint uid = packet.ReadUInt32();
-                var nickname = packet.ReadString();
+                uint uid = Packet.ReadUInt32();
+                var nickname = Packet.ReadString();
 
-                session.ResetHandShake(); // Reseta o handshake para evitar problemas de sincronização
+                Player.ResetHandShake(); // Reseta o handshake para evitar problemas de sincronização
 
 
                 // 1. Validações Básicas (Anti-Hacker)
@@ -39,47 +39,47 @@ namespace Pangya_MessengerServer.Handles
                     throw cmd_pi.getException();
 
                 // 3. Vincula os dados ao Player
-                session.UserInfo.Set(cmd_pi.getInfo());
+                Player.UserInfo.Set(cmd_pi.getInfo());
 
                 // 4. Verificação de Integridade (Nick DB vs Nick Packet)
-                if (nickname != session.UserInfo.nickname)
+                if (nickname != Player.UserInfo.nickname)
                     throw new Exception("[Login Error] Nickname divergente do Database.");
 
                 // 5. Verificação de Bloqueio (Ban)
-                if (session.UserInfo.block_flag.m_id_state.ull_IDState != 0)
+                if (Player.UserInfo.block_flag.m_id_state.ull_IDState != 0)
                 {
-                   await CheckPlayerBlock(session); // Podemos isolar essa lógica num método private
+                   await CheckPlayerBlock(Player); // Podemos isolar essa lógica num método private
                 }
 
                 // 6. Gerenciamento de Conexão Duplicada
-                var sessionAntiga = MessengerServer.getInstance().HasLoggedWithOuterSocket(session);
-                if (sessionAntiga != null)
-                    MessengerServer.getInstance().Disconnect(sessionAntiga);
+                var PlayerAntiga = MessengerServer.getInstance().HasLoggedWithOuterSocket(Player);
+                if (PlayerAntiga != null)
+                    MessengerServer.getInstance().Disconnect(PlayerAntiga);
 
                 // 7. Confirmação com o Auth Server
                 if (MessengerServer.getInstance().m_unit_connect != null)
                 {
-                    MessengerServer.getInstance().m_unit_connect.getInfoPlayerOnline(session.UserInfo.server_uid, session.UserInfo.uid);
+                    MessengerServer.getInstance().m_unit_connect.getInfoPlayerOnline(Player.UserInfo.server_uid, Player.UserInfo.uid);
                 }
                 else
                 {
-                    MessengerServer.getInstance().Disconnect(session);
+                    MessengerServer.getInstance().Disconnect(Player);
                 }
 
                 // Se o confirm for assíncrono, use await aqui também
-                session.UserInfo.m_friend_manager.init(session.UserInfo);
+                Player.UserInfo.m_friend_manager.init(Player.UserInfo);
 
                 // Estado 4 = Online/Lobby
-                session.UserInfo.m_state = 4;
-                session.Authorized = true;
+                Player.UserInfo.m_state = 4;
+                Player.Authorized = true;
 
-                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_LOGIN] Player[UID={session.UserInfo.uid}, NICK={nickname}, NICK_DB={session.GetNickname()}] logou com sucesso!", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_LOGIN] Player[UID={Player.UserInfo.uid}, NICK={nickname}, NICK_DB={Player.GetNickname()}] logou com sucesso!", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 // Resposta de Sucesso (0x2F)
                 var p = new Packet(0x2F);
                  p.WriteByte(0); // OK
-                p.WriteUInt32(session.UserInfo.uid);
+                p.WriteUInt32(Player.UserInfo.uid);
 
-               session.Send(p);
+               Player.Send(p);
 
             }
             catch (exception e)
@@ -89,9 +89,9 @@ namespace Pangya_MessengerServer.Handles
                 p.init_plain(0x2F);
                 p.WriteByte(1); // Flag de erro
 
-                session.Send(p);
+                Player.Send(p);
 
-                MessengerServer.getInstance().Disconnect(session);
+                MessengerServer.getInstance().Disconnect(Player);
 
                 // Log de erro centralizado
                 Console.WriteLine($"[Login Error] {e.Message}");
@@ -100,9 +100,9 @@ namespace Pangya_MessengerServer.Handles
             await Task.CompletedTask;
         } 
 
-        private async Task CheckPlayerBlock(Player session)
+        private async Task CheckPlayerBlock(Player Player)
         {
-            var state = session.UserInfo.block_flag.m_id_state;
+            var state = Player.UserInfo.block_flag.m_id_state;
 
             // Se o ull_IDState for 0, não há bloqueio, então saímos cedo (Early Return)
             if (state.ull_IDState == 0) return;
@@ -115,7 +115,7 @@ namespace Pangya_MessengerServer.Handles
                     : $"{state.block_time / 60}min {state.block_time % 60}sec";
 
                 throw new exception(
-                    $"[MessengerServer] Bloqueado por tempo [{tempo}]. Player [UID={session.UserInfo.uid}, ID={session.UserInfo.id}]",
+                    $"[MessengerServer] Bloqueado por tempo [{tempo}]. Player [UID={Player.UserInfo.uid}, ID={Player.UserInfo.id}]",
                     ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 1029, 0)
                 );
             }
@@ -124,7 +124,7 @@ namespace Pangya_MessengerServer.Handles
             if (state.L_BLOCK_FOREVER)
             {
                 throw new exception(
-                    $"[MessengerServer] Bloqueado permanente. Player [UID={session.UserInfo.uid}, ID={session.UserInfo.id}]",
+                    $"[MessengerServer] Bloqueado permanente. Player [UID={Player.UserInfo.uid}, ID={Player.UserInfo.id}]",
                     ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 1030, 0)
                 );
             }
@@ -134,10 +134,10 @@ namespace Pangya_MessengerServer.Handles
             {
                 // Aqui você adiciona o IP atual do infeliz na lista de banidos
                 // Como é uma operação de escrita, o ideal é que seja disparada sem travar o login
-               snmdb.NormalManagerDB.getInstance().add(1, new CmdInsertBlockIp(session.GetIP(), "255.255.255.255"), null, null);
+               snmdb.NormalManagerDB.getInstance().add(1, new CmdInsertBlockIp(Player.GetIP(), "255.255.255.255"), null, null);
 
                 throw new exception(
-                    $"[MessengerServer] Player [UID={session.UserInfo.uid}, IP={session.GetIP()}] Block ALL IP.",
+                    $"[MessengerServer] Player [UID={Player.UserInfo.uid}, IP={Player.GetIP()}] Block ALL IP.",
                     ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 1031, 0)
                 );
             }

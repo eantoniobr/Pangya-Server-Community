@@ -17,69 +17,69 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_UPDATE_DOLFINI_LOCKER_PANG : IPacketHandler<Player>
+    public class Handle_PLAYER_UPDATE_DOLFINI_LOCKER_PANG : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
                 // 1. Leitura dos dados: Opção (0 = Retirar, 1 = Depositar) e Quantidade
-                byte opt = _packet.ReadByte();
-                ulong pang = _packet.ReadUInt64();
+                byte opt = Packet.ReadByte();
+                ulong pang = Packet.ReadUInt64();
 
                 if (opt == 1) // DEPÓSITO: Player -> Locker
                 {
-                    if (pang > _session.UserInfo.Statistics.pang)
+                    if (pang > Player.UserInfo.Statistics.pang)
                     {
-                        throw new exception("[Handle_PLAYER_UPDATE_DOLFINI_LOCKER_PANG][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou depositar pangs[" + pang + "] que não possui.",
+                        throw new exception("[Handle_PLAYER_UPDATE_DOLFINI_LOCKER_PANG][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou depositar pangs[" + pang + "] que não possui.",
                             ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 451, 5100352));
                     }
 
-                    _session.Inventory.DolfineLocker.pang += pang; // Adiciona no cofre
-                   _session.UserInfo.consomePang(pang); // Remove do inventário
+                    Player.Inventory.DolfineLocker.pang += pang; // Adiciona no cofre
+                   Player.UserInfo.consomePang(pang); // Remove do inventário
                 }
                 else if (opt == 0) // RETIRADA: Locker -> Player
                 {
-                    if (pang > _session.Inventory.DolfineLocker.pang)
+                    if (pang > Player.Inventory.DolfineLocker.pang)
                     {
-                        throw new exception("[Handle_PLAYER_UPDATE_DOLFINI_LOCKER_PANG][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou retirar pangs[" + pang + "] que não estão no Dolfini Locker.",
+                        throw new exception("[Handle_PLAYER_UPDATE_DOLFINI_LOCKER_PANG][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou retirar pangs[" + pang + "] que não estão no Dolfini Locker.",
                             ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 452, 5100353));
                     }
 
-                    _session.Inventory.DolfineLocker.pang -= pang; // Remove do cofre
-                   _session.UserInfo.addPang(pang); // Adiciona no inventário
+                    Player.Inventory.DolfineLocker.pang -= pang; // Remove do cofre
+                   Player.UserInfo.addPang(pang); // Adiciona no inventário
                 }
                 else
                 {
-                    throw new exception("[Handle_PLAYER_UPDATE_DOLFINI_LOCKER_PANG][Error] PLAYER [UID=" + _session.UserInfo.uid + "] enviou opção inválida[" + opt + "].",
+                    throw new exception("[Handle_PLAYER_UPDATE_DOLFINI_LOCKER_PANG][Error] PLAYER [UID=" + Player.UserInfo.uid + "] enviou opção inválida[" + opt + "].",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 450, 5100351));
                 }
 
-                _smp.message_pool.getInstance().push(new message("[Dolfini Locker::Update pang][Success] PLAYER [UID=" + _session.UserInfo.uid + "] Atualizou Pang[value=" + pang + ", OPT=" + opt + "].", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[Dolfini Locker::Update pang][Success] PLAYER [UID=" + Player.UserInfo.uid + "] Atualizou Pang[value=" + pang + ", OPT=" + opt + "].", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // 2. Atualização persistente no Banco de Dados
                 NormalManagerDB.getInstance().add(3,
-                     new CmdUpdateDolfiniLockerPang(_session.UserInfo.uid, _session.Inventory.DolfineLocker.pang));
+                     new CmdUpdateDolfiniLockerPang(Player.UserInfo.uid, Player.Inventory.DolfineLocker.pang));
 
                 // 3. Sincronização de Pacotes com o Cliente
 
                 // Pacote 0x171: Confirmação da operação
                 p.init_plain(0x171);
                 p.WriteUInt32(0);
-                _session.Send(p);
+                Player.Send(p);
 
                 // Pacote 0xC8: Atualização visual dos Pangs no inventário principal
                 p.init_plain(0xC8);
-                p.WriteUInt64(_session.UserInfo.Statistics.pang);
+                p.WriteUInt64(Player.UserInfo.Statistics.pang);
                 p.WriteUInt64(pang);
-                _session.Send(p);
+                Player.Send(p);
 
                 // Pacote 0x172: Atualização visual dos Pangs dentro do Dolfini Locker
                 p.init_plain(0x172);
-                p.WriteUInt64(_session.Inventory.DolfineLocker.pang);
-                _session.Send(p);
+                p.WriteUInt64(Player.Inventory.DolfineLocker.pang);
+                Player.Send(p);
             }
             catch (exception e)
             {
@@ -91,7 +91,7 @@ namespace Pangya_GameServer.Handles
                     : 5100350;
 
                 p.WriteUInt32(errorCode);
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

@@ -8,12 +8,12 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_UPDATE_PCBANG_MASCOT : IPacketHandler<Player>
+    public class Handle_PLAYER_UPDATE_PCBANG_MASCOT : HandleBase<Player, Packet_EXAMPLE>
     { 
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
             var _session = session;
-            var _packet = pkt; 
+            var Packet = pkt; 
         await Task.CompletedTask;
         }
     }

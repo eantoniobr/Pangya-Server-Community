@@ -11,17 +11,17 @@ using snmdb;
 
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_PLAYER_KICK_TO_GUILD : IPacketHandler<Player>
+    public class Handle_PLAYER_KICK_TO_GUILD : HandleBase<Player, Packet_EXAMPLE>
     {
         public const int FRIEND_PAG_LIMIT = 30;
 
-        public async Task Handle(Player session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
                 // No protocolo Pangya, o Messenger recebe o ID do Clube e o UID do alvo
-                var club_id = _packet.ReadUInt32();
-                var member_uid = _packet.ReadUInt32();
+                var club_id = Packet.ReadUInt32();
+                var member_uid = Packet.ReadUInt32();
 
                 if (club_id == 0u || member_uid == 0u)
                     throw new exception("[Handle_PLAYER_KICK_TO_GUILD][Error] ID de Clube ou Membro inválido.",
@@ -30,7 +30,7 @@ namespace Pangya_MessengerServer.Handles
                 // 1. Localiza os membros da guilda que estão online no Messenger
                 var v_cm = MessengerServer.getInstance().FindAllGuildMember(club_id);
 
-                // 2. Localiza o alvo (Pode ser a própria session ou outro UID)
+                // 2. Localiza o alvo (Pode ser a própria Player ou outro UID)
                 var targetPlayer =  MessengerServer.getInstance().FindPlayer(member_uid);
                 PlayerInfo pi = null;
 

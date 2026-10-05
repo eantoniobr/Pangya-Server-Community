@@ -20,7 +20,7 @@ using static System.Collections.Specialized.BitVector32;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_SYNC_ITEM_MY_ROOM : IPacketHandler<Player>
+    public class Handle_PLAYER_SYNC_ITEM_MY_ROOM : HandleBase<Player, Packet_EXAMPLE>
     {
         /// <summary>
         /// Flags de atualização do My Room (Quarto). 
@@ -58,56 +58,56 @@ namespace Pangya_GameServer.Handles
             SYNC_POSTER = 10
         }
 
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             SYNC_ITEM_FLAGS type = SYNC_ITEM_FLAGS.SYNC_CHAR_ALL_PARTS;
             int error = 4;
 
             try
             {
-                type = (SYNC_ITEM_FLAGS)_packet.ReadByte(); 
+                type = (SYNC_ITEM_FLAGS)Packet.ReadByte(); 
 
-                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_SYNC_ITEM_MY_ROOM][Warning] PLAYER[UID: {_session.UserInfo.uid}, REQ: {type}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_SYNC_ITEM_MY_ROOM][Warning] PLAYER[UID: {Player.UserInfo.uid}, REQ: {type}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 switch (type)
                 {
                     case SYNC_ITEM_FLAGS.SYNC_CHAR_ALL_PARTS:
                         // AQUI: Onde o anel e as roupas são processados
-                        error = HandleUpdateCharacterParts(_session, _packet);
+                        error = HandleUpdateCharacterParts(Player, Packet);
                         break;
 
                     case SYNC_ITEM_FLAGS.SYNC_CADDIE:
-                        error = HandleUpdateCaddie(_session, _packet);
+                        error = HandleUpdateCaddie(Player, Packet);
                         break;
 
                     case SYNC_ITEM_FLAGS.SYNC_USE_ITEMS:
-                        error = HandleUpdateUseItems(_session, _packet);
+                        error = HandleUpdateUseItems(Player, Packet);
                         break;
 
                     case SYNC_ITEM_FLAGS.SYNC_CLUB_AND_BALL:
                         // AQUI: Onde o ClubSet e a Comet são sincronizados
-                        error = HandleUpdateClubAndBall(_session, _packet);
+                        error = HandleUpdateClubAndBall(Player, Packet);
                         break;
 
                     case SYNC_ITEM_FLAGS.SYNC_SKINS:
-                        error = HandleUpdateSkins(_session, _packet);
+                        error = HandleUpdateSkins(Player, Packet);
                         break;
 
                     case SYNC_ITEM_FLAGS.SYNC_CHAR_MAIN:
                         // Troca o personagem principal da conta
-                        error = HandleUpdateCharacter(_session, _packet);
+                        error = HandleUpdateCharacter(Player, Packet);
                         break;
 
                     case SYNC_ITEM_FLAGS.SYNC_MASCOT:
-                        error = HandleUpdateMascot(_session, _packet);
+                        error = HandleUpdateMascot(Player, Packet);
                         break;
 
                     case SYNC_ITEM_FLAGS.SYNC_CHAR_CUTIN:
-                        error = HandleUpdateCutin(_session, _packet);
+                        error = HandleUpdateCutin(Player, Packet);
                         break;
 
                     case SYNC_ITEM_FLAGS.SYNC_POSTER:
-                        error = HandleUpdatePoster(_session, _packet);
+                        error = HandleUpdatePoster(Player, Packet);
                         break;
 
                     default:
@@ -117,13 +117,13 @@ namespace Pangya_GameServer.Handles
                         error = 1;
                         break;
                 }
-                _session.Send(Handle_PACKET_RESPONSE.pacote06B(_session.Inventory, (byte)type, error));
+                Player.Send(HandlePacket_RESPONSE.pacote06B(Player.Inventory, (byte)type, error));
 
-                _session.GetChannel()?.UpdatePlayerInfo(_session);
+                Player.GetChannel()?.UpdatePlayerInfo(Player);
             }
             catch (exception e)
             {
-                _session.Send(Handle_PACKET_RESPONSE.pacote06B(_session.Inventory, (byte)type, 1));
+                Player.Send(HandlePacket_RESPONSE.pacote06B(Player.Inventory, (byte)type, 1));
 
                 _smp.message_pool.getInstance().push(
                     new message(
@@ -140,17 +140,17 @@ namespace Pangya_GameServer.Handles
             int error = 4;
 
             CharacterInfo ci = new CharacterInfo().ToRead(packet);
-            var pCe = session.Inventory.FindCharacterById(ci.id);
+            var pCe = Player.Inventory.FindCharacterById(ci.id);
 
             if (ci.id == 0 || pCe == null)
                 return (ci.id == 0) ? 1 : 2;
 
-            session.Inventory.SyncCharacter(ci.id, ci); //sempre antes
+            Player.Inventory.SyncCharacter(ci.id, ci); //sempre antes
 
-            session.CheckCharacterEquipedPart(ci);
-            session.CheckCharacterEquipedAuxPart(ci);
+            Player.CheckCharacterEquipedPart(ci);
+            Player.CheckCharacterEquipedAuxPart(ci);
 
-            NormalManagerDB.getInstance().add(0, new CmdUpdateCharacterAllPartEquiped(session.Inventory.uid, ci));
+            NormalManagerDB.getInstance().add(0, new CmdUpdateCharacterAllPartEquiped(Player.Inventory.uid, ci));
 
             return error;
         }
@@ -160,14 +160,14 @@ namespace Pangya_GameServer.Handles
             int error = 4;
             int charId = packet.ReadInt32();
 
-            var pCe = session.Inventory.FindCharacterById(charId);
+            var pCe = Player.Inventory.FindCharacterById(charId);
 
             if (charId == 0 || pCe == null)
                 return (charId == 0) ? 1 : 2;
             //é diferente do outro
-            session.Inventory.SyncCharacter(charId);
+            Player.Inventory.SyncCharacter(charId);
 
-            NormalManagerDB.getInstance().add(0, new CmdUpdateCharacterEquiped(session.Inventory.uid, charId));
+            NormalManagerDB.getInstance().add(0, new CmdUpdateCharacterEquiped(Player.Inventory.uid, charId));
 
             return error;
         }
@@ -179,23 +179,23 @@ namespace Pangya_GameServer.Handles
 
             if (itemId != 0)
             {
-                var caddie = session.Inventory.FindCaddieById(itemId);
+                var caddie = Player.Inventory.FindCaddieById(itemId);
 
                 if (caddie == null)
                     return 2;
 
-                session.Inventory.UserEquippedItem.CaddieEquiped = caddie;
-                session.Inventory.UserEquipment.caddie_id = itemId;
+                Player.Inventory.UserEquippedItem.CaddieEquiped = caddie;
+                Player.Inventory.UserEquipment.caddie_id = itemId;
 
-                if (session.CheckCaddieEquiped(session.Inventory.UserEquipment))
-                    itemId = session.Inventory.UserEquipment.caddie_id;
+                if (Player.CheckCaddieEquiped(Player.Inventory.UserEquipment))
+                    itemId = Player.Inventory.UserEquipment.caddie_id;
             }
             else
             {
-                session.Inventory.UserEquipment.caddie_id = 0;
+                Player.Inventory.UserEquipment.caddie_id = 0;
             }
 
-            NormalManagerDB.getInstance().add(0, new CmdUpdateCaddieEquiped(session.Inventory.uid, itemId));
+            NormalManagerDB.getInstance().add(0, new CmdUpdateCaddieEquiped(Player.Inventory.uid, itemId));
 
             return error;
         }
@@ -206,39 +206,39 @@ namespace Pangya_GameServer.Handles
 
             // BALL
             int ballTypeId = packet.ReadInt32();
-            var ball = session.Inventory.FindWarehouseItemByTypeid((uint)ballTypeId);
+            var ball = Player.Inventory.FindWarehouseItemByTypeid((uint)ballTypeId);
 
             if (ball != null)
             {
-                session.Inventory.UserEquippedItem.Ball_WI = ball;
-                session.Inventory.UserEquipment.ball_typeid = (uint)ballTypeId;
+                Player.Inventory.UserEquippedItem.Ball_WI = ball;
+                Player.Inventory.UserEquipment.ball_typeid = (uint)ballTypeId;
 
-                if (session.CheckBallEquiped(session.Inventory.UserEquipment))
-                    ballTypeId = (int)session.Inventory.UserEquipment.ball_typeid;
+                if (Player.CheckBallEquiped(Player.Inventory.UserEquipment))
+                    ballTypeId = (int)Player.Inventory.UserEquipment.ball_typeid;
             }
             else
             {
-                session.Inventory.UserEquipment.ball_typeid = 0;
+                Player.Inventory.UserEquipment.ball_typeid = 0;
             }
 
-            NormalManagerDB.getInstance().add(0, new CmdUpdateBallEquiped(session.Inventory.uid, (uint)ballTypeId));
+            NormalManagerDB.getInstance().add(0, new CmdUpdateBallEquiped(Player.Inventory.uid, (uint)ballTypeId));
 
             // CLUBSET
             int clubId = packet.ReadInt32();
-            var club = session.Inventory.FindWarehouseItemById(clubId);
+            var club = Player.Inventory.FindWarehouseItemById(clubId);
 
             if (club == null)
                 return 2;
 
-            session.Inventory.UserEquippedItem.Club_WI = club;
-            session.Inventory.UserEquipment.clubset_id = clubId;
+            Player.Inventory.UserEquippedItem.Club_WI = club;
+            Player.Inventory.UserEquipment.clubset_id = clubId;
 
-            if (session.CheckClubSetEquiped(session.Inventory.UserEquipment))
-                clubId = session.Inventory.UserEquipment.clubset_id;
+            if (Player.CheckClubSetEquiped(Player.Inventory.UserEquipment))
+                clubId = Player.Inventory.UserEquipment.clubset_id;
 
             NormalManagerDB.getInstance().add(
                  0,
-                 new CmdUpdateClubsetEquiped(session.Inventory.uid, clubId));
+                 new CmdUpdateClubsetEquiped(Player.Inventory.uid, clubId));
 
             return error;
         }
@@ -249,13 +249,13 @@ namespace Pangya_GameServer.Handles
 
             UserEquip ue = new()
             {
-                item_slot = packet.ReadUInt32(session.Inventory.UserEquipment.item_slot.Length)
+                item_slot = packet.ReadUInt32(Player.Inventory.UserEquipment.item_slot.Length)
             };
 
-            if (session.Inventory.CheckItemEquiped(ue.item_slot)) //verificacao....
-                session.Inventory.UserEquipment.item_slot = ue.item_slot;
+            if (Player.Inventory.CheckItemEquiped(ue.item_slot)) //verificacao....
+                Player.Inventory.UserEquipment.item_slot = ue.item_slot;
 
-            NormalManagerDB.getInstance().add(25, new CmdUpdateItemSlot(session.Inventory.uid, ue.item_slot));
+            NormalManagerDB.getInstance().add(25, new CmdUpdateItemSlot(Player.Inventory.uid, ue.item_slot));
 
             return error;
         }
@@ -264,27 +264,27 @@ namespace Pangya_GameServer.Handles
         {
             int error = 4;
 
-            for (int i = 0; i < session.Inventory.UserEquipment.skin_typeid.Length; i++)
+            for (int i = 0; i < Player.Inventory.UserEquipment.skin_typeid.Length; i++)
             {
                 int id = packet.ReadInt32();
 
                 if (id == 0)
                 {
-                    session.Inventory.UserEquipment.skin_id[i] = 0;
-                    session.Inventory.UserEquipment.skin_typeid[i] = 0;
+                    Player.Inventory.UserEquipment.skin_id[i] = 0;
+                    Player.Inventory.UserEquipment.skin_typeid[i] = 0;
                     continue;
                 }
 
-                var skin = session.Inventory.FindWarehouseItemByTypeid((uint)id);
+                var skin = Player.Inventory.FindWarehouseItemByTypeid((uint)id);
 
                 if (skin == null)
                     return 2;
 
-                session.Inventory.UserEquipment.skin_id[i] = (uint)skin.id;
-                session.Inventory.UserEquipment.skin_typeid[i] = skin._typeid;
+                Player.Inventory.UserEquipment.skin_id[i] = (uint)skin.id;
+                Player.Inventory.UserEquipment.skin_typeid[i] = skin._typeid;
             }
 
-            NormalManagerDB.getInstance().add(0, new CmdUpdateSkinEquiped(session.Inventory.uid, session.Inventory.UserEquipment));
+            NormalManagerDB.getInstance().add(0, new CmdUpdateSkinEquiped(Player.Inventory.uid, Player.Inventory.UserEquipment));
 
             return error;
         }
@@ -296,19 +296,19 @@ namespace Pangya_GameServer.Handles
 
             if (id != 0)
             {
-                var mascot = session.Inventory.FindMascotById(id);
+                var mascot = Player.Inventory.FindMascotById(id);
                 if (mascot == null)
                     return 2;
 
-                session.Inventory.UserEquippedItem.MascotEquiped = mascot;
-                session.Inventory.UserEquipment.mascot_id = id;
+                Player.Inventory.UserEquippedItem.MascotEquiped = mascot;
+                Player.Inventory.UserEquipment.mascot_id = id;
             }
             else
             {
-                session.Inventory.UserEquipment.mascot_id = 0;
+                Player.Inventory.UserEquipment.mascot_id = 0;
             }
 
-            NormalManagerDB.getInstance().add(0, new CmdUpdateMascotEquiped(session.Inventory.uid, id));
+            NormalManagerDB.getInstance().add(0, new CmdUpdateMascotEquiped(Player.Inventory.uid, id));
 
             return error;
         }
@@ -318,7 +318,7 @@ namespace Pangya_GameServer.Handles
             int error = 4;
 
             int charId = packet.ReadInt32();
-            var ci = session.Inventory.FindCharacterById(charId);
+            var ci = Player.Inventory.FindCharacterById(charId);
 
             if (charId == 0)
                 return 1; // Invalid Item Id
@@ -326,13 +326,13 @@ namespace Pangya_GameServer.Handles
             if (ci == null)
                 return 2; // Not Found
 
-            if (session.Inventory.UserEquippedItem.CharacterEquiped == null)
+            if (Player.Inventory.UserEquippedItem.CharacterEquiped == null)
                 return 4; // No character equipped
 
-            if (session.Inventory.UserEquippedItem.CharacterEquiped.id != ci.id)
+            if (Player.Inventory.UserEquippedItem.CharacterEquiped.id != ci.id)
                 return 5; // Not the equipped character
 
-            int[] cutins = packet.ReadInt32(session.Inventory.UserEquippedItem.CharacterEquiped.cut_in.Length);
+            int[] cutins = packet.ReadInt32(Player.Inventory.UserEquippedItem.CharacterEquiped.cut_in.Length);
 
             for (int i = 0; i < cutins.Length; i++)
             {
@@ -344,7 +344,7 @@ namespace Pangya_GameServer.Handles
                     continue;
                 }
 
-                var pWi = session.Inventory.FindWarehouseItemById(cutinId);
+                var pWi = Player.Inventory.FindWarehouseItemById(cutinId);
 
                 if (pWi == null ||
                     sIff.getInstance().getItemGroupIdentify(pWi._typeid) != IFF_GROUP.SKIN)
@@ -353,13 +353,13 @@ namespace Pangya_GameServer.Handles
                 ci.cut_in[i] = (uint)cutinId;
             }
 
-            session.Inventory.SyncCharacter(ci.id, ci); //sempre antes
+            Player.Inventory.SyncCharacter(ci.id, ci); //sempre antes
 
             // Validação final
-            session.CheckCharacterEquipedCutin(ci);
+            Player.CheckCharacterEquipedCutin(ci);
 
             // Update DB
-            NormalManagerDB.getInstance().add(0, new CmdUpdateCharacterCutinEquiped(session.Inventory.uid, ci));
+            NormalManagerDB.getInstance().add(0, new CmdUpdateCharacterCutinEquiped(Player.Inventory.uid, ci));
 
             return error;
         }
@@ -368,28 +368,28 @@ namespace Pangya_GameServer.Handles
         {
             int error = 4;
 
-            for (int i = 0; i < session.Inventory.UserEquipment.poster.Length; i++)
+            for (int i = 0; i < Player.Inventory.UserEquipment.poster.Length; i++)
             {
                 int posterTypeId = packet.ReadInt32();
 
                 if (posterTypeId == 0)
                 {
-                    session.Inventory.UserEquipment.poster[i] = 0;
+                    Player.Inventory.UserEquipment.poster[i] = 0;
                     continue;
                 }
 
-                var pMri = session.Inventory.FindMyRoomItemByTypeid((uint)posterTypeId);
+                var pMri = Player.Inventory.FindMyRoomItemByTypeid((uint)posterTypeId);
 
                 if (pMri == null ||
                     sIff.getInstance().getItemGroupIdentify(pMri._typeid) != IFF_GROUP.FURNITURE)
                     return 2;
 
-                session.Inventory.UserEquipment.poster[i] = (uint)posterTypeId;
+                Player.Inventory.UserEquipment.poster[i] = (uint)posterTypeId;
             }
 
-            if (session.CheckPosterEquiped(session.Inventory.UserEquipment) || error == 4)
+            if (Player.CheckPosterEquiped(Player.Inventory.UserEquipment) || error == 4)
             {
-                NormalManagerDB.getInstance().add(0, new CmdUpdatePosterEquiped(session.Inventory.uid, session.Inventory.UserEquipment));
+                NormalManagerDB.getInstance().add(0, new CmdUpdatePosterEquiped(Player.Inventory.uid, Player.Inventory.UserEquipment));
             }
 
             return error;

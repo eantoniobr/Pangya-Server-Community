@@ -3,6 +3,7 @@ using PangyaAPI.Network;
 using PangyaAPI.Network.Config;
 using PangyaAPI.Network.Core;
 using PangyaAPI.Network.Flags;
+using PangyaAPI.Network.Handle;
 using PangyaAPI.Network.Models;
 using PangyaAPI.Network.Repository;
 using PangyaAPI.Network.Security;
@@ -14,8 +15,7 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 using System.Net;
 using System.Net.Sockets;
-
-public abstract class AppServerBase<T, TId> : UnitAuthCommand, IAppServer where T : class, IAppSession where TId : struct, Enum
+public abstract class AppServerBase<T, TId> : UnitAuthCommand, IAppServer where T : class, IAppSession where TId : struct, Enum 
 {
     #region FIELDS
     public TypeServer ServerType { get; set; }
@@ -25,7 +25,7 @@ public abstract class AppServerBase<T, TId> : UnitAuthCommand, IAppServer where 
     private IAppServerAccept _acceptLoop;
 
     protected readonly AppSessionManager<T> SessionsManager;
-    protected readonly IAppPacketDispatcher<T, TId> _dispatcher;
+    protected readonly PacketDispatcher<T, TId> _dispatcher;
     public bool IsRunning { get; private set; }
 
     public IReadOnlyCollection<IAppSession> Sessions => SessionsManager.GetAllSessions();
@@ -46,7 +46,7 @@ public abstract class AppServerBase<T, TId> : UnitAuthCommand, IAppServer where 
     #endregion
 
     #region CONSTRUTOR
-    protected AppServerBase(AppSessionManager<T> sessionManager, IAppPacketDispatcher<T, TId> dispatcher, TypeServer typeServer)
+    protected AppServerBase(AppSessionManager<T> sessionManager, PacketDispatcher<T, TId> dispatcher, TypeServer typeServer)
     {
         ServerType = typeServer;
         SessionsManager = sessionManager;

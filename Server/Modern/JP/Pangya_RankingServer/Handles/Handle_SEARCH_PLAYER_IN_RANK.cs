@@ -8,7 +8,7 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_RankingServer.Handles
 {
-    public class Handle_SEARCH_PLAYER_IN_RANK : IPacketHandler<Player>
+    public class Handle_SEARCH_PLAYER_IN_RANK : HandleBase<Player, Packet_EXAMPLE>
     {
         public enum SEARCH_OPTION : byte
         {
@@ -16,48 +16,48 @@ namespace Pangya_RankingServer.Handles
             POSITION = 1
         }
 
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             try
             {
-                if (!session.Authorized)
+                if (!Player.Authorized)
                     throw new Exception($"[{nameof(Handle_SEARCH_PLAYER_IN_RANK)}] Sessão não autorizada para busca no ranking.");
 
-                SEARCH_OPTION option = (SEARCH_OPTION)packet.ReadByte();
+                SEARCH_OPTION option = (SEARCH_OPTION)Packet.ReadByte();
 
-                var sd = new SearchData(packet);
+                var sd = new SearchData(Packet);
                 if (option == SEARCH_OPTION.NICKNAME)
                 {
-                    string nickname = packet.ReadString();
+                    string nickname = Packet.ReadString();
 
                     if (string.IsNullOrEmpty(nickname))
                     {
-                        throw new exception($"[{nameof(Handle_SEARCH_PLAYER_IN_RANK)}] [Search Error] Nickname vazio para UID {session.UserInfo.uid}.",
+                        throw new exception($"[{nameof(Handle_SEARCH_PLAYER_IN_RANK)}] [Search Error] Nickname vazio para UID {Player.UserInfo.uid}.",
                             ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.RANK_SERVER, 331, 0));
                     }
 
                     // Log de monitoramento opcional
-                    _smp.message_pool.getInstance().push(new message($"[{nameof(Handle_REQUEST_PLAYER_INFO)}][Log] PLAYER[UID: {session.UserInfo.uid}, REQUEST: {nickname},SEARCH_{option}] ", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message($"[{nameof(Handle_REQUEST_PLAYER_INFO)}][Log] PLAYER[UID: {Player.UserInfo.uid}, REQUEST: {nickname},SEARCH_{option}] ", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                    sRankRegistryManager.getInstance().searchPlayerByNicknameAndSendPage(session, nickname, sd);
+                    sRankRegistryManager.getInstance().searchPlayerByNicknameAndSendPage(Player, nickname, sd);
                 }
                 else if (option == SEARCH_OPTION.POSITION)
                 {
-                    uint position = packet.ReadUInt32();
+                    uint position = Packet.ReadUInt32();
 
                     if (position == 0)
                     {
-                        throw new exception($"[{nameof(Handle_SEARCH_PLAYER_IN_RANK)}] [Search Error] Posição inválida ({position}) para UID {session.UserInfo.uid}.",
+                        throw new exception($"[{nameof(Handle_SEARCH_PLAYER_IN_RANK)}] [Search Error] Posição inválida ({position}) para UID {Player.UserInfo.uid}.",
                             ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.RANK_SERVER, 332, 0));
                     } 
 
-                    _smp.message_pool.getInstance().push(new message($"[{nameof(Handle_REQUEST_PLAYER_INFO)}][Log] PLAYER[UID: {session.UserInfo.uid}, NICK: {session.UserInfo.nickname}, REQUEST: SEARCH_{option}] ", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message($"[{nameof(Handle_REQUEST_PLAYER_INFO)}][Log] PLAYER[UID: {Player.UserInfo.uid}, NICK: {Player.UserInfo.nickname}, REQUEST: SEARCH_{option}] ", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                    sRankRegistryManager.getInstance().searchPlayerByRankAndSendPage(session, position, sd);
+                    sRankRegistryManager.getInstance().searchPlayerByRankAndSendPage(Player, position, sd);
                 }
                 else
                 {
-                    throw new exception($"[{nameof(Handle_SEARCH_PLAYER_IN_RANK)}] [Search Error] Opção de busca inválida ({option}) para UID {session.UserInfo.uid}.",
+                    throw new exception($"[{nameof(Handle_SEARCH_PLAYER_IN_RANK)}] [Search Error] Opção de busca inválida ({option}) para UID {Player.UserInfo.uid}.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.RANK_SERVER, 330, 0));
                 }
             }
@@ -68,7 +68,7 @@ namespace Pangya_RankingServer.Handles
 
                 var p = new Packet(0x138C);
                 p.WriteByte(1);
-                session.Send(p);
+                Player.Send(p);
             }
             catch (Exception ex)
             {

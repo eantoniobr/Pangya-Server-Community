@@ -9,24 +9,24 @@ using System.Text.RegularExpressions;
 
 namespace Pangya_LoginServer.Handles
 {
-    public class Handle_PLAYER_RECONNECT : IPacketHandler<Player>
+    public class Handle_PLAYER_RECONNECT : HandleBase<Player, Packet_EXAMPLE>
     {
         private static readonly Regex InvalidIdRegex = new Regex(@".*[\^$&,\\?`´~\|""@#¨'%*!\\].*", RegexOptions.Compiled);
 
         // Alterado para Task para suportar await corretamente
-        public async Task Handle(Player player, Packet packet)
+        public override async Task Handle()
         {
             try
             { 
                 // 1. Leitura dos dados do pacote (Estrutura padrão Re-Login)
-                string id = packet.ReadString();
-                int server_uid = packet.ReadInt32(); // ID do servidor que ele estava
-                string auth_key_login_received = packet.ReadString();
+                string id = Packet.ReadString();
+                int server_uid = Packet.ReadInt32(); // ID do servidor que ele estava
+                string auth_key_login_received = Packet.ReadString();
 
                 // 2. Validação básica de caracteres no ID (Segurança)
                 if (string.IsNullOrEmpty(id) || InvalidIdRegex.IsMatch(id))
                 {
-                    player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500052));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote00E(Player, "", 12, 500052));
                     return;
                 }
 
@@ -35,30 +35,30 @@ namespace Pangya_LoginServer.Handles
 
                 if (uid <= 0)
                 {
-                    player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500052));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote00E(Player, "", 12, 500052));
                     return;
                 }
 
                 // 4. Busca dados do Player e a AuthKey original (Async)
                 // Rodando em paralelo para maior performance
-                var playerInfoTask = CommandDB.GetPlayerInfo((uint)uid);
+                var PlayerInfoTask = CommandDB.GetPlayerInfo((uint)uid);
                 var authKeyTask = CommandDB.GetAuthKeyLogin((uint)uid); 
 
-                var info = playerInfoTask;
+                var info = PlayerInfoTask;
                 string akli = authKeyTask;
 
                 // 5. Validação de Integridade (Se a chave bate com o banco)
                 if (auth_key_login_received != akli)
                 {
-                    player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500052));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote00E(Player, "", 12, 500052));
                     return;
                 }
 
                 // 6. Atualiza a sessão com os dados do banco
-                player.UserInfo.Set(info);
+                Player.UserInfo.Set(info);
 
                 // 7. Verificações de bloqueio e BAN
-                if (CheckBlockStatus(player))
+                if (CheckBlockStatus(Player))
                 {
                     // O método CheckBlockStatus lança exceção ou envia erro
                     return;
@@ -66,7 +66,7 @@ namespace Pangya_LoginServer.Handles
                  
                 // 9. Finaliza o login usando o SUCCESS_LOGIN (option 1 = Reconnect)
                 // Isso envia a lista de servidores e confirma a entrada
-                await Handle_PLAYER_LOGIN.SUCCESS_LOGIN(player, 1);
+                await Handle_PLAYER_LOGIN.SUCCESS_LOGIN(Player, 1);
             }
             catch (Exception ex)
             {
@@ -75,20 +75,20 @@ namespace Pangya_LoginServer.Handles
                     $"[Handle_PLAYER_RECONNECT][Error] {ex.Message}",
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500052));
+                Player.Send(Handle_PACKET_RESPONSE.pacote00E(Player, "", 12, 500052));
             }
             await Task.CompletedTask;
         }
 
-        private bool CheckBlockStatus(Player player)
+        private bool CheckBlockStatus(Player Player)
         {
-            var state = player.UserInfo.block_flag.m_id_state;
+            var state = Player.UserInfo.block_flag.m_id_state;
 
             if (state.ull_IDState == 0) return false;
 
             if (state.L_BLOCK_FOREVER || state.L_BLOCK_TEMPORARY)
             {
-                player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500052));
+                Player.Send(Handle_PACKET_RESPONSE.pacote00E(Player, "", 12, 500052));
                 return true;
             }
 

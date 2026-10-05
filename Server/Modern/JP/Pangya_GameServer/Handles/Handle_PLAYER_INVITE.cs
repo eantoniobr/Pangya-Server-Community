@@ -18,46 +18,46 @@ using System;
 using System.Threading.Tasks;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_INVITE : IPacketHandler<Player>
+    public class Handle_PLAYER_INVITE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
-            var m_ci = _session.GetChannel();
+            var m_ci = Player.GetChannel();
             try
             {
-                string nickname = _packet.ReadString();
-                uint uid = _packet.ReadUInt32();
+                string nickname = Packet.ReadString();
+                uint uid = Packet.ReadUInt32();
 
                 var s = GameServer.getInstance().FindSessionByNickname(nickname);
 
                 if (s == null || s.UserInfo.uid != uid)
                 {
-                    throw new exception("[Lobby.Room::RequestInvite][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou convidar o PLAYER [UID=" + (uid) + ", NICKNAME=" + nickname + "] para Sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas o player nao esta nesse canal. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby.Room::RequestInvite][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou convidar o PLAYER [UID=" + (uid) + ", NICKNAME=" + nickname + "] para Sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas o Player nao esta nesse canal. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         3000, 23));
                 }
 
                 if (s.UserInfo.Member.sala_numero != -1)
                 {
-                    throw new exception("[Lobby.Room::RequestInvite][Warning] PLAYER [UID=" + _session.UserInfo.uid + "] tentou convidar o PLAYER [UID=" + (uid) + ", NICKNAME=" + nickname + "] para Sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas o player ja esta em outra sala.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby.Room::RequestInvite][Warning] PLAYER [UID=" + Player.UserInfo.uid + "] tentou convidar o PLAYER [UID=" + (uid) + ", NICKNAME=" + nickname + "] para Sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas o Player ja esta em outra sala.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         3002, 23));
                 }
 
                 if (s.UserInfo.Place != 0)
                 {
-                    throw new exception("[Lobby.Room::RequestInvite][Warning] PLAYER [UID=" + _session.UserInfo.uid + "] tentou convidar o PLAYER [UID=" + (uid) + ", NICKNAME=" + nickname + "] para Sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas o player nao pode ser convidado no momento.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby.Room::RequestInvite][Warning] PLAYER [UID=" + Player.UserInfo.uid + "] tentou convidar o PLAYER [UID=" + (uid) + ", NICKNAME=" + nickname + "] para Sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas o Player nao pode ser convidado no momento.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         3002, 23));
                 }
 
-                var r = _session.GetRoom();
+                var r = Player.GetRoom();
 
                 if (r == null)
                 {
-                    throw new exception("[Lobby.Room::RequestInvite][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou convidar o PLAYER [UID=" + (uid) + ", NICKNAME=" + nickname + "] para Sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala para poder convidar. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby.Room::RequestInvite][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou convidar o PLAYER [UID=" + (uid) + ", NICKNAME=" + nickname + "] para Sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala para poder convidar. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         3001, 23));
                 }
 
-                var ici = r.AddInvited(_session.UserInfo.uid, s);
+                var ici = r.AddInvited(Player.UserInfo.uid, s);
 
                 m_ci.AddInviteTimeRequest(ici);
                 m_ci.Lobby.SendUpdateRoomInfo(r.GetInfo(), 3);
@@ -68,20 +68,20 @@ namespace Pangya_GameServer.Handles
                 p.WriteUInt32(GameServer.getInstance().getUID());
                 p.WriteByte(m_ci.getId());
                 p.WriteInt16(r.GetRoomId());
-                p.WriteUInt32(_session.UserInfo.uid);
-                p.WriteString(_session.UserInfo.nickname);
+                p.WriteUInt32(Player.UserInfo.uid);
+                p.WriteString(Player.UserInfo.nickname);
                 p.WriteUInt32(s.UserInfo.uid);
 
-                _session.Send(p);
+                Player.Send(p);
 
-                // Envia o Convite para o player
+                // Envia o Convite para o Player
                 p.init_plain(0x83);
                 p.WriteUInt16(0); // OK
                 p.WriteUInt32(GameServer.getInstance().getUID());
                 p.WriteByte(m_ci.getId());
                 p.WriteInt16(r.GetRoomId());
-                p.WriteUInt32(_session.UserInfo.uid);
-                p.WriteString(_session.UserInfo.nickname);
+                p.WriteUInt32(Player.UserInfo.uid);
+                p.WriteString(Player.UserInfo.nickname);
                 p.WriteUInt32(s.UserInfo.uid);
 
                 s.Send(p);
@@ -93,7 +93,7 @@ namespace Pangya_GameServer.Handles
                 // Resposta Error
                 p.init_plain(0x12F);
                 p.WriteUInt16((ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL) ? (ushort)ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : (ushort)23);
-                _session.Send(p);
+                Player.Send(p);
             }
 
         await Task.CompletedTask;

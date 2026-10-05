@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 
 namespace Pangya_AuthServer.Handles
 {
-    public class Handle_CONFIRM_DISCONNECT_PLAYER : IAuthPacketHandler<Player>
+    public class Handle_CONFIRM_DISCONNECT_PLAYER : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
                 // 1. Leitura dos dados do pacote
-                uint playerUid = _packet.ReadUInt32();
-                uint targetServerUid = _packet.ReadUInt32();
+                uint playerUid = Packet.ReadUInt32();
+                uint targetServerUid = Packet.ReadUInt32();
 
                 // 2. Verifica se o destinatário da confirmação não é o próprio Auth Server
                 // Substitua 'm_si.uid' pela sua constante de UID do servidor atual

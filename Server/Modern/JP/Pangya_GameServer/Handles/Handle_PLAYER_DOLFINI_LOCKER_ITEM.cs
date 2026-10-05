@@ -19,9 +19,9 @@ using System.Threading.Tasks;
 using static Pangya_GameServer.Models.DefineConstants;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_DOLFINI_LOCKER_ITEM : IPacketHandler<Player>
+    public class Handle_PLAYER_DOLFINI_LOCKER_ITEM : HandleBase<Player, Packet_EXAMPLE>
     { 
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
             // Criamos o pacote de resposta (0x16D)
             var p = new Packet(0x16D);
@@ -31,7 +31,7 @@ namespace Pangya_GameServer.Handles
                 uint opt = pkt.ReadUInt32();
                 ushort paginaSolicitada = pkt.ReadUInt16();
 
-                var itemList = session.Inventory.DolfineLocker.v_item;
+                var itemList = Player.Inventory.DolfineLocker.v_item;
                 int totalItems = itemList.Count;
                  
                 ushort totalPaginas = (ushort)((totalItems % DL_LIMIT_ITEM_PER_PAGE == 0) ? (ushort)totalItems / DL_LIMIT_ITEM_PER_PAGE : (ushort)totalItems / DL_LIMIT_ITEM_PER_PAGE + 1);
@@ -57,7 +57,7 @@ namespace Pangya_GameServer.Handles
                     p.WriteBytes(itemLocker.item.ToArray());
                 }
 
-                session.Send(p);
+                Player.Send(p);
             }
             catch (exception e)
             {
@@ -66,7 +66,7 @@ namespace Pangya_GameServer.Handles
                 // Resposta de erro (vazia)
                 var errorPkt = new Packet(0x16D);
                 errorPkt.WriteZero(5);
-                session.Send(errorPkt);
+                Player.Send(errorPkt);
             }
 
         await Task.CompletedTask;

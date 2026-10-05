@@ -10,13 +10,13 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_LAST_PLAYER_FINISH_VERSUS : IPacketHandler<Player>
+    public class Handle_PLAYER_LAST_PLAYER_FINISH_VERSUS : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         { 
             try
             {
-                var r = _session.GetGameRoom() ?? throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou finalizar o Versus na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                var r = Player.GetGameRoom() ?? throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou finalizar o Versus na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhuma sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         1, 0x555001));
 
                 if (r is StrokeBase)
@@ -26,21 +26,21 @@ namespace Pangya_GameServer.Handles
                         var lastPlayer = r.GetSessions()?.FirstOrDefault();
                         if (r.FinishGame(lastPlayer, 2))
                         {
-                            _session.GetRoom()?.FinishGame();
+                            Player.GetRoom()?.FinishGame();
                         }
 
                     }
                     else
                     {
-                        _session.GetRoom()?.FinishGame();
+                        Player.GetRoom()?.FinishGame();
                     }
 
-                    _session.GetChannel()?.SendListUpdateRooms(_session.GetRoom().GetInfo());
+                    Player.GetChannel()?.SendListUpdateRooms(Player.GetRoom().GetInfo());
 
                 }
                 else
                 {
-                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_LAST_PLAYER_FINISH_VERSUS][ErrorSystem] O jogo da sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "] nao e do tipo Versus. Hacker ou Bug", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_LAST_PLAYER_FINISH_VERSUS][ErrorSystem] O jogo da sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "] nao e do tipo Versus. Hacker ou Bug", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
             }
             catch (exception e)

@@ -6,9 +6,9 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CREATE_REALMYRROM : IPacketHandler<Player>
+    public class Handle_PLAYER_CREATE_REALMYRROM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
             // Resposta padrão do My Room Info
             var p = new Packet(0x12B);
@@ -19,14 +19,14 @@ namespace Pangya_GameServer.Handles
                 uint to_uid = pkt.ReadUInt32();
                  
                 bool isSelf = (from_uid == to_uid);
-                bool canEnter = (session.Inventory.MyRoomConfig.allow_enter == 1);
+                bool canEnter = (Player.Inventory.MyRoomConfig.allow_enter == 1);
 
                 if (isSelf && canEnter)
                 {
                     // Status 1: Sucesso ao carregar dados do Quarto
                     p.WriteUInt32(1);
                     p.WriteUInt32(to_uid); 
-                    p.WriteBytes(session.Inventory.MyRoomConfig.ToArray());
+                    p.WriteBytes(Player.Inventory.MyRoomConfig.ToArray());
                 }
                 else
                 {
@@ -36,7 +36,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 3. Envio direto via Session
-                session.Send(p);
+                Player.Send(p);
             }
             catch (exception e)
             {
@@ -49,7 +49,7 @@ namespace Pangya_GameServer.Handles
                 var errorPkt = new Packet(0x12B);
                 errorPkt.WriteUInt32(0);
                 errorPkt.WriteUInt32(0); // UID zerado
-                session.Send(errorPkt);
+                Player.Send(errorPkt);
             }
 
         await Task.CompletedTask;

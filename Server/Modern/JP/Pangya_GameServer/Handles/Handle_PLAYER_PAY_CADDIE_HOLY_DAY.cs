@@ -16,27 +16,27 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_PAY_CADDIE_HOLY_DAY : IPacketHandler<Player>
+    public class Handle_PLAYER_PAY_CADDIE_HOLY_DAY : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new();
 
             try
             {
-                int caddie_id = _packet.ReadInt32();
+                int caddie_id = Packet.ReadInt32();
 
                 if (caddie_id <= 0)
                 {
-                    throw new exception("[Lobby::RequestPayCaddieHolyDay][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou pagar as ferias do Caddie[ID=" + (caddie_id) + "], mas o caddie_id é invalido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestPayCaddieHolyDay][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou pagar as ferias do Caddie[ID=" + (caddie_id) + "], mas o caddie_id é invalido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         1, 0x6100101));
                 }
 
-                var pCi = _session.Inventory.FindCaddieById(caddie_id);
+                var pCi = Player.Inventory.FindCaddieById(caddie_id);
 
                 if (pCi == null)
                 {
-                    throw new exception("[Lobby::RequestPayCaddieHolyDay][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou pagar as ferias do Caddie[ID=" + (caddie_id) + "], mas o ele nao possui esse Caddie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestPayCaddieHolyDay][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou pagar as ferias do Caddie[ID=" + (caddie_id) + "], mas o ele nao possui esse Caddie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         2, 0x6100102));
                 }
 
@@ -44,19 +44,19 @@ namespace Pangya_GameServer.Handles
 
                 if (caddie == null)
                 {
-                    throw new exception("[Lobby::RequestPayCaddieHolyDay][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou pagar as ferias do Caddie[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + "], mas nao tem esse caddie no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestPayCaddieHolyDay][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou pagar as ferias do Caddie[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + "], mas nao tem esse caddie no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         3, 0x6100103));
                 }
 
                 if ((!caddie.Shop.flag_shop.IsCash && caddie.valor_mensal <= 0) || pCi.rent_flag != 2)
                 {
-                    throw new exception("[Lobby::RequestPayCaddieHolyDay][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou pagar as ferias do Caddie[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + "], mas nao é um caddie valido para pagar as verias. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestPayCaddieHolyDay][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou pagar as ferias do Caddie[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + "], mas nao é um caddie valido para pagar as verias. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         4, 0x6100104));
                 }
 
-                if (caddie.valor_mensal > (long)_session.UserInfo.Statistics.pang)
+                if (caddie.valor_mensal > (long)Player.UserInfo.Statistics.pang)
                 {
-                    throw new exception("[Lobby::RequestPayCaddieHolyDay][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou pagar as ferias do Caddie[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + "], mas o ele nao tem pangs suficiente[value=" + (_session.UserInfo.Statistics.pang) + ", Request=" + (caddie.valor_mensal) + "] para pagar as ferias do caddie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestPayCaddieHolyDay][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou pagar as ferias do Caddie[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + "], mas o ele nao tem pangs suficiente[value=" + (Player.UserInfo.Statistics.pang) + ", Request=" + (caddie.valor_mensal) + "] para pagar as ferias do caddie. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         5, 0x6100105));
                 }
 
@@ -71,13 +71,13 @@ namespace Pangya_GameServer.Handles
                 // Update Caddie End Date Unix
                 pCi.updateEndDate();
                  
-               _session.UserInfo.consomePang(caddie.valor_mensal);
+               Player.UserInfo.consomePang(caddie.valor_mensal);
 
                 // UPDATE ON DB
-                NormalManagerDB.getInstance().add(20, new CmdPayCaddieHolyDay(_session.UserInfo.uid, pCi.id, UtilTime.FormatDate(pCi.end_date)), null, null);
+                NormalManagerDB.getInstance().add(20, new CmdPayCaddieHolyDay(Player.UserInfo.uid, pCi.id, UtilTime.FormatDate(pCi.end_date)), null, null);
 
                 // Verifica se o Caddie já tem um item update
-                var v_it = _session.Inventory.FindUpdateItemById(pCi.id);
+                var v_it = Player.Inventory.FindUpdateItemById(pCi.id);
 
                 if (v_it != null && v_it.Count > 0)
                 {
@@ -86,22 +86,22 @@ namespace Pangya_GameServer.Handles
                         if (el.Value.type == UpdateItem.UI_TYPE.CADDIE)
                         {
                             // Tira esse Update Item do map
-                            _session.Inventory.UpdateItems.Remove(el.Key);
+                            Player.Inventory.UpdateItems.Remove(el.Key);
                         }
                     }
                 }
 
                 // Log
-                _smp.message_pool.getInstance().push(new message("[PayCaddieHolyDay][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] pagou as ferias do Caddie[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + ", PRICE=" + (caddie.valor_mensal) + "] ate " + UtilTime.FormatDate(pCi.end_date), type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[PayCaddieHolyDay][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] pagou as ferias do Caddie[TYPEID=" + (pCi._typeid) + ", ID=" + (pCi.id) + ", PRICE=" + (caddie.valor_mensal) + "] ate " + UtilTime.FormatDate(pCi.end_date), type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // UPDATE ON GAME
                 p.init_plain(0x93);
 
                 p.WriteByte(2); // OK
                 p.WriteInt32(pCi.id);
-                p.WriteUInt64(_session.UserInfo.Statistics.pang);
+                p.WriteUInt64(Player.UserInfo.Statistics.pang);
 
-                _session.Send(p);
+                Player.Send(p);
 
             }
             catch (exception e)
@@ -111,7 +111,7 @@ namespace Pangya_GameServer.Handles
                 p.init_plain(0x93);
                 p.WriteByte(1); // Error
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

@@ -11,19 +11,19 @@ using snmdb;
 
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_PLAYER_EXIT_TO_GUILD : IPacketHandler<Player>//<Packet_PLAYER_INVITE_TO_ROOM_GUILD_BATTLE, MPlayer>
+    public class Handle_PLAYER_EXIT_TO_GUILD : HandleBase<Player, Packet_EXAMPLE>//<Packet_PLAYER_INVITE_TO_ROOM_GUILD_BATTLE, MPlayer>
     {
         public const int FRIEND_PAG_LIMIT = 30;
-        public async Task Handle(Player session, Packet _packet)
+        public override async Task Handle()
         {
             var p = new Packet();
 
             try
             {
                 // O pacote costuma enviar o ClubID e o UID do membro que vai sair
-                // Se um Admin tira alguém, o member_uid é diferente do session.m_pi.uid
-                var club_id = _packet.ReadUInt32();
-                var member_uid = _packet.ReadUInt32();
+                // Se um Admin tira alguém, o member_uid é diferente do Player.m_pi.uid
+                var club_id = Packet.ReadUInt32();
+                var member_uid = Packet.ReadUInt32();
 
                 if (club_id == 0u || member_uid == 0u)
                     throw new exception("[MessengerService::requestMemberExitedFromGuild][Error] ID de Clube ou Membro inválido.",
@@ -33,7 +33,7 @@ namespace Pangya_MessengerServer.Handles
                 var v_cm = MessengerServer.getInstance().FindAllGuildMember(club_id);
 
                 // 2. Localiza o alvo (quem está saindo)
-                // Pode ser a própria 'session' ou outro player online/offline
+                // Pode ser a própria 'Player' ou outro player online/offline
                 var targetPlayer = MessengerServer.getInstance().FindPlayer(member_uid);
 
                 if (targetPlayer != null)

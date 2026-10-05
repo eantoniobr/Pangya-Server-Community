@@ -12,42 +12,42 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_OPEN_MAIL_BOX : IPacketHandler<Player>
+    public class Handle_PLAYER_OPEN_MAIL_BOX : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
                 // 1. Verificação de Bloqueio
-                if (_session.UserInfo.block_flag.m_flag.mail_box)
+                if (Player.UserInfo.block_flag.m_flag.mail_box)
                 {
-                    throw new exception("[Handle_PLAYER_OPEN_MAIL_BOX][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Mail Box, mas ele nao pode. Hacker ou Bug",
+                    throw new exception("[Handle_PLAYER_OPEN_MAIL_BOX][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Mail Box, mas ele nao pode. Hacker ou Bug",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 5, 0x790001));
                 }
 
                 // 2. Leitura da Página
-                int pagina = _packet.ReadInt32();
+                int pagina = Packet.ReadInt32();
 
                 if (pagina <= 0)
                 {
-                    throw new exception("[Handle_PLAYER_OPEN_MAIL_BOX][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Mail Box[Pagina=" + (pagina) + "], mas a pagina é invalida.",
+                    throw new exception("[Handle_PLAYER_OPEN_MAIL_BOX][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Mail Box[Pagina=" + (pagina) + "], mas a pagina é invalida.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 6, 0x790002));
                 }
 
                 // 3. Busca de E-mails e Envio
-                var mails = _session.UserInfo.MailBox.GetPage((uint)pagina);
+                var mails = Player.UserInfo.MailBox.GetPage((uint)pagina);
 
                 if (mails != null && mails.Any())
                 {
                     // Pagina existe, envia ela
-                    _session.Send(Handle_PACKET_RESPONSE.pacote211(mails, pagina, (int)_session.UserInfo.MailBox.getTotalPages()));
+                    Player.Send(HandlePacket_RESPONSE.pacote211(mails, pagina, (int)Player.UserInfo.MailBox.getTotalPages()));
                 }
                 else
                 {
                     // MailBox Vazio ou Página não encontrada
-                    _session.Send(Handle_PACKET_RESPONSE.pacote211(new List<MailBox>(), pagina, 1));
+                    Player.Send(HandlePacket_RESPONSE.pacote211(new List<MailBox>(), pagina, 1));
                 }
             }
             catch (exception e)
@@ -63,7 +63,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteUInt32(errorCode);
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

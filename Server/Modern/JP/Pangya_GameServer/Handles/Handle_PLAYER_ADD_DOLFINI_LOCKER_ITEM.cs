@@ -23,54 +23,54 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM : IPacketHandler<Player>
+    public class Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
             DolfiniLockerItem[] aTI = null;
-            var m_ci = _session.GetChannel();
+            var m_ci = Player.GetChannel();
             try
             { 
-                byte count = _packet.ReadByte();
+                byte count = Packet.ReadByte();
                 aTI = new DolfiniLockerItem[count];
 
                 for (int index = 0; index < count; index++)
-                    aTI[index] = new DolfiniLockerItem().ToRead(_packet);
+                    aTI[index] = new DolfiniLockerItem().ToRead(Packet);
 
                 uint char_typeid = 0;
                 uint i = 0;
 
-                var r = _session.GetRoom();
+                var r = Player.GetRoom();
 
                 for (i = 0; i < count; ++i)
                 {
-                    // Verifica se o player está com shop aberto e se está vendendo o item no shop
-                    if (r != null && r.CheckPersonalShopItem(_session, aTI[i].item.id))
+                    // Verifica se o Player está com shop aberto e se está vendendo o item no shop
+                    if (r != null && r.CheckPersonalShopItem(Player, aTI[i].item.id))
                     {
-                        throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] tentou colocar o item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker, mas o item esta sendo vendido no Personal shop dele. Hacker ou Bug.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1010, 0x5201010));
+                        throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] tentou colocar o item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker, mas o item esta sendo vendido no Personal shop dele. Hacker ou Bug.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1010, 0x5201010));
                     }
 
                     if (sIff.getInstance().getItemGroupIdentify(aTI[i].item._typeid) != IFF_GROUP.PART)
                     {
-                        throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] tentou colocar um item[TYPEID=" + (aTI[i].item._typeid) + "] no Dolfini Locker que nao é um IFF::PART.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 500, 109));
+                        throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] tentou colocar um item[TYPEID=" + (aTI[i].item._typeid) + "] no Dolfini Locker que nao é um IFF::PART.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 500, 109));
                     }
 
                     var part = sIff.getInstance().findPart(aTI[i].item._typeid);
 
                     if (part == null)
                     {
-                        throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] tentou colocar um item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker que nao tem no IFF_STRUCT do server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 504, 5100405));
+                        throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] tentou colocar um item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker que nao tem no IFF_STRUCT do server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 504, 5100405));
                     }
 
                     if (part.type_item == PART_TYPE.UCC_DRAW_ONLY || part.type_item == PART_TYPE.UCC_COPY_ONLY)
                     {
-                        throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] tentou colocar um Self Design Original/Copy item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker, mas nao é permitido", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 505, 5100406));
+                        throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] tentou colocar um Self Design Original/Copy item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker, mas nao é permitido", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 505, 5100406));
                     }
 
                     char_typeid = ((Convert.ToUInt32(sIff.getInstance().CHARACTER) << 26) | sIff.getInstance().getItemCharIdentify(aTI[i].item._typeid));
 
-                    var character = _session.Inventory.FindCharacterByTypeid(char_typeid);
+                    var character = Player.Inventory.FindCharacterByTypeid(char_typeid);
 
                     if (character != null)
                     {
@@ -78,18 +78,18 @@ namespace Pangya_GameServer.Handles
 
                         if (character.parts_id[part_num] == aTI[i].item.id && character.parts_typeid[part_num] == aTI[i].item._typeid)
                         {
-                            throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] tentou colocar um item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] equipado Part[num=" + (part_num) + "] no Dolfini Locker. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 501, 5100402));
+                            throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] tentou colocar um item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] equipado Part[num=" + (part_num) + "] no Dolfini Locker. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 501, 5100402));
                         }
                     }
 
-                    var it = _session.Inventory.FindWarehouseItemById(aTI[i].item.id);
+                    var it = Player.Inventory.FindWarehouseItemById(aTI[i].item.id);
 
                     if (it == null)
                     {
-                        throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] tentou colocar um item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker que ele nao tem. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 502, 5100403));
+                        throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] tentou colocar um item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker que ele nao tem. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 502, 5100403));
                     }
 
-                    CmdAddDolfiniLockerItem cmd_adli = new CmdAddDolfiniLockerItem(_session.UserInfo.uid, aTI[i]);
+                    CmdAddDolfiniLockerItem cmd_adli = new CmdAddDolfiniLockerItem(Player.UserInfo.uid, aTI[i]);
 
                     NormalManagerDB.getInstance().add(0, cmd_adli, null, null);
 
@@ -112,7 +112,7 @@ namespace Pangya_GameServer.Handles
 
                     if (aTI[i].index == -1)
                     {
-                        _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] nao conseguiu add o item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker no DB", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                        _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] nao conseguiu add o item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker no DB", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                         if (i < (count - 1u))
                         {
@@ -125,33 +125,33 @@ namespace Pangya_GameServer.Handles
                         continue;
                     }
 
-                    _session.Inventory.WarehouseItems.Remove(it.id);
+                    Player.Inventory.WarehouseItems.Remove(it.id);
 
-                    _session.Inventory.DolfineLocker.v_item.Add(aTI[i]);
+                    Player.Inventory.DolfineLocker.v_item.Add(aTI[i]);
 
-                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Sucess] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] Adicionou Item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker com sucesso", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Sucess] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] Adicionou Item[TYPEID=" + (aTI[i].item._typeid) + ", ID=" + (aTI[i].item.id) + "] no Dolfini Locker com sucesso", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
 
                 if (count == 0)
                 {
-                    throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] nenhum item passou nas verificacoes, PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 503, 5100404));
+                    throw new exception("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][Error] nenhum item passou nas verificacoes, PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 503, 5100404));
                 }
 
                 p.init_plain(0x139);
                 p.WriteUInt16(0);
-                _session.Send(p);
+                Player.Send(p);
 
                 p.init_plain(0xEC);
                 p.WriteUInt32(count);
                 p.WriteByte(1); // Add Item no Dolfini Locker
-                p.WriteUInt64(0); // Pang add para o player
+                p.WriteUInt64(0); // Pang add para o Player
                 p.WriteUInt32(0);
 
                 for (i = 0; i < count; ++i)
                 {
                     p.WriteBytes(aTI[i].item.ToArray());
                 }
-                _session.Send(p);
+                Player.Send(p);
 
                 for (i = 0; i < count; ++i)
                 {
@@ -159,7 +159,7 @@ namespace Pangya_GameServer.Handles
                     p.WriteUInt32(0); // opt[Error Code]
                     p.WriteUInt64(0);
                     p.WriteBytes(aTI[i].item.ToArray());
-                    _session.Send(p);
+                    Player.Send(p);
                 }
 
                 if (aTI != null)
@@ -169,11 +169,11 @@ namespace Pangya_GameServer.Handles
             }
             catch (exception e)
             {
-                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][ErrorSystem] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_ADD_DOLFINI_LOCKER_ITEM][ErrorSystem] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 p.init_plain(0x16E);
                 p.WriteUInt32((ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL) ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 5100400);
-                _session.Send(p);
+                Player.Send(p);
 
                 if (aTI != null)
                 {

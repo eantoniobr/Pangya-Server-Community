@@ -20,9 +20,9 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_EXCHANGE_ITEM_BY_TP_LEGACY_TIKI_SHOP : IPacketHandler<Player>
+    public class Handle_PLAYER_EXCHANGE_ITEM_BY_TP_LEGACY_TIKI_SHOP : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
@@ -30,12 +30,12 @@ namespace Pangya_GameServer.Handles
             {
 #if RELEASE
                 // Log de depuração para ambiente de lançamento
-                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_EXCHANGE_ITEM_BY_TP_LEGACY_TIKI_SHOP][Success] PLAYER [UID=" + _session.UserInfo.uid + "] solicitou troca na Tiki Shop.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_EXCHANGE_ITEM_BY_TP_LEGACY_TIKI_SHOP][Success] PLAYER [UID=" + Player.UserInfo.uid + "] solicitou troca na Tiki Shop.", type_msg.CL_FILE_LOG_AND_CONSOLE));
 #endif
                 // 1. Verificação de Bloqueio
-                if (_session.UserInfo.block_flag.m_flag.legacy_tiki_shop)
+                if (Player.UserInfo.block_flag.m_flag.legacy_tiki_shop)
                 {
-                    throw new exception("[Handle_PLAYER_EXCHANGE_ITEM_BY_TP_LEGACY_TIKI_SHOP][Error] PLAYER [UID=" + _session.UserInfo.uid + "] está bloqueado no Legacy Tiki Shop.",
+                    throw new exception("[Handle_PLAYER_EXCHANGE_ITEM_BY_TP_LEGACY_TIKI_SHOP][Error] PLAYER [UID=" + Player.UserInfo.uid + "] está bloqueado no Legacy Tiki Shop.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 4000, 1));
                 }
 
@@ -44,11 +44,11 @@ namespace Pangya_GameServer.Handles
                 AchievementSystem sys_achieve = new AchievementSystem();
 
                 // 2. Leitura e Validação dos Itens
-                uint count = _packet.ReadByte();
+                uint count = Packet.ReadByte();
 
                 for (var i = 0; i < count; ++i)
                 {
-                    var tsetp = new stLegacyTikiShopExchangeTP().ToRead(_packet);
+                    var tsetp = new stLegacyTikiShopExchangeTP().ToRead(Packet);
 
                     // Valida se o item base existe no IFF
                     var @base = sIff.getInstance().findCommomItem(tsetp._typeid);
@@ -76,7 +76,7 @@ namespace Pangya_GameServer.Handles
                     bi._typeid = tsetp._typeid;
                     bi.qntd = (uint)(point_shop.Quantity * tsetp.qntd);
 
-                    ItemManager.initItemFromBuyItem(_session.UserInfo, item, bi, false, 0, 0, 1);
+                    ItemManager.initItemFromBuyItem(Player.UserInfo, item, bi, false, 0, 0, 1);
 
                     if (item._typeid == 0)
                     {
@@ -94,16 +94,16 @@ namespace Pangya_GameServer.Handles
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 905, 0x5200905));
                 }
 
-                if (total_tiki_pts_cost > _session.UserInfo.PointShopLegacy)
+                if (total_tiki_pts_cost > Player.UserInfo.PointShopLegacy)
                 {
-                    throw new exception("[Handle_PLAYER_EXCHANGE_ITEM_BY_TP_LEGACY_TIKI_SHOP][Error] Pontos insuficientes [HAVE=" + _session.UserInfo.PointShopLegacy + ", COST=" + total_tiki_pts_cost + "].",
+                    throw new exception("[Handle_PLAYER_EXCHANGE_ITEM_BY_TP_LEGACY_TIKI_SHOP][Error] Pontos insuficientes [HAVE=" + Player.UserInfo.PointShopLegacy + ", COST=" + total_tiki_pts_cost + "].",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 906, 0x5200906));
                 }
 
                 // 4. Atualização de Saldo e Banco de Dados
-                _session.UserInfo.PointShopLegacy -= total_tiki_pts_cost;
+                Player.UserInfo.PointShopLegacy -= total_tiki_pts_cost;
 
-                NormalManagerDB.getInstance().add(0, new CmdUpdateLegacyTikiShopPoint(_session.UserInfo.uid, _session.UserInfo.PointShopLegacy));
+                NormalManagerDB.getInstance().add(0, new CmdUpdateLegacyTikiShopPoint(Player.UserInfo.uid, Player.UserInfo.PointShopLegacy));
 
                 // 5. Inserção dos Itens no Inventário
                 var rai = ItemManager.addItem(v_item_to_add, _session, 0, 0);
@@ -140,16 +140,16 @@ namespace Pangya_GameServer.Handles
                     p.WriteInt32((el.STDA_C_ITEM_TIME > 0) ? el.STDA_C_ITEM_TIME : el.STDA_C_ITEM_QNTD);
                     p.WriteZero(25);
                 }
-                _session.Send(p);
+                Player.Send(p);
 
                 // Pacote 0x1EA: Confirmação da troca e atualização do saldo de pontos na UI da loja
                 p.init_plain(0x1EA);
                 p.WriteUInt32(0u); // Sucesso
-                p.WriteUInt32((uint)_session.UserInfo.PointShopLegacy);
-                _session.Send(p);
+                p.WriteUInt32((uint)Player.UserInfo.PointShopLegacy);
+                Player.Send(p);
 
                 // Finaliza e sincroniza as conquistas
-                sys_achieve.finish_and_update(_session);
+                sys_achieve.finish_and_update(Player);
             }
             catch (exception e)
             {
@@ -161,7 +161,7 @@ namespace Pangya_GameServer.Handles
                     : 1u;
 
                 p.WriteUInt32(errorCode);
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

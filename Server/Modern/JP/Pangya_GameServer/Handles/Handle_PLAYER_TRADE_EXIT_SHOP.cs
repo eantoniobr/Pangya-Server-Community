@@ -5,26 +5,26 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_TRADE_EXIT_SHOP : IPacketHandler<Player>
+    public class Handle_PLAYER_TRADE_EXIT_SHOP : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
            
-            var m_ci =  _session.GetChannel();
+            var m_ci =  Player.GetChannel();
 
             try
             {
-                var r = _session.GetRoom();
+                var r = Player.GetRoom();
 
                 if (r != null)
                 {
-                   r._tradeShop.RequestChatRoomCloseViewShop(_session, _packet.ReadUInt32());
+                   r._tradeShop.RequestChatRoomCloseViewShop(Player, Packet.ReadUInt32());
                 }
                 else
                 {
                     // não aqui mas no else tem que retornar erro para o cliente, que ele esta tentando Fechar um Personal Shop, mas ele nao esta em nenhum sala
                     // Isso é Hacker ou Bug
-                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_TRADE_EXIT_SHOP][Error][WARNIG] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fechar o personal shop de outro player. mas nao esta em nenhum sala[numero=" + (_session.UserInfo.Member.sala_numero) + "]. Hacker ou Bug [Tem que enviar a resposta para o cliente, por que ainda nao esta enviando]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_TRADE_EXIT_SHOP][Error][WARNIG] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fechar o personal shop de outro Player. mas nao esta em nenhum sala[numero=" + (Player.UserInfo.Member.sala_numero) + "]. Hacker ou Bug [Tem que enviar a resposta para o cliente, por que ainda nao esta enviando]", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
             }
             catch (exception e)

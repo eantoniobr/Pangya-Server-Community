@@ -6,21 +6,21 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_FINISH_GAME : IPacketHandler<Player>
+    public class Handle_PLAYER_FINISH_GAME : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                var r = _session.GetGameRoom() ?? throw new exception("[Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou finalizar o jogo na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhum sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                var r = Player.GetGameRoom() ?? throw new exception("[Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou finalizar o jogo na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas ele nao esta em nenhum sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         1, 0x5902201));
 
-                if (r.RequestFinishGame(_session, _packet))
+                if (r.RequestFinishGame(Player, Packet))
                 {
-                    _session.GetRoom().FinishGame();
+                    Player.GetRoom().FinishGame();
                     if (r.GetTipo() != ROOM_INFO_TYPE.PRACTICE && r.GetTipo() != ROOM_INFO_TYPE.GRAND_ZODIAC_PRACTICE)
                     {
-                        _session.GetChannel()?.SendListUpdateRooms(r.GetRoomInfo());
+                        Player.GetChannel()?.SendListUpdateRooms(r.GetRoomInfo());
                     }
                 }
             }

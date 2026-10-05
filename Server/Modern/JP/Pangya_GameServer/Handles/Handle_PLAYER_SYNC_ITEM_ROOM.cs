@@ -21,7 +21,7 @@ namespace Pangya_GameServer.Handles
     /// <summary>
     /// pequeno problema dectado, nao pode excluir a sala antes de sicronizacar disso......
     /// </summary>
-    public class Handle_PLAYER_SYNC_ITEM_ROOM : IPacketHandler<Player>
+    public class Handle_PLAYER_SYNC_ITEM_ROOM : HandleBase<Player, Packet_EXAMPLE>
     {
         /// <summary>
         /// Define os tipos de sincronização de itens entre o Cliente e o Servidor.
@@ -62,54 +62,54 @@ namespace Pangya_GameServer.Handles
             TWILIGHT,
         }
 
-        public async Task Handle(Player player, Packet _packet)
+        public override async Task Handle()
         {
             int error = 0; // Começamos com sucesso
             try
             {
-                var r = player.GetRoom();
+                var r = Player.GetRoom();
 
                 if (r == null)
                 { 
                         return;
                 }
                 
-                var type = (SYNC_ITEM_TYPE)_packet.ReadByte();
+                var type = (SYNC_ITEM_TYPE)Packet.ReadByte();
                  
-                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_SYNC_ITEM_GAMEROOM][Warning] PLAYER[UID: {player.UserInfo.uid}, REQ: {type}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_SYNC_ITEM_GAMEROOM][Warning] PLAYER[UID: {Player.UserInfo.uid}, REQ: {type}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 switch (type)
                 {
                     case SYNC_ITEM_TYPE.SYNC_CHARACTER_MAIN:
                         // Se você já tiver o HandleChangeCharacter, use-o aqui
-                        error = HandleChangeCharacter(player, _packet.ReadInt32());
+                        error = HandleChangeCharacter(Player, Packet.ReadInt32());
                         break;
 
                     case SYNC_ITEM_TYPE.SYNC_CADDIE:
-                        error = HandleChangeCaddie(player, _packet.ReadInt32());
+                        error = HandleChangeCaddie(Player, Packet.ReadInt32());
                         break;
 
                     case SYNC_ITEM_TYPE.SYNC_BALL:
-                        error = HandleChangeBall(player, _packet.ReadUInt32());
+                        error = HandleChangeBall(Player, Packet.ReadUInt32());
                         break;
 
                     case SYNC_ITEM_TYPE.SYNC_CLUBSET:
-                        error = HandleChangeClubSet(player, _packet.ReadInt32());
+                        error = HandleChangeClubSet(Player, Packet.ReadInt32());
                         break;
 
                     case SYNC_ITEM_TYPE.SYNC_MASCOT:
-                        error = HandleChangeMascot(player, _packet.ReadInt32());
+                        error = HandleChangeMascot(Player, Packet.ReadInt32());
                         break;
 
                     case SYNC_ITEM_TYPE.SYNC_ITEM_EFFECT_LOUNGE:
-                        error = HandleChangeItemSpecial(player, _packet.ReadInt32(), _packet.ReadInt32());
+                        error = HandleChangeItemSpecial(Player, Packet.ReadInt32(), Packet.ReadInt32());
                         break;
 
                     case SYNC_ITEM_TYPE.SYNC_ALL:
-                        error |= HandleChangeCharacter(player, _packet.ReadInt32());
-                        error |= HandleChangeCaddie(player, _packet.ReadInt32());
-                        error |= HandleChangeClubSet(player, _packet.ReadInt32());
-                        error |= HandleChangeBall(player, _packet.ReadUInt32());
+                        error |= HandleChangeCharacter(Player, Packet.ReadInt32());
+                        error |= HandleChangeCaddie(Player, Packet.ReadInt32());
+                        error |= HandleChangeClubSet(Player, Packet.ReadInt32());
+                        error |= HandleChangeBall(Player, Packet.ReadUInt32());
                         break;
                     default:
                         error = 1;
@@ -117,12 +117,12 @@ namespace Pangya_GameServer.Handles
                         break;
                 }
 
-                r.SendBroadCast(Handle_PACKET_RESPONSE.pacote04B(player, (byte)type, error));
+                r.SendBroadCast(HandlePacket_RESPONSE.pacote04B(Player, (byte)type, error));
 
                 if (type == SYNC_ITEM_TYPE.SYNC_ALL && error == 0)// Começa jogo
-                    r.StartGame(player);
+                    r.StartGame(Player);
 
-                r.UpdatePlayerInfo(player);
+                r.UpdatePlayerInfo(Player);
                  
             }
             catch (exception e)
@@ -130,7 +130,7 @@ namespace Pangya_GameServer.Handles
                 _smp.message_pool.getInstance().push(new message("[Room::ChangeItem][ErrorSystem] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Envia erro para o cliente não travar a UI
-                player.Send(Handle_PACKET_RESPONSE.pacote04B(player, 255, 1));
+                Player.Send(HandlePacket_RESPONSE.pacote04B(Player, 255, 1));
             }
         }
 
@@ -142,13 +142,13 @@ namespace Pangya_GameServer.Handles
             // 1. Tenta localizar o Caddie se o ID for válido
             if (caddieId > 0)
             {
-                targetCaddie = _session.Inventory.FindCaddieById(caddieId);
+                targetCaddie = Player.Inventory.FindCaddieById(caddieId);
 
                 // Validação de Existência e Tipo
                 if (targetCaddie == null || sIff.getInstance().getItemGroupIdentify(targetCaddie._typeid) != IFF_GROUP.CADDIE)
                 {
                     _smp.message_pool.getInstance().push(new message(
-                        $"[Room::Caddie] ID {caddieId} inválido para UID {_session.UserInfo.uid}. Desequipando.",
+                        $"[Room::Caddie] ID {caddieId} inválido para UID {Player.UserInfo.uid}. Desequipando.",
                         type_msg.CL_ONLY_CONSOLE));
 
                     error = (targetCaddie == null) ? 2 : 3;
@@ -158,26 +158,26 @@ namespace Pangya_GameServer.Handles
                 else
                 {
                     // 2. Processa Expiração (UpdateItem) do Caddie ou de suas Parts
-                    ProcessCaddieExpiration(_session, targetCaddie, ref caddieId);
+                    ProcessCaddieExpiration(Player, targetCaddie, ref caddieId);
 
                     if (caddieId == 0) targetCaddie = null; // Caso o caddie inteiro tenha expirado
                 }
             }
 
             // 3. Aplicação na Memória (Sincroniza a Sessão)
-            _session.Inventory.UserEquippedItem.CaddieEquiped = targetCaddie;
-            _session.Inventory.UserEquipment.caddie_id = caddieId;
+            Player.Inventory.UserEquippedItem.CaddieEquiped = targetCaddie;
+            Player.Inventory.UserEquipment.caddie_id = caddieId;
 
             // 4. Validação final pela Engine do Player
-            if (targetCaddie != null && _session.CheckCaddieEquiped(_session.Inventory.UserEquipment))
+            if (targetCaddie != null && Player.CheckCaddieEquiped(Player.Inventory.UserEquipment))
             {
-                _session.Inventory.UserEquippedItem.CaddieEquiped = null;
-                _session.Inventory.UserEquipment.caddie_id = 0;
+                Player.Inventory.UserEquippedItem.CaddieEquiped = null;
+                Player.Inventory.UserEquipment.caddie_id = 0;
                 caddieId = 0;
             }
 
             // 5. Persistência Única no DB
-            NormalManagerDB.getInstance().add(0, new CmdUpdateCaddieEquiped(_session.UserInfo.uid, caddieId));
+            NormalManagerDB.getInstance().add(0, new CmdUpdateCaddieEquiped(Player.UserInfo.uid, caddieId));
 
             return error;
         }
@@ -190,13 +190,13 @@ namespace Pangya_GameServer.Handles
             // 1. Tenta equipar a bola solicitada (se não for a padrão ID 0)
             if (ballTypeId > 0)
             {
-                targetBall = _session.Inventory.FindWarehouseItemByTypeid(ballTypeId);
+                targetBall = Player.Inventory.FindWarehouseItemByTypeid(ballTypeId);
 
                 // Validação de integridade
                 if (targetBall == null || sIff.getInstance().getItemGroupIdentify(targetBall._typeid) != IFF_GROUP.BALL)
                 {
                     _smp.message_pool.getInstance().push(new message(
-                        $"[Room::Ball] Player[UID={_session.UserInfo.uid}] enviou TypeID {ballTypeId} inválido. Revertendo.",
+                        $"[Room::Ball] Player[UID={Player.UserInfo.uid}] enviou TypeID {ballTypeId} inválido. Revertendo.",
                         type_msg.CL_ONLY_CONSOLE));
 
                     error = (targetBall == null) ? 2 : 3;
@@ -207,12 +207,12 @@ namespace Pangya_GameServer.Handles
             // 2. Fallback: Se a bola for nula ou o ID for 0, busca a padrão (Comet de 1 centavo/iniciante)
             if (targetBall == null)
             {
-                targetBall = _session.Inventory.FindWarehouseItemByTypeid(DEFAULT_COMET_TYPEID);
+                targetBall = Player.Inventory.FindWarehouseItemByTypeid(DEFAULT_COMET_TYPEID);
 
-                // 3. Se o player não tem nem a padrão (raro, mas acontece em bugs de DB), cria uma
+                // 3. Se o Player não tem nem a padrão (raro, mas acontece em bugs de DB), cria uma
                 if (targetBall == null)
                 {
-                    targetBall = _session.CreateDefaultBall(); // Método auxiliar similar ao da Taqueira
+                    targetBall = Player.CreateDefaultBall(); // Método auxiliar similar ao da Taqueira
                     error = 0; // Zera erro pois agora ele tem uma bola válida
                 }
             }
@@ -220,17 +220,17 @@ namespace Pangya_GameServer.Handles
             // 4. Aplicação na Memória
             if (targetBall != null)
             {
-                _session.Inventory.UserEquippedItem.Ball_WI = targetBall;
-                _session.Inventory.UserEquipment.ball_typeid = targetBall._typeid;
+                Player.Inventory.UserEquippedItem.Ball_WI = targetBall;
+                Player.Inventory.UserEquipment.ball_typeid = targetBall._typeid;
 
                 // Validação final da engine de jogo
-                if (_session.CheckBallEquiped(_session.Inventory.UserEquipment))
+                if (Player.CheckBallEquiped(Player.Inventory.UserEquipment))
                 {
-                    ballTypeId = _session.Inventory.UserEquipment.ball_typeid;
+                    ballTypeId = Player.Inventory.UserEquipment.ball_typeid;
                 }
 
                 // 5. Persistência Única (DB)
-                NormalManagerDB.getInstance().add(0, new CmdUpdateBallEquiped(_session.UserInfo.uid, ballTypeId));
+                NormalManagerDB.getInstance().add(0, new CmdUpdateBallEquiped(Player.UserInfo.uid, ballTypeId));
             }
 
             return error;
@@ -244,14 +244,14 @@ namespace Pangya_GameServer.Handles
             // 1. Tenta localizar a taqueira solicitada
             if (clubsetId > 0)
             {
-                targetClub = _session.Inventory.FindWarehouseItemById(clubsetId);
+                targetClub = Player.Inventory.FindWarehouseItemById(clubsetId);
 
                 // Valida se existe, se é ClubSet e se não expirou
                 if (targetClub == null ||
                     sIff.getInstance().getItemGroupIdentify(targetClub._typeid) != IFF_GROUP.CLUBSET ||
-                    !_session.Inventory.IsClubSetValid(clubsetId))
+                    !Player.Inventory.IsClubSetValid(clubsetId))
                 {
-                    _smp.message_pool.getInstance().push(new message($"[Room::ClubSet] ID {clubsetId} inválido ou expirado para UID {_session.UserInfo.uid}. Revertendo para padrão.", type_msg.CL_ONLY_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message($"[Room::ClubSet] ID {clubsetId} inválido ou expirado para UID {Player.UserInfo.uid}. Revertendo para padrão.", type_msg.CL_ONLY_CONSOLE));
                     targetClub = null; // Força busca da padrão
                 }
             }
@@ -259,10 +259,10 @@ namespace Pangya_GameServer.Handles
             // 2. Se a taqueira for inválida/nula, busca ou cria a CV1 (Padrão)
             if (targetClub == null)
             {
-                targetClub = _session.Inventory.FindWarehouseItemByTypeid(DEFAULT_CLUB_TYPEID);
+                targetClub = Player.Inventory.FindWarehouseItemByTypeid(DEFAULT_CLUB_TYPEID);
                 if (targetClub == null)
                 {
-                    targetClub = _session.CreateDefaultClubSet(); // Método auxiliar similar ao da Taqueira
+                    targetClub = Player.CreateDefaultClubSet(); // Método auxiliar similar ao da Taqueira
                     error = 0; // Zera erro pois agora ele tem uma bola válida
                 }
             }
@@ -270,11 +270,11 @@ namespace Pangya_GameServer.Handles
             // 3. Aplica o Equipamento (Lógica centralizada)
             if (targetClub != null)
             {
-                _session.Inventory.EquipClubSetAction(targetClub);
+                Player.Inventory.EquipClubSetAction(targetClub);
 
                 // 4. Persistência Única
                 NormalManagerDB.getInstance().add(0,
-                    new CmdUpdateClubsetEquiped(_session.UserInfo.uid, targetClub.id));
+                    new CmdUpdateClubsetEquiped(Player.UserInfo.uid, targetClub.id));
             }
 
             return error;
@@ -288,13 +288,13 @@ namespace Pangya_GameServer.Handles
             // 1. Tenta localizar o mascote se o ID for maior que 0
             if (mascotId > 0)
             {
-                targetMascot = _session.Inventory.FindMascotById(mascotId);
+                targetMascot = Player.Inventory.FindMascotById(mascotId);
 
                 // Verifica se o item existe e se é realmente um mascote
                 if (targetMascot == null || sIff.getInstance().getItemGroupIdentify(targetMascot._typeid) != IFF_GROUP.MASCOT)
                 {
                     _smp.message_pool.getInstance().push(new message(
-                        $"[Room::Mascot] Player[UID={_session.UserInfo.uid}] enviou ID {mascotId} inválido. Desequipando.",
+                        $"[Room::Mascot] Player[UID={Player.UserInfo.uid}] enviou ID {mascotId} inválido. Desequipando.",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     error = (targetMascot == null) ? 2 : 3;
@@ -304,7 +304,7 @@ namespace Pangya_GameServer.Handles
                 else
                 {
                     // 2. Verifica expiração (Tempo do mascote acabou?)
-                    var expired = _session.Inventory.FindUpdateItemById(targetMascot.id);
+                    var expired = Player.Inventory.FindUpdateItemById(targetMascot.id);
                     if (expired.Count > 0)
                     {
                         _smp.message_pool.getInstance().push(new message($"[Room::Mascot] Mascote {mascotId} expirado. Removendo.", type_msg.CL_ONLY_CONSOLE));
@@ -315,19 +315,19 @@ namespace Pangya_GameServer.Handles
             }
 
             // 3. Aplicação na Memória (Sincroniza a Sessão)
-            _session.Inventory.UserEquippedItem.MascotEquiped = targetMascot;
-            _session.Inventory.UserEquipment.mascot_id = mascotId;
+            Player.Inventory.UserEquippedItem.MascotEquiped = targetMascot;
+            Player.Inventory.UserEquipment.mascot_id = mascotId;
 
             // 4. Validação Extra (Check final de integridade)
-            if (targetMascot != null && !_session.CheckMascotEquiped(_session.Inventory.UserEquipment))
+            if (targetMascot != null && !Player.CheckMascotEquiped(Player.Inventory.UserEquipment))
             {
-                _session.Inventory.UserEquippedItem.MascotEquiped = null;
-                _session.Inventory.UserEquipment.mascot_id = 0;
+                Player.Inventory.UserEquippedItem.MascotEquiped = null;
+                Player.Inventory.UserEquipment.mascot_id = 0;
                 mascotId = 0;
             }
 
             // 5. Persistência Única (DB)
-            NormalManagerDB.getInstance().add(0, new CmdUpdateMascotEquiped(_session.UserInfo.uid, mascotId));
+            NormalManagerDB.getInstance().add(0, new CmdUpdateMascotEquiped(Player.UserInfo.uid, mascotId));
 
             return error;
         }
@@ -335,20 +335,20 @@ namespace Pangya_GameServer.Handles
         private int HandleChangeItemSpecial(Player _session, int item_id, int effect_lounge)
         {
             // 1. Defesa Inicial: Sem personagem = Erro Crítico
-            if (_session.Inventory.UserEquippedItem.CharacterEquiped == null)
+            if (Player.Inventory.UserEquippedItem.CharacterEquiped == null)
             {
-                throw new exception($"[Room::SyncEffect] Player[UID={_session.UserInfo.uid}] sem character equipado.",
+                throw new exception($"[Room::SyncEffect] Player[UID={Player.UserInfo.uid}] sem character equipado.",
                     ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1000, 0x57007));
             }
 
-            var charInfo = _session.Inventory.UserEquippedItem.CharacterEquiped;
+            var charInfo = Player.Inventory.UserEquippedItem.CharacterEquiped;
             var effectType = effect_lounge;
 
             // 2. Busca ou Cria o Estado do Personagem na Lounge (StateCharacterLounge)
-            if (!_session.UserInfo.CharacterLoungeStates.TryGetValue(item_id, out var state))
+            if (!Player.UserInfo.CharacterLoungeStates.TryGetValue(item_id, out var state))
             {
                 state = new StateCharacterLounge();
-                _session.UserInfo.CharacterLoungeStates.Add(charInfo.id, state);
+                Player.UserInfo.CharacterLoungeStates.Add(charInfo.id, state);
                 _smp.message_pool.getInstance().push(new message($"[Room::SyncEffect] Criado novo StateLounge para Char {charInfo.id}", type_msg.CL_ONLY_CONSOLE));
             }
 
@@ -356,24 +356,24 @@ namespace Pangya_GameServer.Handles
             switch ((LOUNGE_EFFECT_TYPE)effectType)
             {
                 case LOUNGE_EFFECT_TYPE.BIG_HEAD: // HERMES (Originalmente o item que aumenta a cabeça)
-                    ValidateAndApplyEffect(_session, cadie_cauldron_Hermes_item_typeid, () =>
+                    ValidateAndApplyEffect(Player, cadie_cauldron_Hermes_item_typeid, () =>
                     {
                         state.scale_head = (state.scale_head > 1.0f) ? 1.0f : 2.0f;
                     });
                     break;
 
                 case LOUNGE_EFFECT_TYPE.FAST_WALK: // JESTER (Originalmente o item de velocidade)
-                    ValidateAndApplyEffect(_session, cadie_cauldron_Jester_item_typeid, () =>
+                    ValidateAndApplyEffect(Player, cadie_cauldron_Jester_item_typeid, () =>
                     {
                         state.walk_speed = (state.walk_speed > 1.0f) ? 1.0f : 2.0f;
                     });
                     break;
 
                 case LOUNGE_EFFECT_TYPE.TWILIGHT: // TWILIGHT (Efeito de Aura/Clima)
-                    ValidateAndApplyEffect(_session, cadie_cauldron_Twilight_item_typeid, () =>
+                    ValidateAndApplyEffect(Player, cadie_cauldron_Twilight_item_typeid, () =>
                     {
                         // Twilight geralmente é um gatilho de animação, não altera escala/velocidade fixa
-                        _smp.message_pool.getInstance().push(new message($"[Room::SyncEffect] Twilight ativado para {_session.UserInfo.uid}", type_msg.CL_ONLY_CONSOLE));
+                        _smp.message_pool.getInstance().push(new message($"[Room::SyncEffect] Twilight ativado para {Player.UserInfo.uid}", type_msg.CL_ONLY_CONSOLE));
                     });
                     break;
 
@@ -392,28 +392,28 @@ namespace Pangya_GameServer.Handles
             // 1. Tenta localizar o personagem solicitado
             if (characterId != 0)
             {
-                targetChar = _session.Inventory.FindCharacterById(characterId);
+                targetChar = Player.Inventory.FindCharacterById(characterId);
             }
 
             // 2. Fallback 1: Se não encontrou o ID, tenta pegar o primeiro do mapa (mp_ce)
-            if (targetChar == null && _session.Inventory.Characters.Count > 0)
+            if (targetChar == null && Player.Inventory.Characters.Count > 0)
             {
-                targetChar = _session.Inventory.Characters.Values.FirstOrDefault();
+                targetChar = Player.Inventory.Characters.Values.FirstOrDefault();
                 _smp.message_pool.getInstance().push(new message(
-                    $"[Room::Sync] Player[UID={_session.UserInfo.uid}] ID {characterId} inválido. Usando reserva: {targetChar?.id}",
+                    $"[Room::Sync] Player[UID={Player.UserInfo.uid}] ID {characterId} inválido. Usando reserva: {targetChar?.id}",
                     type_msg.CL_ONLY_CONSOLE));
             }
 
-            // 3. Fallback 2: Se o player não tem NENHUM personagem, cria o Nuri (Padrão)
+            // 3. Fallback 2: Se o Player não tem NENHUM personagem, cria o Nuri (Padrão)
             if (targetChar == null)
             {
                 return 1; // Falha crítica ao criar Nuri
             }
 
             // 4. APLICAÇÃO DA MUDANÇA (Sincronização de Memória)  
-            _session.Inventory.SyncCharacter(targetChar.id);
+            Player.Inventory.SyncCharacter(targetChar.id);
             // 5. PERSISTÊNCIA E BROADCAST
-            SyncCharacterToRoom(_session, targetChar.id);
+            SyncCharacterToRoom(Player, targetChar.id);
 
             return 0; // SUCCESS
         }
@@ -423,18 +423,18 @@ namespace Pangya_GameServer.Handles
         private void SyncCharacterToRoom(Player _session, int charId)
         {
             var p = new Packet();
-            Room? room = _session.GetRoom();
+            Room? room = Player.GetRoom();
             // DB Update
-            NormalManagerDB.getInstance().add(0, new CmdUpdateCharacterEquiped(_session.UserInfo.uid, charId), null, this);
+            NormalManagerDB.getInstance().add(0, new CmdUpdateCharacterEquiped(Player.UserInfo.uid, charId), null, this);
 
             // Update Room Info
-            room?.UpdatePlayerInfo(_session);
-            PlayerRoomInfoEx pri = room?.GetPlayerInfo(_session);
+            room?.UpdatePlayerInfo(Player);
+            PlayerRoomInfoEx pri = room?.GetPlayerInfo(Player);
 
             // Broadcast 0x48 (Update Player)
             if (room?.GetTipo() != ROOM_INFO_TYPE.PRACTICE && room?.GetTipo() != ROOM_INFO_TYPE.GRAND_ZODIAC_PRACTICE)
             {
-                if (Handle_PACKET_RESPONSE.pacote048(p, _session, new List<PlayerRoomInfoEx>() { pri ?? new PlayerRoomInfoEx() }, 0x103))
+                if (HandlePacket_RESPONSE.pacote048(p, _session, new List<PlayerRoomInfoEx>() { pri ?? new PlayerRoomInfoEx() }, 0x103))
                 {
                     room?.SendBroadCast(p);
                 }
@@ -443,8 +443,8 @@ namespace Pangya_GameServer.Handles
             // Lounge Sync (0x196)
             if (room?.GetTipo() == ROOM_INFO_TYPE.LOUNGE)
             {
-                if (_session.UserInfo.CharacterLoungeStates.TryGetValue(charId, out StateCharacterLounge characterLounge))
-                    room?.SendBroadCast(Handle_PACKET_RESPONSE.pacote196(_session, characterLounge));
+                if (Player.UserInfo.CharacterLoungeStates.TryGetValue(charId, out StateCharacterLounge characterLounge))
+                    room?.SendBroadCast(HandlePacket_RESPONSE.pacote196(Player, characterLounge));
             }
         }
 
@@ -453,7 +453,7 @@ namespace Pangya_GameServer.Handles
         /// </summary>
         private void ProcessCaddieExpiration(Player _session, CaddieInfoEx caddie, ref int caddieId)
         {
-            var updates = _session.Inventory.FindUpdateItemById(caddie.id);
+            var updates = Player.Inventory.FindUpdateItemById(caddie.id);
             if (!updates.Any() || caddie.rent_flag == 1) return;
 
             foreach (var el in updates.ToList()) // ToList para evitar erro de modificação de coleção
@@ -473,16 +473,16 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // Remove do mapa de updates (limpeza de memória)
-                _session.Inventory.UpdateItems.Remove(el.Key);
+                Player.Inventory.UpdateItems.Remove(el.Key);
             }
         }
 
         /// <summary>
-        /// Método auxiliar para validar se o player tem a parte necessária equipada no personagem atual
+        /// Método auxiliar para validar se o Player tem a parte necessária equipada no personagem atual
         /// </summary>
         private void ValidateAndApplyEffect(Player _session, uint[] itemPool, Action applyAction)
         {
-            var charInfo = _session.Inventory.UserEquippedItem.CharacterEquiped;
+            var charInfo = Player.Inventory.UserEquippedItem.CharacterEquiped;
 
             // 1. Segurança: Se o personagem não estiver carregado, não há o que validar
             if (charInfo == null)
@@ -501,10 +501,10 @@ namespace Pangya_GameServer.Handles
                 throw new exception("Item de efeito não cadastrado para este personagem.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1001, 1));
             }
 
-            // 4. Validação de posse/equipe (Verifica se o player realmente está vestindo o item)
+            // 4. Validação de posse/equipe (Verifica se o Player realmente está vestindo o item)
             if (!charInfo.isPartEquiped(requiredItem))
             {
-                _smp.message_pool.getInstance().push(new message($"[Effect] Player UID {_session.UserInfo.uid} tentou usar efeito sem ter o item {requiredItem} equipado.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message($"[Effect] Player UID {Player.UserInfo.uid} tentou usar efeito sem ter o item {requiredItem} equipado.", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 throw new exception("Player não está com o item de efeito equipado.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1002, 1));
             }
 

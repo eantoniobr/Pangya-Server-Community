@@ -16,17 +16,17 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ACTIVE_POWER_SHOT : IPacketHandler<Player>
+    public class Handle_PLAYER_ACTIVE_POWER_SHOT : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
 
             try
             {
-                var r = _session.GetGameRoom() ?? throw new exception("[Handle_PLAYER_ACTIVE_POWER_SHOT][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou ativar power shot, mas a sala [NUMERO=" + _session.UserInfo.Member.sala_numero + "] não foi encontrada. Hacker ou Bug",
+                var r = Player.GetGameRoom() ?? throw new exception("[Handle_PLAYER_ACTIVE_POWER_SHOT][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou ativar power shot, mas a sala [NUMERO=" + Player.UserInfo.Member.sala_numero + "] não foi encontrada. Hacker ou Bug",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 0x5900801));
                 
-                r.RequestActivePowerShot(_session, _packet);
+                r.RequestActivePowerShot(Player, Packet);
             }
             catch (exception e)
             {

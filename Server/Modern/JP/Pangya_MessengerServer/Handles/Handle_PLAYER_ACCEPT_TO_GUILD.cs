@@ -10,18 +10,18 @@ using snmdb;
 
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_PLAYER_ACEEPT_TO_GUILD : IPacketHandler<Player>
+    public class Handle_PLAYER_ACEEPT_TO_GUILD : HandleBase<Player, Packet_EXAMPLE>
     {
         public const int FRIEND_PAG_LIMIT = 30;
 
-        public async Task Handle(Player session, Packet _packet)
+        public override async Task Handle()
         {
             var p = new Packet();
 
             try
             {
-                uint club_id = _packet.ReadUInt32();
-                uint member_uid = _packet.ReadUInt32();
+                uint club_id = Packet.ReadUInt32();
+                uint member_uid = Packet.ReadUInt32();
 
                 if (club_id == 0u || member_uid == 0u)
                 {

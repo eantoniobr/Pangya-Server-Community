@@ -7,18 +7,18 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_NOTICE_GM : IPacketHandler<Player>
+    public class Handle_PLAYER_NOTICE_GM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             try
             {
                 // 2. Verificação de Privilégio (Game Master)
                 // Usamos a propriedade GameMaster que você tem no UserInfo
-                if (!session.UserInfo.UserCapabilities.game_master)
+                if (!Player.UserInfo.UserCapabilities.game_master)
                 {
                     throw new exception(
-                        $"[Handle_PLAYER_NOTICE_GM][Error] PLAYER[UID={session.UserInfo.uid}] não é GM.",
+                        $"[Handle_PLAYER_NOTICE_GM][Error] PLAYER[UID={Player.UserInfo.uid}] não é GM.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 1, 0x5700100));
                 }
 
@@ -28,13 +28,13 @@ namespace Pangya_GameServer.Handles
                 if (string.IsNullOrEmpty(notice))
                 {
                     throw new exception(
-                        $"[Handle_PLAYER_NOTICE_GM][Error] PLAYER[UID={session.UserInfo.uid}] enviou notice vazia.",
+                        $"[Handle_PLAYER_NOTICE_GM][Error] PLAYER[UID={Player.UserInfo.uid}] enviou notice vazia.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 8, 0x5700100));
                 }
 
                 // Log do servidor
                 _smp.message_pool.getInstance().push(new message(
-                    $"[GM::Notice] PLAYER[UID={session.UserInfo.uid}] enviou: {notice}",
+                    $"[GM::Notice] PLAYER[UID={Player.UserInfo.uid}] enviou: {notice}",
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // 4. Criação do Pacote de Broadcast (0x40 - Chat/Notice)
@@ -42,7 +42,7 @@ namespace Pangya_GameServer.Handles
                 {
                     p.init_plain(0x40);
                     p.WriteByte(7);
-                    p.WriteString(session.UserInfo.nickname);
+                    p.WriteString(Player.UserInfo.nickname);
                     p.WriteString(notice);
                     GameServer.getInstance().SendChannelBroadCast(p);
                 }
@@ -54,7 +54,7 @@ namespace Pangya_GameServer.Handles
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Feedback de erro apenas para o GM que tentou enviar
-                SendErrorNotice(session, "Não conseguiu executar o comando.");
+                SendErrorNotice(Player, "Não conseguiu executar o comando.");
             }
 
         await Task.CompletedTask;
@@ -66,9 +66,9 @@ namespace Pangya_GameServer.Handles
             {
                 p.init_plain(0x40);
                 p.WriteByte(7);
-                p.WriteString(session.UserInfo.nickname);
+                p.WriteString(Player.UserInfo.nickname);
                 p.WriteString(errorMessage);
-                session.Send(p);
+                Player.Send(p);
             }
         }
     }

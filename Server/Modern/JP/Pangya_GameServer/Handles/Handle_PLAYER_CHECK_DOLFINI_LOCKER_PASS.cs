@@ -15,39 +15,39 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS : IPacketHandler<Player>
+    public class Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
                 // 1. Leitura e Sanitização básica
-                string pass = _packet.ReadString();
+                string pass = Packet.ReadString();
 
                 if (string.IsNullOrEmpty(pass))
                 {
-                    throw new exception("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Error] PLAYER[UID=" + _session.UserInfo.uid + "] tentou contra o server[MESSAGE=" + pass + "], vazio. Hacker ou Bug",
+                    throw new exception("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Error] PLAYER[UID=" + Player.UserInfo.uid + "] tentou contra o server[MESSAGE=" + pass + "], vazio. Hacker ou Bug",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 1));
                 }
 
                 if (!Tools.Sanitize(pass))
                 {
-                    throw new exception("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Error] PLAYER[UID=" + _session.UserInfo.uid + "] tentou contra o server[MESSAGE=" + pass + "], tentativa de inject. Hacker ou Bug",
+                    throw new exception("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Error] PLAYER[UID=" + Player.UserInfo.uid + "] tentou contra o server[MESSAGE=" + pass + "], tentativa de inject. Hacker ou Bug",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 1));
                 }
 
                 // 2. Validações de comprimento (Business Logic)
                 if (pass.Length == 0)
                 {
-                    throw new exception("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar no Dolfini Locker com uma senha vazia. Hacker ou Bug.",
+                    throw new exception("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou entrar no Dolfini Locker com uma senha vazia. Hacker ou Bug.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 250, 5100151));
                 }
 
                 if (pass.Length > 4)
                 {
-                    throw new exception("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar no Dolfini Locker com uma senha maior que a suportada. Hacker ou Bug",
+                    throw new exception("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou entrar no Dolfini Locker com uma senha maior que a suportada. Hacker ou Bug",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 251, 5100152));
                 }
 
@@ -55,23 +55,23 @@ namespace Pangya_GameServer.Handles
                 p.init_plain(0x16C);
 
                 // Compara a senha enviada com a senha armazenada na sessão
-                if (string.CompareOrdinal(pass, _session.Inventory.DolfineLocker.pass) != 0)
+                if (string.CompareOrdinal(pass, Player.Inventory.DolfineLocker.pass) != 0)
                 {
-                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Success] PLAYER [UID=" + _session.UserInfo.uid + "] tentou entrar no Dolfini Locker com senha[value=" + pass + "] errada", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Success] PLAYER [UID=" + Player.UserInfo.uid + "] tentou entrar no Dolfini Locker com senha[value=" + pass + "] errada", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     p.WriteUInt32(0x75); // Senha Incorreta
                 }
                 else
                 {
-                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Success] PLAYER [UID=" + _session.UserInfo.uid + "] logou com sucesso no Dolfini Locker", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_CHECK_DOLFINI_LOCKER_PASS][Success] PLAYER [UID=" + Player.UserInfo.uid + "] logou com sucesso no Dolfini Locker", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     // Marca que o jogador passou na verificação de senha
-                    _session.Inventory.DolfineLocker.pass_check = true;
+                    Player.Inventory.DolfineLocker.pass_check = true;
 
                     p.WriteUInt32(0); // Senha Correta
                 }
 
-                _session.Send(p);
+                Player.Send(p);
             }
             catch (exception e)
             {
@@ -84,7 +84,7 @@ namespace Pangya_GameServer.Handles
                     : 5100150;
 
                 p.WriteUInt32(errorCode);
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

@@ -4,9 +4,9 @@ using PangyaAPI.Network;
 using PangyaAPI.Network.Core; 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_SERVER_LIST : IPacketHandler<Player>
+    public class Handle_PLAYER_SERVER_LIST : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
 			try
 			{

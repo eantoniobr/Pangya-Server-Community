@@ -7,17 +7,17 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_RankingServer.Handles
 {
-    public class Handle_REQUEST_PLAYER_INFO : IPacketHandler<Player>
+    public class Handle_REQUEST_PLAYER_INFO : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             try
             {
-                uint uid = packet.ReadUInt32();
+                uint uid = Packet.ReadUInt32();
 
-                string id = packet.ReadString();
+                string id = Packet.ReadString();
 
-                byte active = packet.ReadByte();
+                byte active = Packet.ReadByte();
 
                 // Log de monitoramento com o nome da classe
                  
@@ -29,7 +29,7 @@ namespace Pangya_RankingServer.Handles
                     throw new Exception($"[{nameof(Handle_REQUEST_PLAYER_INFO)}] [PlayerInfo Error] Tentativa de request com UID zero.");
                 }
 
-                sRankRegistryManager.getInstance().sendPlayerFullInfo(session, uid);
+                sRankRegistryManager.getInstance().sendPlayerFullInfo(Player, uid);
             }
             catch (Exception e)
             {

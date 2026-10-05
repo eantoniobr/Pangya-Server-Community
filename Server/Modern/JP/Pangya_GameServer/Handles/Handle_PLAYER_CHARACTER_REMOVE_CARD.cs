@@ -15,44 +15,44 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHARACTER_REMOVE_CARD : IPacketHandler<Player>
+    public class Handle_PLAYER_CHARACTER_REMOVE_CARD : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
-                if (_session.UserInfo.block_flag.m_flag.char_mastery)
+                if (Player.UserInfo.block_flag.m_flag.char_mastery)
                 {
-                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou remover card do character, mas ele nao pode. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou remover card do character, mas ele nao pode. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         9, 0x790001));
                 }
 
-                CardRemove cr = new CardRemove().ToRead(_packet);
+                CardRemove cr = new CardRemove().ToRead(Packet);
                 List<stItem> v_item = new List<stItem>();
                 stItem item = new stItem();
                 BuyItem bi = new BuyItem();
 
-                var pCi = _session.Inventory.FindCharacterById(cr.char_id);
+                var pCi = Player.Inventory.FindCharacterById(cr.char_id);
 
                 if (pCi == null || pCi._typeid != cr.char_typeid)
                 {
-                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas o ele nao possui esse character. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas o ele nao possui esse character. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         850, 0x5200851));
                 }
 
-                var pWi = _session.Inventory.FindWarehouseItemById(cr.removedor_id);
+                var pWi = Player.Inventory.FindWarehouseItemById(cr.removedor_id);
 
                 if (pWi == null || pWi._typeid != cr.removedor_typeid)
                 {
-                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas ele nao possui o removedor[TYPEID=" + (cr.removedor_typeid) + ", ID=" + (cr.removedor_id) + "] de card. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas ele nao possui o removedor[TYPEID=" + (cr.removedor_typeid) + ", ID=" + (cr.removedor_id) + "] de card. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         851, 0x5200852));
                 }
 
                 if (pWi.STDA_C_ITEM_QNTD < 1)
                 {
-                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas ele nao quantidade suficiente do removedor[TYPEID=" + (cr.removedor_typeid) + ", ID=" + (cr.removedor_id) + "] de card. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas ele nao quantidade suficiente do removedor[TYPEID=" + (cr.removedor_typeid) + ", ID=" + (cr.removedor_id) + "] de card. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         854, 0x5200855));
                 }
 
@@ -64,7 +64,7 @@ namespace Pangya_GameServer.Handles
                     case 4: // Character
                         if (pCi.Card_Character[(cr.card_slot - 1) % 4] == 0)
                         {
-                            throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas nao tem nenhum card equipado nesse Slot. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas nao tem nenhum card equipado nesse Slot. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                 853, 0x5200854));
                         }
 
@@ -81,7 +81,7 @@ namespace Pangya_GameServer.Handles
                     case 8: // Caddie
                         if (pCi.Card_Caddie[(cr.card_slot - 1) % 4] == 0)
                         {
-                            throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas nao tem nenhum card equipado nesse Slot. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas nao tem nenhum card equipado nesse Slot. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                 853, 0x5200854));
                         }
 
@@ -98,7 +98,7 @@ namespace Pangya_GameServer.Handles
                     case 12: // NPC
                         if (pCi.Card_NPC[(cr.card_slot - 1) % 4] == 0)
                         {
-                            throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas nao tem nenhum card equipado nesse Slot. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas nao tem nenhum card equipado nesse Slot. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                 853, 0x5200854));
                         }
 
@@ -110,16 +110,16 @@ namespace Pangya_GameServer.Handles
                         pCi.Card_NPC[(cr.card_slot - 1) % 4] = 0;
                         break;
                     default:
-                        throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas o slot é deconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                        throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas o slot é deconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                             852, 0x5200853));
                 }
 
                 // Update ON Server
-                var pCei = _session.Inventory.FindCardEquipedByTypeid(bi._typeid, (int)cr.char_typeid, (int)cr.card_slot);
+                var pCei = Player.Inventory.FindCardEquipedByTypeid(bi._typeid, (int)cr.char_typeid, (int)cr.card_slot);
 
                 if (pCei == null)
                 {
-                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas nao tem o card equipado no List de cards equipado. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou remover card[Slot=" + (cr.card_slot) + "] do Character[TYPEID=" + (cr.char_typeid) + ", ID=" + (cr.char_id) + "], mas nao tem o card equipado no List de cards equipado. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         0x857, 0x5200858));
                 }
 
@@ -134,7 +134,7 @@ namespace Pangya_GameServer.Handles
                 // Remove Card Removedor Item
                 if (ItemManager.removeItem(item, _session) <= 0)
                 {
-                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] nao conseguiu excluir/(atualizar qntd) item[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] nao conseguiu excluir/(atualizar qntd) item[TYPEID=" + (item._typeid) + ", ID=" + (item.id) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         858, 0x5200859));
                 }
 
@@ -142,11 +142,11 @@ namespace Pangya_GameServer.Handles
 
                 item = new stItem();
 
-                ItemManager.initItemFromBuyItem(_session.UserInfo, item, bi, false, 0, 0, 1);
+                ItemManager.initItemFromBuyItem(Player.UserInfo, item, bi, false, 0, 0, 1);
 
                 if (item._typeid == 0)
                 {
-                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] nao conseguiu initializar item[TYPEID=" + (bi._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] nao conseguiu initializar item[TYPEID=" + (bi._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         855, 0x5200856));
                 }
 
@@ -155,7 +155,7 @@ namespace Pangya_GameServer.Handles
 
                 if ((rt = ItemManager.addItem(item, _session, 0, 0)) < 0)
                 {
-                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + _session.UserInfo.uid + "] nao conseguiu adicionar item[TYPEID=" + (item._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestCharacterRemoveCard][Error] PLAYER [UID=" + Player.UserInfo.uid + "] nao conseguiu adicionar item[TYPEID=" + (item._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         856, 0x5200857));
                 }
 
@@ -175,20 +175,20 @@ namespace Pangya_GameServer.Handles
                 v_item.Add(new stItem(item));
 
                 // Update ON DB
-                NormalManagerDB.getInstance().add(11, new CmdRemoveEquipedCard(_session.UserInfo.uid, pCei), null, null);
+                NormalManagerDB.getInstance().add(11, new CmdRemoveEquipedCard(Player.UserInfo.uid, pCei), null, null);
 
                 // Remove Equiped Card
-                var it = _session.Inventory.CardEquipment.FirstOrDefault(_el =>
+                var it = Player.Inventory.CardEquipment.FirstOrDefault(_el =>
                 {
                     return _el.id == bi._typeid && _el.parts_id == cr.char_id && _el.slot == cr.card_slot;
                 });
 
                 if (it != null)
                 {
-                    _session.Inventory.CardEquipment.Remove(it);
+                    Player.Inventory.CardEquipment.Remove(it);
                 }
-                _session.Inventory.SyncCharacter(pCi.id, pCi);
-                ////_session.Inventory.ei.char_info = pCi;//evitar vazamento de memoria
+                Player.Inventory.SyncCharacter(pCi.id, pCi);
+                ////Player.Inventory.ei.char_info = pCi;//evitar vazamento de memoria
 
                 // Update ON Jogo
                 p.init_plain(0x216);
@@ -210,7 +210,7 @@ namespace Pangya_GameServer.Handles
                     p.WriteByte(el.type_iff); // Card Slot
                 }
 
-                _session.Send(p);
+                Player.Send(p);
 
                 // Reposta do Character Remove Card
                 p.init_plain(0x273);
@@ -218,12 +218,12 @@ namespace Pangya_GameServer.Handles
                 p.WriteUInt32(0); // OK
                 p.WriteUInt32(bi._typeid);
 
-                _session.Send(p);
+                Player.Send(p);
 
                 // Update Achievement ON SERVER, DB and GAME
                 AchievementSystem sys_achieve = new AchievementSystem();
                 sys_achieve.incrementCounter(0x6C400088u);
-                sys_achieve.finish_and_update(_session);
+                sys_achieve.finish_and_update(Player);
             }
             catch (exception e)
             {
@@ -233,7 +233,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteUInt32((ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL) ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 0x5200850);
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

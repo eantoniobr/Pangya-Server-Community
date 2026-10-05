@@ -27,60 +27,60 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_KICK_PLAYER_OF_ROOM : IPacketHandler<Player>
+    public class Handle_PLAYER_KICK_PLAYER_OF_ROOM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                uint uid = _packet.ReadUInt32();
+                uint uid = Packet.ReadUInt32();
 
-                var r = _session.GetRoom();
+                var r = Player.GetRoom();
 
                 if (r == null)
                 {
-                    throw new exception("[Handle_PLAYER_KICK_PLAYER_OF_ROOM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + "] tentou chutar um PLAYER [UID=" + (uid) + "] da sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas sala nao existe. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Handle_PLAYER_KICK_PLAYER_OF_ROOM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + "] tentou chutar um PLAYER [UID=" + (uid) + "] da sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas sala nao existe. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         10, 0));
                 }
 
-                if (r.GetMaster() != _session.UserInfo.uid)
+                if (r.GetMaster() != Player.UserInfo.uid)
                 {
-                    throw new exception("[Handle_PLAYER_KICK_PLAYER_OF_ROOM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + "] tentou chutar um PLAYER [UID=" + (uid) + "] da sala[NUMERO=" + r.GetRoomId() + "], mas o player nao é master da sala para poder chutar(kick) o player. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Handle_PLAYER_KICK_PLAYER_OF_ROOM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + "] tentou chutar um PLAYER [UID=" + (uid) + "] da sala[NUMERO=" + r.GetRoomId() + "], mas o Player nao é master da sala para poder chutar(kick) o Player. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         11, 0));
                 }
 
-                // Se não for GM, não pode kikar o player da sala com jogo em andamento
-                if (!_session.UserInfo.UserCapabilities.game_master && r.CurrentGame != null)
+                // Se não for GM, não pode kikar o Player da sala com jogo em andamento
+                if (!Player.UserInfo.UserCapabilities.game_master && r.CurrentGame != null)
                 {
-                    throw new exception("[Handle_PLAYER_KICK_PLAYER_OF_ROOM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + "] tentou chutar um PLAYER [UID=" + (uid) + "] da sala[NUMERO=" + r.GetRoomId() + "], mas o player é GM para poder chutar o player da sala com o jogo em andamento.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Handle_PLAYER_KICK_PLAYER_OF_ROOM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + "] tentou chutar um PLAYER [UID=" + (uid) + "] da sala[NUMERO=" + r.GetRoomId() + "], mas o Player é GM para poder chutar o Player da sala com o jogo em andamento.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         13, 0));
                 }
 
                 var _sessionKick = r.FindSessionByOid(uid);
 
-                if (_sessionKick == null)
+                if (PlayerKick == null)
                 {
-                    throw new exception("[Handle_PLAYER_KICK_PLAYER_OF_ROOM][Error] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + "] tentou chutar um PLAYER [UID=" + (uid) + "] da sala[NUMERO=" + r.GetRoomId() + "], mas o player nao existe na sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Handle_PLAYER_KICK_PLAYER_OF_ROOM][Error] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + "] tentou chutar um PLAYER [UID=" + (uid) + "] da sala[NUMERO=" + r.GetRoomId() + "], mas o Player nao existe na sala. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         12, 0));
                 }
 
-                if (_sessionKick.UserInfo.uid == _session.UserInfo.uid)
+                if (PlayerKick.UserInfo.uid == Player.UserInfo.uid)
                 {
                     // Enviamos um aviso para o chat do próprio GM em vez de dar erro fatal
-                    _session.SendChatNotice("no executed, other player");
+                    Player.SendChatNotice("no executed, other Player");
 
                     _smp.message_pool.getInstance().push(new message(
-                        $"[Handle_PLAYER_KICK_FROM_ROOM][Warning] GM {_session.UserInfo.nickname} tentou se auto-desconectar (Bloqueado).",
+                        $"[Handle_PLAYER_KICK_FROM_ROOM][Warning] GM {Player.UserInfo.nickname} tentou se auto-desconectar (Bloqueado).",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     return; // Interrompe a execução aqui
                 }
 
                 // Player precisa do pacote para sair da sala
-                // Não precisa verifica se é Grand Prix o multiplayer,
-                // o pacote do multiplayer serve para kikar o player da sala. O pacote do GP no GP buga
+                // Não precisa verifica se é Grand Prix o multiPlayer,
+                // o pacote do multiPlayer serve para kikar o Player da sala. O pacote do GP no GP buga
                 // Nota: Assumindo que LeaveRoomMultiPlayer esteja acessível via contexto ou classe estática correspondente
-                _sessionKick.GetChannel().LeaveRoomMultiPlayer(_sessionKick, 3);
+                _sessionKick.GetChannel().LeaveRoomMultiPlayer(PlayerKick, 3);
             }
             catch (exception e)
             {

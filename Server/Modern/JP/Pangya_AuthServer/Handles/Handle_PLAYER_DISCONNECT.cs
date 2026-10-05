@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Pangya_AuthServer.Handles
 {
-    public class Handle_PLAYER_DISCONNECT : IAuthPacketHandler<Player>
+    public class Handle_PLAYER_DISCONNECT : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         { 
         }
     }

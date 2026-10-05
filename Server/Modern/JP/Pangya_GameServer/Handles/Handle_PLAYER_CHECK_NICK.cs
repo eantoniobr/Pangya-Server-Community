@@ -18,9 +18,9 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHECK_NICK : IPacketHandler<Player>
+    public class Handle_PLAYER_CHECK_NICK : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             NICK_CHECK nc = NICK_CHECK.SUCCESS;
             string nick = string.Empty;
@@ -32,25 +32,25 @@ namespace Pangya_GameServer.Handles
 
             try
             {
-                opt = _packet.ReadByte();
+                opt = Packet.ReadByte();
 
                 if (opt != 0)
                 {
                     _smp.message_pool.getInstance().push(new message(
-                       $"[Lobby::requestCheckNick][WARNING] Player[UID={_session.UserInfo.uid}] Pediu para Check Nickname: {nick}, [OPT={opt}] diferente de 0.",
+                       $"[Lobby::requestCheckNick][WARNING] Player[UID={Player.UserInfo.uid}] Pediu para Check Nickname: {nick}, [OPT={opt}] diferente de 0.",
                        type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
 
-                nick = _packet.ReadPStr();
+                nick = Packet.ReadPStr();
 
-                _smp.message_pool.getInstance().push(new message($"[Lobby::requestCheckNick][Log] Player[UID={_session.UserInfo.uid}, IGN_CHECK={nick}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message($"[Lobby::requestCheckNick][Log] Player[UID={Player.UserInfo.uid}, IGN_CHECK={nick}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 if (nc == NICK_CHECK.SUCCESS && Regex.IsMatch(nick, @".*[ ].*"))
                 {
                     nc = NICK_CHECK.EMPETY_ERROR;
 
                     _smp.message_pool.getInstance().push(new message(
-                       $"[Lobby::requestCheckNick][Log] Player[UID={_session.UserInfo.uid}] Pediu para verificar o nick contem espaco em branco: {nick}",
+                       $"[Lobby::requestCheckNick][Log] Player[UID={Player.UserInfo.uid}] Pediu para verificar o nick contem espaco em branco: {nick}",
                        type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
 
@@ -60,7 +60,7 @@ namespace Pangya_GameServer.Handles
                     nc = NICK_CHECK.INCORRECT_NICK;
 
                     _smp.message_pool.getInstance().push(new message(
-                       $"[Lobby::requestCheckNick][Log] Player[UID={_session.UserInfo.uid}] Pediu para verificar o nick é menor que 4 letras ou tem caracteres que nao pode: {nick}",
+                       $"[Lobby::requestCheckNick][Log] Player[UID={Player.UserInfo.uid}] Pediu para verificar o nick é menor que 4 letras ou tem caracteres que nao pode: {nick}",
                        type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
 
@@ -87,7 +87,7 @@ namespace Pangya_GameServer.Handles
                         mi = cmd_mi.getInfo();
 
                         _smp.message_pool.getInstance().push(new message(
-                           $"[Lobby::requestCheckNick][Log] Player[UID={_session.UserInfo.uid}] Pediu para verificar o nick ja esta em uso: {nick}",
+                           $"[Lobby::requestCheckNick][Log] Player[UID={Player.UserInfo.uid}] Pediu para verificar o nick ja esta em uso: {nick}",
                            type_msg.CL_FILE_LOG_AND_CONSOLE));
                     }
                 }
@@ -124,7 +124,7 @@ namespace Pangya_GameServer.Handles
                     p.WriteBytes(mi.ToArray());
                 }
 
-                _session.Send(p);
+                Player.Send(p);
             }
             catch (exception e)
             {

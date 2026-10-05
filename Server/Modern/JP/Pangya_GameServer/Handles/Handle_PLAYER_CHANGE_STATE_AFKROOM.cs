@@ -17,48 +17,48 @@ using PangyaAPI.Utilities.Log;
 using snmdb;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHANGE_STATE_AFKROOM : IPacketHandler<Player>
+    public class Handle_PLAYER_CHANGE_STATE_AFKROOM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
-            var m_ci = _session.GetChannel();
+            var m_ci = Player.GetChannel();
             try
             {
-                byte state = _packet.ReadByte();
+                byte state = Packet.ReadByte();
 
-                var r = _session.GetRoom();
+                var r = Player.GetRoom();
 
                 if (r == null)
                 {
-                    throw new exception("[Lobby.Room::RequestChangePlayerStateAFKRoom][Error] sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "] nao existe.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby.Room::RequestChangePlayerStateAFKRoom][Error] sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "] nao existe.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         10, 0));
                 }
 
-                PlayerRoomInfo pri = r.GetPlayerInfo(_session);
+                PlayerRoomInfo pri = r.GetPlayerInfo(Player);
 
-                PlayerLobbyInfo pci = m_ci.GetPlayerInfo(_session);
+                PlayerLobbyInfo pci = m_ci.GetPlayerInfo(Player);
 
                 if (pri == null)
                 {
-                    throw new exception("[Lobby.Room::RequestChangePlayerStateAFKRoom][Error] nao tem o info do player na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "].", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby.Room::RequestChangePlayerStateAFKRoom][Error] nao tem o info do Player na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "].", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         11, 0));
                 }
 
                 if (pci == null)
                 {
-                    throw new exception("[Lobby.Room::RequestChangePlayerStateAFKRoom][Error] nao tem o info do player no canal.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby.Room::RequestChangePlayerStateAFKRoom][Error] nao tem o info do Player no canal.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         12, 0));
                 }
 
                 pci.state_flag.away = pri.state_flag.away = state;
 
                 Packet p = new Packet(0x8E);
-                p.WriteInt32(_session.ConnectionID);
+                p.WriteInt32(Player.ConnectionID);
                 p.WriteByte(state);
 
                 r.SendBroadCast(p);
 
-                m_ci.Lobby.SendBroadCast(Handle_PACKET_RESPONSE.pacote046(new List<PlayerLobbyInfo>() { (pci == null) ? new PlayerLobbyInfo() : pci }, 3));
+                m_ci.Lobby.SendBroadCast(HandlePacket_RESPONSE.pacote046(new List<PlayerLobbyInfo>() { (pci == null) ? new PlayerLobbyInfo() : pci }, 3));
             }
             catch (exception e)
             {

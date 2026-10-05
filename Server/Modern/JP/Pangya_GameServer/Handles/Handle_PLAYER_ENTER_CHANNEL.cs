@@ -17,44 +17,44 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ENTER_CHANNEL : IPacketHandler<Player>
+    public class Handle_PLAYER_ENTER_CHANNEL : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
-            var m_ci = _session.GetChannel();
+            var m_ci = Player.GetChannel();
 
             try
             {
-                sbyte channel = _packet.ReadSByte();
+                sbyte channel = Packet.ReadSByte();
 
                 // No padrão de Handle, o enterChannel geralmente é disparado pelo ChannelManager ou PlayerService
-                var c = GameServer.getInstance().EnterChannel(_session, channel);
+                var c = GameServer.getInstance().EnterChannel(Player, channel);
 
                 if (c != null)
                 {
                     if (!sAttendanceRewardSystem.getInstance().isLoad())
                         sAttendanceRewardSystem.getInstance().load();
 
-                    var m_ari = _session.UserInfo.Attendance;
+                    var m_ari = Player.UserInfo.Attendance;
 
                     // Lógica de Recompensa de Presença (Attendance)
                     if (m_ari.login == 2 || m_ari.login == 3)
                     { 
-                        sAttendanceRewardSystem.getInstance().sendGrandPrixTicket(_session);
-                        sAttendanceRewardSystem.getInstance().sendFortuneKey(_session);
-                        sAttendanceRewardSystem.getInstance().sendBotTicket(_session);
+                        sAttendanceRewardSystem.getInstance().sendGrandPrixTicket(Player);
+                        sAttendanceRewardSystem.getInstance().sendFortuneKey(Player);
+                        sAttendanceRewardSystem.getInstance().sendBotTicket(Player);
                     }
                     else
                     {
-                        if (sAttendanceRewardSystem.getInstance().passedOneDay(_session))
+                        if (sAttendanceRewardSystem.getInstance().passedOneDay(Player))
                         { 
-                            sAttendanceRewardSystem.getInstance().sendGrandPrixTicket(_session);
-                            sAttendanceRewardSystem.getInstance().sendFortuneKey(_session);
-                            sAttendanceRewardSystem.getInstance().sendBotTicket(_session);
+                            sAttendanceRewardSystem.getInstance().sendGrandPrixTicket(Player);
+                            sAttendanceRewardSystem.getInstance().sendFortuneKey(Player);
+                            sAttendanceRewardSystem.getInstance().sendBotTicket(Player);
                         }
                     }
 
-                    _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_ENTER_CHANNEL][Sucess] PLAYER[UID: {_session.UserInfo.uid}, CID: {channel}] ENTER TO CHANNEL.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message($"[Handle_PLAYER_ENTER_CHANNEL][Sucess] PLAYER[UID: {Player.UserInfo.uid}, CID: {channel}] ENTER TO CHANNEL.", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
             }
             catch (exception e)

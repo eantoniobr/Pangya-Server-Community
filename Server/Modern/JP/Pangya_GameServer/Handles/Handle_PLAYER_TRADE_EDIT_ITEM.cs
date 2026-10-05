@@ -9,23 +9,23 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_TRADE_EDIT_ITEM : IPacketHandler<Player>
+    public class Handle_PLAYER_TRADE_EDIT_ITEM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                var r = _session.GetRoom();
+                var r = Player.GetRoom();
 
                 if (r != null)
                 {
-                   r._tradeShop.RequestChatRoomOpenShop(_session, _packet);
+                   r._tradeShop.RequestChatRoomOpenShop(Player, Packet);
                 }
                 else
                 {
                     // não aqui mas no else tem que retornar erro para o cliente, que ele esta tentando Fechar um Personal Shop, mas ele nao esta em nenhum sala
                     // Isso é Hacker ou Bug
-                    _smp.message_pool.getInstance().push(new message("[Lobby.Room::RequestOpenSaleShop][Error][WARNIG] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir o personal shop dele. mas nao esta em nenhum sala[numero=" + (_session.UserInfo.Member.sala_numero) + "]. Hacker ou Bug [Tem que enviar a resposta para o cliente, por que ainda nao esta enviando]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message("[Lobby.Room::RequestOpenSaleShop][Error][WARNIG] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir o personal shop dele. mas nao esta em nenhum sala[numero=" + (Player.UserInfo.Member.sala_numero) + "]. Hacker ou Bug [Tem que enviar a resposta para o cliente, por que ainda nao esta enviando]", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
              }
             catch (exception e)

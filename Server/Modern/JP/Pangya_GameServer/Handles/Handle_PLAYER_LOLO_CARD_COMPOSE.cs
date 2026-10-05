@@ -21,28 +21,28 @@ using System.Linq;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_LOLO_CARD_COMPOSE : IPacketHandler<Player>
+    public class Handle_PLAYER_LOLO_CARD_COMPOSE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
                 // 1. Verificação de Bloqueio de Feature
-                if (_session.UserInfo.block_flag.m_flag.lolo_copound_card)
+                if (Player.UserInfo.block_flag.m_flag.lolo_copound_card)
                 {
-                    throw new exception("[Handle_PLAYER_LOLO_CARD_COMPOSE][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou fundir card, mas está bloqueado.",
+                    throw new exception("[Handle_PLAYER_LOLO_CARD_COMPOSE][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou fundir card, mas está bloqueado.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 7, 0x790001));
                 }
 
-                LoloCardComposeEx lcc = new LoloCardComposeEx().ToRead(_packet) as LoloCardComposeEx;
+                LoloCardComposeEx lcc = new LoloCardComposeEx().ToRead(Packet) as LoloCardComposeEx;
                 List<stItem> v_items_to_sync = new List<stItem>(); // Itens para sync final (removidos e adicionados)
                 List<stItem> v_items_to_remove = new List<stItem>();
                 AchievementSystem sys_achieve = new AchievementSystem();
                 ulong total_pang_cost = 0;
 
-                var r = _session.GetRoom();
+                var r = Player.GetRoom();
 
                 // 2. Validação das Cartas de Entrada
                 for (int i = 0; i < lcc._typeid.Length; i++)
@@ -63,8 +63,8 @@ namespace Pangya_GameServer.Handles
                             ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 151, 0x5400152));
                     }
 
-                    // Verifica se o player possui a carta no inventário
-                    var pCi = _session.Inventory.FindCardByTypeid(card_iff.ID);
+                    // Verifica se o Player possui a carta no inventário
+                    var pCi = Player.Inventory.FindCardByTypeid(card_iff.ID);
                     if (pCi == null || pCi.qntd < 1)
                     {
                         throw new exception($"[Handle] Player não possui a carta [TYPEID={current_typeid}].",
@@ -72,7 +72,7 @@ namespace Pangya_GameServer.Handles
                     }
 
                     // Anti-Exploit: Verifica se o item está à venda no Personal Shop
-                    if (r != null && r.CheckPersonalShopItem(_session, pCi.id))
+                    if (r != null && r.CheckPersonalShopItem(Player, pCi.id))
                     {
                         throw new exception($"[Handle] Card [ID={pCi.id}] está à venda no shop pessoal.",
                             ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1010, 0x5201010));
@@ -131,7 +131,7 @@ namespace Pangya_GameServer.Handles
                 // 6. Execução: Adicionar nova carta
                 stItem item_ganho = new stItem();
                 BuyItem bi = new BuyItem { id = -1, _typeid = new_card._typeid, qntd = 1 };
-                ItemManager.initItemFromBuyItem(_session.UserInfo, item_ganho, bi, false, 0, 0, 1);
+                ItemManager.initItemFromBuyItem(Player.UserInfo, item_ganho, bi, false, 0, 0, 1);
 
                 var rt = ItemManager.addItem(item_ganho, _session, 0, 0);
                 if (rt < 0)
@@ -146,7 +146,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 7. Atualização Financeira e Conquistas
-               _session.UserInfo.consomePang(total_pang_cost);
+               Player.UserInfo.consomePang(total_pang_cost);
                 sys_achieve.incrementCounter(0x6C40008Au + (uint)new_card.tipo); // Tipo sorteado
                 sys_achieve.incrementCounter(0x6C400089u); // Contador geral de fusão
 
@@ -154,9 +154,9 @@ namespace Pangya_GameServer.Handles
 
                 // Pacote 0xC8: Update Pang
                 p.init_plain(0xC8);
-                p.WriteUInt64(_session.UserInfo.Statistics.pang);
+                p.WriteUInt64(Player.UserInfo.Statistics.pang);
                 p.WriteUInt64(total_pang_cost);
-                _session.Send(p);
+                Player.Send(p);
 
                 // Pacote 0x216: Update Items (Visual)
                 p.init_plain(0x216);
@@ -172,20 +172,20 @@ namespace Pangya_GameServer.Handles
                     p.WriteInt32((el.STDA_C_ITEM_TIME > 0) ? el.STDA_C_ITEM_TIME : el.STDA_C_ITEM_QNTD);
                     p.WriteZero(25);
                 }
-                _session.Send(p);
+                Player.Send(p);
 
                 // Resposta visual do resultado (0x229 e 0x22A)
                 p.init_plain(0x229);
                 p.WriteUInt32((uint)new_card.tipo);
-                _session.Send(p);
+                Player.Send(p);
 
                 p.init_plain(0x22A);
                 p.WriteUInt32(0); // OK
                 p.WriteUInt32(new_card._typeid);
-                _session.Send(p);
+                Player.Send(p);
 
                 // Finaliza Achievements
-                sys_achieve.finish_and_update(_session);
+                sys_achieve.finish_and_update(Player);
             }
             catch (exception e)
             {
@@ -197,7 +197,7 @@ namespace Pangya_GameServer.Handles
                     : 0x5400150;
 
                 p.WriteUInt32(errorCode);
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

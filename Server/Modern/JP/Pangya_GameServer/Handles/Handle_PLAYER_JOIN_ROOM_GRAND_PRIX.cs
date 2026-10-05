@@ -13,29 +13,29 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_JOIN_ROOM_GRAND_PRIX : IPacketHandler<Player>
+    public class Handle_PLAYER_JOIN_ROOM_GRAND_PRIX : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
             var p = new Packet();
 
             try
             {
-                // Lê o TypeID do Grand Prix que o player quer entrar/criar
+                // Lê o TypeID do Grand Prix que o Player quer entrar/criar
                 uint _typeid_gp = pkt.ReadUInt32();
 
                 // 1. Validações de Permissão (Flags)
-                var flag = session.UserInfo.block_flag.m_flag;
+                var flag = Player.UserInfo.block_flag.m_flag;
 
                 if (flag.all_game)
                 {
-                    throw new exception($"[GP_Handler] PLAYER[UID={session.UserInfo.uid}] tentou entrar no GP, mas possui flag 'all_game' bloqueada.",
+                    throw new exception($"[GP_Handler] PLAYER[UID={Player.UserInfo.uid}] tentou entrar no GP, mas possui flag 'all_game' bloqueada.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 0x6700003, 0x6700003));
                 }
 
                 if (flag.grand_prix)
                 {
-                    throw new exception($"[GP_Handler] PLAYER[UID={session.UserInfo.uid}] bloqueado para Grand Prix.",
+                    throw new exception($"[GP_Handler] PLAYER[UID={Player.UserInfo.uid}] bloqueado para Grand Prix.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 0x6700004, 0x6700004));
                 }
 
@@ -48,7 +48,7 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 3. Verificações de Requisitos (Level e Tickets)
-                if (session.UserInfo.Member.level < gp.MinLevel || (gp.MaxLevel > 0 && session.UserInfo.Member.level > gp.MaxLevel))
+                if (Player.UserInfo.Member.level < gp.MinLevel || (gp.MaxLevel > 0 && Player.UserInfo.Member.level > gp.MaxLevel))
                 {
                     throw new exception("Level incompatível para este Grand Prix.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 0x6700006, 0x6700006));
@@ -56,7 +56,7 @@ namespace Pangya_GameServer.Handles
 
                 if (gp.ticket.qntd > 0 && gp.ticket._typeid > 0)
                 {
-                    var pWi = session.Inventory.FindWarehouseItemByTypeid(gp.ticket._typeid);
+                    var pWi = Player.Inventory.FindWarehouseItemByTypeid(gp.ticket._typeid);
                     if (pWi == null || pWi.STDA_C_ITEM_QNTD < gp.ticket.qntd)
                     {
                         throw new exception("Tickets insuficientes.",
@@ -66,7 +66,7 @@ namespace Pangya_GameServer.Handles
 
                 // 4. Lógica de Sala
                 Room r = null;
-                var channel = session.GetChannel();
+                var channel = Player.GetChannel();
 
                 // Regra: Rookie sempre cria instância nova, outros tentam achar sala existente
                 bool isRookie = sIff.getInstance().isGrandPrixNormal(gp.ID) &&
@@ -100,11 +100,11 @@ namespace Pangya_GameServer.Handles
                 channel.UpdatePlayerInfo(session);
                 r.SendHeadRoom();
                 r.SendMakeRoom(session);
-                r.SendPlayerInfo(session, 0);
+                r.SendPlayerInfo(Player, 0);
 
                 if (r.GetTipo() != ROOM_INFO_TYPE.PRACTICE)
                 {
-                    channel.SendUpdatePlayerInfo(session, 3);
+                    channel.SendUpdatePlayerInfo(Player, 3);
                 }
 
                 channel.SendUpdateRoomInfo(r.GetInfo(), 1);
@@ -124,7 +124,7 @@ namespace Pangya_GameServer.Handles
                     : 0x6700000;
                 p.WriteUInt32(errCode);
 
-               session.Send(p);
+               Player.Send(p);
             }
         }
 
@@ -133,7 +133,7 @@ namespace Pangya_GameServer.Handles
         {
             var ri = new RoomInfo
             {
-                max_player = 30,
+                max_Player = 30,
                 tipo = (byte)ROOM_INFO_TYPE.GRAND_PRIX,
                 qntd_hole = gp.course_info.Qntd_hole,
                 course = (ROOM_INFO_COURSE)gp.course_info.Course,

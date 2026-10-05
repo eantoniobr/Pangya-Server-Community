@@ -11,9 +11,9 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ENTER_MY_ROOM : IPacketHandler<Player>
+    public class Handle_PLAYER_ENTER_MY_ROOM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
             try
             { 
@@ -22,13 +22,13 @@ namespace Pangya_GameServer.Handles
                 // Envio do Pacote 0x168 (Dados do Personagem/Estado)
                 var p168 = new Packet(0x168);
                 p168.WriteBytes(pri.ToArrayEx());
-                session.Send(p168);
+                Player.Send(p168);
 
                 // Envio do Pacote 0x12D (Itens do MyRoom - Posters/Móveis)
                 var p12D = new Packet(0x12D);
                 p12D.WriteUInt32(1); // Option: Load Items
 
-                var items = session.Inventory.MyRoomItems;
+                var items = Player.Inventory.MyRoomItems;
                 p12D.WriteUInt16((ushort)items.Count);
 
                 foreach (var item in items)
@@ -36,12 +36,12 @@ namespace Pangya_GameServer.Handles
                     p12D.WriteBytes(item.ToArray());
                 }
 
-                session.Send(p12D);
+                Player.Send(p12D);
             }
             catch (exception e)
             {
                 _smp.message_pool.getInstance().push(new message(
-                    $"[MyRoom::Enter] Player[UID: {session.UserInfo.uid}] Error: {e.getFullMessageError()}",
+                    $"[MyRoom::Enter] Player[UID: {Player.UserInfo.uid}] Error: {e.getFullMessageError()}",
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
             }
 

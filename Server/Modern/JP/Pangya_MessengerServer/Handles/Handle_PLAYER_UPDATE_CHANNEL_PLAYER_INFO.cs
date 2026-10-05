@@ -10,24 +10,24 @@ using System.Data.Common;
 
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_UPDATE_CHANNEL_INFO : IPacketHandler<Player>
+    public class Handle_UPDATE_CHANNEL_INFO : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
                 // 1. Lê e atualiza as informações de canal/sala da sessão
-                session.UserInfo.m_cpi.ToRead(_packet);
+                Player.UserInfo.m_cpi.ToRead(Packet);
 
                 var servers = PangyaAPI.Network.Repository.DBCommand.GetGame();
 
                 // 3. Valida se o servidor escolhido existe e está online
-                var selectedServer = servers.FirstOrDefault(c => c.uid == session.UserInfo.m_cpi.server_uid);
+                var selectedServer = servers.FirstOrDefault(c => c.uid == Player.UserInfo.m_cpi.server_uid);
 
 
 
                 // Log detalhado para o console do Messenger
-                LogChannelUpdate(session);
+                LogChannelUpdate(Player);
 
                 if (selectedServer != null)//verifica se realmente existe esse servidor..
                 {  
@@ -35,29 +35,29 @@ namespace Pangya_MessengerServer.Handles
                     using (var p = new Packet(0x30))
                     {
                         p.WriteUInt16(0x115); // Sub packet Id
-                        p.WriteUInt32(session.UserInfo.uid);
-                        p.WriteUInt32((uint)session.UserInfo.m_state);
+                        p.WriteUInt32(Player.UserInfo.uid);
+                        p.WriteUInt32((uint)Player.UserInfo.m_state);
                         p.WriteByte(1); // Status OK
-                        p.WriteBytes(session.UserInfo.m_cpi.ToArray());
+                        p.WriteBytes(Player.UserInfo.m_cpi.ToArray());
 
                         // 3. Envia para o próprio jogador (Confirmação)
-                        session.Send(p);
+                        Player.Send(p);
 
                         // 4. Envia para todos os amigos/guilda (Broadcast)
                         var targets = MessengerServer.getInstance().FindAllFriend(
-                                session.UserInfo.m_friend_manager.getAllFriendAndGuildMember(true)
+                                Player.UserInfo.m_friend_manager.getAllFriendAndGuildMember(true)
                             );
 
                         if (targets != null && targets.Count > 0)
                         {
-                            MessengerServer.getInstance().FriendBroadcast(targets, session, p);
+                            MessengerServer.getInstance().FriendBroadcast(targets, Player, p);
                         }
                     }
                 }
                 else
                 {
-                    SendErrorResponse(session);
-                    MessengerServer.getInstance().Disconnect(session);
+                    SendErrorResponse(Player);
+                    MessengerServer.getInstance().Disconnect(Player);
                 }
 
 
@@ -67,15 +67,15 @@ namespace Pangya_MessengerServer.Handles
                 _smp.message_pool.getInstance().push(new message("[Handle_UPDATE_CHANNEL_INFO][Error] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Envia pacote de erro (Byte 0) para o cliente não ficar esperando
-                SendErrorResponse(session);
+                SendErrorResponse(Player);
             }
 
             await Task.CompletedTask;
         }
 
-        private async void LogChannelUpdate(Player session)
+        private async void LogChannelUpdate(Player Player)
         {
-            var info = session.UserInfo.m_cpi;
+            var info = Player.UserInfo.m_cpi;
             var roomNum = info.room.number;
 
             var servers = PangyaAPI.Network.Repository.DBCommand.GetGame();
@@ -86,7 +86,7 @@ namespace Pangya_MessengerServer.Handles
             if (selectedServer != null)
             {
                 _smp.message_pool.getInstance().push(new message(
-       $"[Handle_UPDATE_CHANNEL_INFO][Log] Player[{session.UserInfo.uid}] -> IN: {selectedServer.nome}, Room: {roomNum}, Name: {info.name}",
+       $"[Handle_UPDATE_CHANNEL_INFO][Log] Player[{Player.UserInfo.uid}] -> IN: {selectedServer.nome}, Room: {roomNum}, Name: {info.name}",
        type_msg.CL_FILE_LOG_AND_CONSOLE));
             }
             else
@@ -100,15 +100,15 @@ namespace Pangya_MessengerServer.Handles
 
         }
 
-        private void SendErrorResponse(Player session)
+        private void SendErrorResponse(Player Player)
         {
             using (var p = new Packet((ushort)0x30))
             {
                 p.WriteUInt16(0x115);
-                p.WriteUInt32(session.UserInfo.uid);
-                p.WriteUInt32((uint)session.UserInfo.m_state);
+                p.WriteUInt32(Player.UserInfo.uid);
+                p.WriteUInt32((uint)Player.UserInfo.m_state);
                 p.WriteByte(0); // Error status
-                session.Send(p);
+                Player.Send(p);
             }
         }
     }

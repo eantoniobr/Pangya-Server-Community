@@ -11,21 +11,21 @@ using System;
 
 namespace Pangya_LoginServer.Handles
 {
-    public class Handle_PLAYER_SET_FIRST_CHARACTER : IPacketHandler<Player>
+    public class Handle_PLAYER_SET_FIRST_CHARACTER : HandleBase<Player, Packet_EXAMPLE>
     {
         /// <summary>
         /// Handler para seleção do primeiro personagem e roupas iniciais (0x08)
         /// </summary>
-        public async Task Handle(Player player, Packet packet)
+        public override async Task Handle()
         {
             if (!sIff.getInstance().isLoad())
                 sIff.getInstance().Init();
             try
             {
                 // 1. Leitura dos dados do pacote
-                uint _typeid = packet.ReadUInt32();
-                byte default_hair = packet.ReadByte();
-                byte default_shirts = packet.ReadByte();
+                uint _typeid = Packet.ReadUInt32();
+                byte default_hair = Packet.ReadByte();
+                byte default_shirts = Packet.ReadByte();
 
                 // 2. Validações de IFF (Integridade dos dados)
                 // Verifica se o Character existe no IFF do Pangya Fun
@@ -44,7 +44,7 @@ namespace Pangya_LoginServer.Handles
                 // Inicializa as partes padrão (Combo/Parts)
                 ci.initComboDef();
 
-                uint uid = player.UserInfo.uid;
+                uint uid = Player.UserInfo.uid;
 
                 // 4. Persistência no Banco de Dados (Async)
                 CommandDB.AddFirstSet(uid);
@@ -57,19 +57,19 @@ namespace Pangya_LoginServer.Handles
 
                 // 5. Resposta ao Cliente
                 // Envia pacote de confirmação (Geralmente 0x11 no login)
-                player.Send(Handle_PACKET_RESPONSE.pacote011());
+                Player.Send(Handle_PACKET_RESPONSE.pacote011());
 
                 // Finaliza o fluxo e entra no jogo
-               await Handle_PLAYER_LOGIN.SUCCESS_LOGIN(player);
+               await Handle_PLAYER_LOGIN.SUCCESS_LOGIN(Player);
             }
             catch (exception e)
             {
                 // Em caso de erro, avisa o cliente e loga no console
-                player.Send(Handle_PACKET_RESPONSE.pacote011()); // Envia 011 para destravar o cliente
-                player.Send(Handle_PACKET_RESPONSE.pacote00E(player, "", 12, 500051));
+                Player.Send(Handle_PACKET_RESPONSE.pacote011()); // Envia 011 para destravar o cliente
+                Player.Send(Handle_PACKET_RESPONSE.pacote00E(Player, "", 12, 500051));
 
                 _smp.message_pool.getInstance().push(new message(
-                    $"[Handle_PLAYER_SELECT_CHARACTER][Error] UID {player.UserInfo.uid}: {e.Message}",
+                    $"[Handle_PLAYER_SELECT_CHARACTER][Error] UID {Player.UserInfo.uid}: {e.Message}",
                     type_msg.CL_FILE_LOG_AND_CONSOLE)
                 );
             }

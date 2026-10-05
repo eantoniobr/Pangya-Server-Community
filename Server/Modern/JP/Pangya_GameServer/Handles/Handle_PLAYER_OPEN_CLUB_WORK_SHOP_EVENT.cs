@@ -21,9 +21,9 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_OPEN_CLUB_WORK_SHOP_EVENT : IPacketHandler<Player>
+    public class Handle_PLAYER_OPEN_CLUB_WORK_SHOP_EVENT : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
@@ -33,7 +33,7 @@ namespace Pangya_GameServer.Handles
                 //int fasesCompletas = events.totalHoles / events.holesPerPhase;
                 //int progressoFaseAtual = events.totalHoles % events.holesPerPhase;
 
-                //_session.Send(p);
+                //Player.Send(p);
             }
             catch (exception e)
             {

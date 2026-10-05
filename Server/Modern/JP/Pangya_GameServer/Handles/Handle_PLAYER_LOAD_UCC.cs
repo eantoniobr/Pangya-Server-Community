@@ -12,14 +12,14 @@ using System.Runtime.InteropServices;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_LOAD_UCC : IPacketHandler<Player>
+    public class Handle_PLAYER_LOAD_UCC : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             try
             {
                 // Filtra as UCCs válidas do Warehouse do usuário
-                var allUcc = session.Inventory.WarehouseItems.Values
+                var allUcc = Player.Inventory.WarehouseItems.Values
                     .Where(item => item.IsUCC())
                     .Where(item =>
                     {
@@ -49,7 +49,7 @@ namespace Pangya_GameServer.Handles
                     p.WriteUInt32((uint)UtilTime.GetSystemTimeAsUnix());
                     p.WriteUInt32(compress_out);
                     p.WriteBytes(rawData); 
-                    session.Send(p); 
+                    Player.Send(p); 
                 }
                 else
                 {
@@ -73,7 +73,7 @@ namespace Pangya_GameServer.Handles
             p.WriteUInt64(0x2211000000);
             p.WriteZero(13);
             p.WriteUInt32(0x1100);
-            session.Send(p);
+            Player.Send(p);
         }
     }
 }

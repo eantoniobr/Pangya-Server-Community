@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_DIRECT_JOIN_ROOM : IPacketHandler<Player>
+    public class Handle_PLAYER_DIRECT_JOIN_ROOM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
-            var targetChannel = session.GetChannel();
+            var targetChannel = Player.GetChannel();
             try
             { 
                 byte tarGetChannelId = pkt.ReadByte();      // btChannelUID
@@ -27,15 +27,15 @@ namespace Pangya_GameServer.Handles
                      
                 //    if (targetChannel == null)
                 //    {
-                //        SendJoinError(session, 4); // Canal Inválido
+                //        SendJoinError(Player, 4); // Canal Inválido
                 //        return;
                 //    }
 
-                //    // Verifica se o player pode entrar no novo canal (Level, Full, etc)
+                //    // Verifica se o Player pode entrar no novo canal (Level, Full, etc)
                 //    bool enterCheck = targetChannel.CheckEnterChannel(session);
                 //    if (enterCheck)
                 //    {
-                //        SendJoinError(session, 0);
+                //        SendJoinError(Player, 0);
                 //        return;
                 //    }
 
@@ -48,26 +48,26 @@ namespace Pangya_GameServer.Handles
                 //    // Entra no novo canal e no Lobby dele
                 //    if (!targetChannel.EnterChannel(session))
                 //    {
-                //        SendJoinError(session, 4);
+                //        SendJoinError(Player, 4);
                 //        return;
                 //    }
 
-                //    targetChannel.Lobby.EnterLobby(session, 0); // Entra no lobby padrão
+                //    targetChannel.Lobby.EnterLobby(Player, 0); // Entra no lobby padrão
                 //}
 
                 //// 3. Lógica de Join na Sala
-                //// No S4, se o player já estiver em uma sala diferente, ele precisa sair primeiro
-                //if (session.UserInfo.mi.sala_numero != -1 && session.UserInfo.mi.sala_numero != targetRoomId)
+                //// No S4, se o Player já estiver em uma sala diferente, ele precisa sair primeiro
+                //if (Player.UserInfo.mi.sala_numero != -1 && Player.UserInfo.mi.sala_numero != targetRoomId)
                 //{
                 //    // Sai da sala atual antes de migrar
-                //    session.CurrentRoom?.RemovePlayer(session);
+                //    Player.CurrentRoom?.RemovePlayer(session);
                 //}
 
                 //// Tenta entrar na sala alvo
                 //if (targetChannel != null)
                 //{
                 //    // Chama a lógica de join (DisJoinRoom no original redireciona para a sala)
-                //    targetChannel.Lobby.RequestEnterRoom(session, targetRoomId, password);
+                //    targetChannel.Lobby.RequestEnterRoom(Player, targetRoomId, password);
                 //}
             }
             catch (exception e)
@@ -85,7 +85,7 @@ namespace Pangya_GameServer.Handles
             // Pacote 0x41 (65 decimal) - Erro de Join
             var p = new Packet(0x41);
             p.WriteByte(errorType);
-            session.Send(p);
+            Player.Send(p);
         }
     }
 }

@@ -13,23 +13,23 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_MSN_PROTOCOL : IPacketHandler<Player>
+    public class Handle_PLAYER_MSN_PROTOCOL : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             var subPacketId = MSN_PROTOCOL_FLAGS.REQUEST_FRIEND;
 
             try
             {
-                subPacketId = (MSN_PROTOCOL_FLAGS)_packet.ReadUInt16();
+                subPacketId = (MSN_PROTOCOL_FLAGS)Packet.ReadUInt16();
 
                 switch (subPacketId)
                 {
                     case MSN_PROTOCOL_FLAGS.SEND_NOTE:
-                        HandlesSendNote(_session, _packet, subPacketId);
+                        HandlesSendNote(Player, Packet, subPacketId);
                         break; 
                     case MSN_PROTOCOL_FLAGS.REQUEST_FRIEND://em teste
-                        HandleRequestFriendList(_session, subPacketId);
+                        HandleRequestFriendList(Player, subPacketId);
                         break; 
                     default:
                         // Sub-pacote desconhecido ou não tratado
@@ -51,38 +51,38 @@ namespace Pangya_GameServer.Handles
                     : 0x5700100;
 
                 p.WriteUInt32(errorCode);
-                _session.Send(p);
+                Player.Send(p);
             }
         }
 
-        private async Task HandlesSendNote(Player _session, Packet _packet, MSN_PROTOCOL_FLAGS subId)
+        private async Task HandlesSendNote(Player _session, Packet Packet, MSN_PROTOCOL_FLAGS subId)
         {
             try
             {
-                uint targetUid = _packet.ReadUInt32();
-                string msg = _packet.ReadString();
-                byte opt = _packet.ReadByte();
+                uint targetUid = Packet.ReadUInt32();
+                string msg = Packet.ReadString();
+                byte opt = Packet.ReadByte();
 
                 // 1. Validações
-                ValidateMessageOff(_session, targetUid, msg, opt, subId);
+                ValidateMessageOff(Player, targetUid, msg, opt, subId);
 
                 // 2. Lógica de Consumo
-                _session.UserInfo.consomePang(10);
+                Player.UserInfo.consomePang(10);
 
                 // 3. Persistência no DB
-                CommandDB.InsertFriendNote(_session.UserInfo.uid, targetUid, msg);
+                CommandDB.InsertFriendNote(Player.UserInfo.uid, targetUid, msg);
 
                 // 4. Log
-                _smp.message_pool.getInstance().push(new message($"[NOTE] Player[UID={_session.UserInfo.uid}] -> Target[UID={targetUid}]: {msg}", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message($"[NOTE] Player[UID={Player.UserInfo.uid}] -> Target[UID={targetUid}]: {msg}", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // 5. Resposta de Sucesso
                 var response = new Packet();
                 response.init_plain(0x95);
                 response.WriteUInt16((ushort)subId);
                 response.WriteUInt32(0); // Status OK
-                response.WriteUInt64(_session.UserInfo.Statistics.pang);
+                response.WriteUInt64(Player.UserInfo.Statistics.pang);
 
-                _session.Send(response);
+                Player.Send(response);
             }
             catch (Exception)
             {
@@ -94,7 +94,7 @@ namespace Pangya_GameServer.Handles
         private async Task HandleRequestFriendList(Player _session, MSN_PROTOCOL_FLAGS subId)
         {
             // 1. Busca a lista de amigos no Banco de Dados 
-            var friends = _session.UserInfo.Friends;
+            var friends = Player.UserInfo.Friends;
 
             var response = new Packet();
             response.init_plain(0x95);
@@ -112,30 +112,30 @@ namespace Pangya_GameServer.Handles
                 response.WriteString(friend.nickname, 22); // Nickname
                 response.WriteString(friend.apelido, 22); // Nickname 
             }
-            _smp.message_pool.getInstance().push(new message($"[TESBUG] Player[UID={_session.UserInfo.uid}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+            _smp.message_pool.getInstance().push(new message($"[TESBUG] Player[UID={Player.UserInfo.uid}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-            _session.Send(response);
+            Player.Send(response);
         }
 
         private void ValidateMessageOff(Player session, uint targetUid, string msg, byte opt, MSN_PROTOCOL_FLAGS subId)
         {
             if (targetUid == 0)
-                throw CreateException(subId, session.UserInfo.uid, "UID inválido (zero)", 1, 0x5700101);
+                throw CreateException(subId, Player.UserInfo.uid, "UID inválido (zero)", 1, 0x5700101);
 
             if (string.IsNullOrEmpty(msg))
-                throw CreateException(subId, session.UserInfo.uid, "Mensagem vazia", 2, 0x5700102);
+                throw CreateException(subId, Player.UserInfo.uid, "Mensagem vazia", 2, 0x5700102);
 
             if (msg.Length > 256)
-                throw CreateException(subId, session.UserInfo.uid, $"Mensagem muito longa ({msg.Length})", 3, 0x5700103);
+                throw CreateException(subId, Player.UserInfo.uid, $"Mensagem muito longa ({msg.Length})", 3, 0x5700103);
 
             if (!Tools.Sanitize(msg))
-                throw CreateException(subId, session.UserInfo.uid, $"Mensagem muito longa ({msg.Length})", 3, 0x5700103);
+                throw CreateException(subId, Player.UserInfo.uid, $"Mensagem muito longa ({msg.Length})", 3, 0x5700103);
 
             if (opt != 0)
-                throw CreateException(subId, session.UserInfo.uid, "Option diferente de 0", 4, 0x5700104);
+                throw CreateException(subId, Player.UserInfo.uid, "Option diferente de 0", 4, 0x5700104);
 
-            if (session.UserInfo.Statistics.pang < 10)
-                throw CreateException(subId, session.UserInfo.uid, $"Pangs insuficientes (tem={session.UserInfo.Statistics.pang})", 5, 0x5700105);
+            if (Player.UserInfo.Statistics.pang < 10)
+                throw CreateException(subId, Player.UserInfo.uid, $"Pangs insuficientes (tem={Player.UserInfo.Statistics.pang})", 5, 0x5700105);
         }
 
         private exception CreateException(MSN_PROTOCOL_FLAGS subId, uint uid, string reason, ushort internalId, uint hexCode)

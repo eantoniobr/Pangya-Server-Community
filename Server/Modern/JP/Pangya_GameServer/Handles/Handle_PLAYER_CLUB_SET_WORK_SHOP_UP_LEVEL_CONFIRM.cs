@@ -20,9 +20,9 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CLUB_SET_WORK_SHOP_UP_LEVEL_CONFIRM : IPacketHandler<Player>
+    public class Handle_PLAYER_CLUB_SET_WORK_SHOP_UP_LEVEL_CONFIRM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
@@ -30,17 +30,17 @@ namespace Pangya_GameServer.Handles
             {
                 stItemEx item = new stItemEx();
 
-                var pClub = _session.Inventory.FindWarehouseItemById(_session.Inventory.WorkshopLastUpLevel.clubset_id);
+                var pClub = Player.Inventory.FindWarehouseItemById(Player.Inventory.WorkshopLastUpLevel.clubset_id);
 
                 if (pClub == null)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelConfirm][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou confirma o Up Level[stat=" + (_session.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (_session.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas ele nao tem esse ClubSet. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelConfirm][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou confirma o Up Level[stat=" + (Player.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (Player.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas ele nao tem esse ClubSet. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         300, 0x5300301));
                 }
 
-                if (_session.Inventory.WorkshopLastUpLevel.stat > 4)
+                if (Player.Inventory.WorkshopLastUpLevel.stat > 4)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelConfirm][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou confirma o Up Level[stat=" + (_session.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (_session.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas o stat é desconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelConfirm][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou confirma o Up Level[stat=" + (Player.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (Player.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas o stat é desconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         302, 0x5300303));
                 }
 
@@ -48,7 +48,7 @@ namespace Pangya_GameServer.Handles
 
                 if (clubset == null)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelConfirm][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou confirma o Up Level[stat=" + (_session.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (_session.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas nao existe esse ClubSet no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelConfirm][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou confirma o Up Level[stat=" + (Player.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (Player.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas nao existe esse ClubSet no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         301, 0x5300302));
                 }
 
@@ -84,23 +84,23 @@ namespace Pangya_GameServer.Handles
                     p.WriteBytes(item.clubset_workshop.ToArray());
                 }
 
-                _session.Send(p);
+                Player.Send(p);
 
                 // Resposta para o ClubSet Wrokshop Up Level Confirm
                 p.init_plain(0x23E);
 
                 p.WriteUInt32(0); // OK
-                p.WriteUInt32(_session.Inventory.WorkshopLastUpLevel.stat);
-                p.WriteInt32(_session.Inventory.WorkshopLastUpLevel.clubset_id);
+                p.WriteUInt32(Player.Inventory.WorkshopLastUpLevel.stat);
+                p.WriteInt32(Player.Inventory.WorkshopLastUpLevel.clubset_id);
 
-                _session.Send(p);
+                Player.Send(p);
 
                 // Update Achievement ON SERVER, DB and GAME
                 AchievementSystem sys_achieve = new AchievementSystem();
 
                 sys_achieve.incrementCounter(0x6C4000A2u);
 
-                sys_achieve.finish_and_update(_session);
+                sys_achieve.finish_and_update(Player);
 
             }
             catch (exception e)
@@ -111,7 +111,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteUInt32((ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL) ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 0x5300300);
 
-                _session.Send(p);
+                Player.Send(p);
             }
 
         await Task.CompletedTask;

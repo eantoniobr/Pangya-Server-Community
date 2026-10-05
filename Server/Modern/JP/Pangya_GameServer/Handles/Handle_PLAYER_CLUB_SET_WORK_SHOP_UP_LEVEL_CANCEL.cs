@@ -20,9 +20,9 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CLUB_SET_WORK_SHOP_UP_LEVEL_CANCEL : IPacketHandler<Player>
+    public class Handle_PLAYER_CLUB_SET_WORK_SHOP_UP_LEVEL_CANCEL : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
@@ -30,17 +30,17 @@ namespace Pangya_GameServer.Handles
             {
                 stItemEx item = new stItemEx();
 
-                var pClub = _session.Inventory.FindWarehouseItemById(_session.Inventory.WorkshopLastUpLevel.clubset_id);
+                var pClub = Player.Inventory.FindWarehouseItemById(Player.Inventory.WorkshopLastUpLevel.clubset_id);
 
                 if (pClub == null)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelCancel][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou cancelar o up level[stat=" + (_session.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (_session.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas ele nao tem esse ClubSet. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelCancel][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou cancelar o up level[stat=" + (Player.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (Player.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas ele nao tem esse ClubSet. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         250, 0x5300251));
                 }
 
-                if (_session.Inventory.WorkshopLastUpLevel.stat > 4)
+                if (Player.Inventory.WorkshopLastUpLevel.stat > 4)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelCancel][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou cancelar o up level[stat=" + (_session.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (_session.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas o stat é desconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelCancel][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou cancelar o up level[stat=" + (Player.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (Player.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas o stat é desconhecido. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         251, 0x5300252));
                 }
 
@@ -48,18 +48,18 @@ namespace Pangya_GameServer.Handles
 
                 if (clubset == null)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelCancel][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou cancelar o up level[stat=" + (_session.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (_session.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas o ClubSet nao existe no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelCancel][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou cancelar o up level[stat=" + (Player.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (Player.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas o ClubSet nao existe no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         252, 0x5300253));
                 }
 
                 if (clubset.work_shop.total_recovery <= (uint)pClub.clubset_workshop.recovery_pts)
                 {
-                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelCancel][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou cancelar o up level[stat=" + (_session.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (_session.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas o ele nao pode mais cancelar ja gastou todos os seus pts de recovery[ClubSet_IFF_recovery=" + (clubset.work_shop.total_recovery) + ", ClubSet_recovery=" + (pClub.clubset_workshop.recovery_pts) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestClubSetWorkShopUpLevelCancel][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou cancelar o up level[stat=" + (Player.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[ID=" + (Player.Inventory.WorkshopLastUpLevel.clubset_id) + "], mas o ele nao pode mais cancelar ja gastou todos os seus pts de recovery[ClubSet_IFF_recovery=" + (clubset.work_shop.total_recovery) + ", ClubSet_recovery=" + (pClub.clubset_workshop.recovery_pts) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         253, 0x5300254));
                 }
 
                 // UPDATE ON SERVER
-                pClub.clubset_workshop.c[_session.Inventory.WorkshopLastUpLevel.stat]--;
+                pClub.clubset_workshop.c[Player.Inventory.WorkshopLastUpLevel.stat]--;
                 pClub.clubset_workshop.recovery_pts++;
 
                 // ClubSet
@@ -76,13 +76,13 @@ namespace Pangya_GameServer.Handles
 
                 // UPDATE ON DB
                 NormalManagerDB.getInstance().add(12,
-                     new CmdUpdateClubSetWorkshop(_session.UserInfo.uid,
+                     new CmdUpdateClubSetWorkshop(Player.UserInfo.uid,
                          pClub,
                          CmdUpdateClubSetWorkshop.FLAG.F_UP_LEVEL_CANCEL),
                      null, null);
 
                 // Log
-                _smp.message_pool.getInstance().push(new message("[ClubSetWorkshop::UpLevelCancel][Sucess] PLAYER [UID=" + _session.UserInfo.uid + "] cancelou o Up Level[stat=" + (_session.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[TYPEID=" + (pClub._typeid) + ", ID=" + (pClub.id) + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[ClubSetWorkshop::UpLevelCancel][Sucess] PLAYER [UID=" + Player.UserInfo.uid + "] cancelou o Up Level[stat=" + (Player.Inventory.WorkshopLastUpLevel.stat) + "] do ClubSet[TYPEID=" + (pClub._typeid) + ", ID=" + (pClub.id) + "]", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // UPDATE ON JOGO
                 p.init_plain(0x216);
@@ -102,15 +102,15 @@ namespace Pangya_GameServer.Handles
                     p.WriteBytes(item.clubset_workshop.ToArray());
                 }
 
-                _session.Send(p);
+                Player.Send(p);
 
                 // Resposta para o ClubSet Wrokshop Up Level Cancel
                 p.init_plain(0x23F);
 
                 p.WriteUInt32(0); // OK
-                p.WriteInt32(_session.Inventory.WorkshopLastUpLevel.clubset_id);
+                p.WriteInt32(Player.Inventory.WorkshopLastUpLevel.clubset_id);
 
-                _session.Send(p);
+                Player.Send(p);
 
             }
             catch (exception e)
@@ -121,7 +121,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteUInt32((ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL) ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 0x5300250);
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

@@ -20,26 +20,25 @@ using System.Threading.Tasks;
 using static Pangya_GameServer.Models.DefineConstants;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_PLAY_MEMORIAL : IPacketHandler<Player>
+    public class Handle_PLAYER_PLAY_MEMORIAL : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet _packet)
-        {
-            var _session = session;
+        public override async Task Handle()
+        { 
             Packet p = new Packet();
 
             try
             {
                 // 1. Validações Iniciais
-                if (_session.UserInfo.block_flag.m_flag.memorial_shop)
+                if (Player.UserInfo.block_flag.m_flag.memorial_shop)
                 {
-                    throw new exception($"[Memorial] Player {_session.UserInfo.uid} bloqueado.",
+                    throw new exception($"[Memorial] Player {Player.UserInfo.uid} bloqueado.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 6, 0x790001));
                 }
 
                 if (!sMemorialSystem.getInstance().isLoad())
                     sMemorialSystem.getInstance().load();
 
-                uint coin_typeid = _packet.ReadUInt32();
+                uint coin_typeid = Packet.ReadUInt32();
 
                 if (coin_typeid == 0)
                     throw new exception("[Memorial] Coin TypeID inválido (zero).", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 0x6300301));
@@ -47,7 +46,7 @@ namespace Pangya_GameServer.Handles
                 if (sIff.getInstance().getItemGroupIdentify(coin_typeid) != IFF_GROUP.ITEM)
                     throw new exception("[Memorial] O item enviado não é uma moeda válida.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 2, 0x6300302));
 
-                var pWi = _session.Inventory.FindWarehouseItemByTypeid(coin_typeid);
+                var pWi = Player.Inventory.FindWarehouseItemByTypeid(coin_typeid);
                 if (pWi == null)
                     throw new exception("[Memorial] Player não possui a moeda no inventário.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 3, 0x6300303));
 
@@ -67,7 +66,7 @@ namespace Pangya_GameServer.Handles
                 else if (memorialCoin.tipo == MEMORIAL_COIN_TYPE.MCT_SPECIAL)
                     sys_achieve.incrementCounter(0x6C4000B3u);
 
-                var win_item = sMemorialSystem.getInstance().drawCoin(_session, memorialCoin);
+                var win_item = sMemorialSystem.getInstance().drawCoin(Player, memorialCoin);
                 if (win_item == null || win_item.Count == 0)
                     throw new exception("[Memorial] Sorteio retornou vazio.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 6, 0x6300306));
 
@@ -92,7 +91,7 @@ namespace Pangya_GameServer.Handles
                         bi.qntd = el.qntd;
                     }
 
-                    ItemManager.initItemFromBuyItem(_session.UserInfo, item_tmp, bi, false, 0, 0, 1);
+                    ItemManager.initItemFromBuyItem(Player.UserInfo, item_tmp, bi, false, 0, 0, 1);
 
                     if (item_tmp._typeid == 0)
                         throw new exception($"[Memorial] Falha ao inicializar item ganho: {bi._typeid}", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 7, 0x6300307));
@@ -101,17 +100,17 @@ namespace Pangya_GameServer.Handles
                     bool canOverlap = sIff.getInstance().IsCanOverlapped(item_tmp._typeid);
                     bool isCadItem = sIff.getInstance().getItemGroupIdentify(item_tmp._typeid) == IFF_GROUP.CAD_ITEM;
 
-                    if ((canOverlap && !isCadItem) || !_session.Inventory.ownerItem(item_tmp._typeid))
+                    if ((canOverlap && !isCadItem) || !Player.Inventory.ownerItem(item_tmp._typeid))
                     {
                         if (ItemManager.isSetItem(item_tmp._typeid))
                         {
-                            var v_setItems = ItemManager.GetItemOfSetItem(_session, item_tmp._typeid, false, 1);
+                            var v_setItems = ItemManager.GetItemOfSetItem(Player, item_tmp._typeid, false, 1);
                             if (v_setItems.Count == 0)
                                 throw new exception("[Memorial] SetItem ganho não possui itens internos.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 8, 0x6300308));
 
                             foreach (var si in v_setItems)
                             {
-                                if ((sIff.getInstance().IsCanOverlapped(si._typeid) && sIff.getInstance().getItemGroupIdentify(si._typeid) != IFF_GROUP.CAD_ITEM) || !_session.Inventory.ownerItem(si._typeid))
+                                if ((sIff.getInstance().IsCanOverlapped(si._typeid) && sIff.getInstance().getItemGroupIdentify(si._typeid) != IFF_GROUP.CAD_ITEM) || !Player.Inventory.ownerItem(si._typeid))
                                     v_item_to_sync.Add(new stItem(si));
                             }
                         }
@@ -144,17 +143,17 @@ namespace Pangya_GameServer.Handles
                     STDA_C_ITEM_QNTD = -1
                 };
 
-                if (ItemManager.removeItem(coin_to_remove, _session) <= 0)
+                if (ItemManager.removeItem(coin_to_remove, Player) <= 0)
                     throw new exception("[Memorial] Falha ao deletar a moeda utilizada.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 11, 0x6300311));
 
-                var rai = ItemManager.addItem(v_item_to_sync, _session, 0, 0);
+                var rai = ItemManager.addItem(v_item_to_sync, Player, 0, 0);
                 if (rai.fails.Count > 0 && rai.type != RetAddItem.SUCCESS_PANG_AND_EXP_AND_CP_POUCH)
                     throw new exception("[Memorial] Erro ao adicionar itens ganhos ao banco de dados.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 12, 0x6300312));
 
                 // Log de Item Raro
                 if (win_item.Any() && win_item[0].tipo > 0 && win_item.Count == 1)
                 {
-                    NormalManagerDB.getInstance().add(24, new CmdInsertMemorialRareWinLog(_session.UserInfo.uid, memorialCoin._typeid, win_item.FirstOrDefault()));
+                    NormalManagerDB.getInstance().add(24, new CmdInsertMemorialRareWinLog(Player.UserInfo.uid, memorialCoin._typeid, win_item.FirstOrDefault()));
                 }
 
                 // 5. Envio de Pacotes
@@ -174,7 +173,7 @@ namespace Pangya_GameServer.Handles
                     pSync.WriteInt32((el.STDA_C_ITEM_TIME > 0) ? el.STDA_C_ITEM_TIME : el.STDA_C_ITEM_QNTD);
                     pSync.WriteZero(25);
                 }
-                _session.Send(pSync);
+                Player.Send(pSync);
 
                 // 0x264: Resposta do Memorial (Animação visual dos itens ganhos)
                 Packet pResult = new Packet(0x264);
@@ -186,9 +185,9 @@ namespace Pangya_GameServer.Handles
                     pResult.WriteUInt32(el._typeid);
                     pResult.WriteUInt32(el.qntd);
                 }
-                _session.Send(pResult);
+                Player.Send(pResult);
 
-                sys_achieve.finish_and_update(_session);
+                sys_achieve.finish_and_update(Player);
             }
             catch (exception e)
             {
@@ -199,7 +198,7 @@ namespace Pangya_GameServer.Handles
                                ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError())
                                : 0x6300300;
                 pErr.WriteUInt32(errCode);
-                _session.Send(pErr);
+                Player.Send(pErr);
             }
         }
     }

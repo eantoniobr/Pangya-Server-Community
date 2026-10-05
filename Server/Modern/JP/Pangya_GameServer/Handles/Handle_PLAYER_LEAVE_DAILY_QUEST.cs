@@ -9,9 +9,9 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_LEAVE_DAILY_QUEST : IPacketHandler<Player>
+    public class Handle_PLAYER_LEAVE_DAILY_QUEST : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             var p = new Packet();
 
@@ -19,24 +19,24 @@ namespace Pangya_GameServer.Handles
 
             try
             {
-                if (_packet == null)
+                if (Packet == null)
                 {
-                    throw new exception("_packet is null", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST,
+                    throw new exception("Packet is null", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST,
                         2, 0));
                 }
 
-                int num_quest = _packet.ReadInt32();
+                int num_quest = Packet.ReadInt32();
 
                 if (num_quest <= 0u)
                 {
-                    throw new exception("PLAYER[UID=" + Convert.ToString(_session.UserInfo.uid) + "] tentou desistir da quest, mas o numero de quest para desistir e 0. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST,
+                    throw new exception("PLAYER[UID=" + Convert.ToString(Player.UserInfo.uid) + "] tentou desistir da quest, mas o numero de quest para desistir e 0. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MGR_DAILY_QUEST,
                         5010, 0));
                 }
 
-                quest_id = _packet.ReadInt32(num_quest);
+                quest_id = Packet.ReadInt32(num_quest);
  
 
-                var v_quest = DailyQuestManager.LeaveQuestUser(_session, quest_id, num_quest);
+                var v_quest = DailyQuestManager.LeaveQuestUser(Player, quest_id, num_quest);
 
                 Dictionary<int, CounterItemInfo> map_cii = new Dictionary<int, CounterItemInfo>();
 
@@ -76,9 +76,9 @@ namespace Pangya_GameServer.Handles
                     p.WriteInt32(0);
                 }
 
-                _session.Send(p);
+                Player.Send(p);
 
-                _session.Send(Handle_PACKET_RESPONSE.pacote228(v_quest));
+                Player.Send(HandlePacket_RESPONSE.pacote228(v_quest));
 
                 if (quest_id == null)
                 {
@@ -93,7 +93,7 @@ namespace Pangya_GameServer.Handles
 
                 var v_ai = new List<AchievementInfoEx>();
 
-                _session.Send(Handle_PACKET_RESPONSE.pacote228(v_ai, 1));
+                Player.Send(HandlePacket_RESPONSE.pacote228(v_ai, 1));
 
                 if (quest_id != null)
                 {

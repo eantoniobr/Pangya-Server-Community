@@ -8,14 +8,14 @@ using PangyaAPI.Utilities.Models;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_WEB_AUTH_KEY : IPacketHandler<Player>
+    public class Handle_PLAYER_WEB_AUTH_KEY : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             try
             {
                 // 2. Criação do Comando de Banco de Dados 
-                string webKey = CommandDB.WEBKeyGeneration(session.UserInfo.uid);
+                string webKey = CommandDB.WEBKeyGeneration(Player.UserInfo.uid);
 
                 // 4. Resposta ao Cliente (0x1AD)
                 using (var p = new Packet())
@@ -23,12 +23,12 @@ namespace Pangya_GameServer.Handles
                     p.init_plain(0x1AD);
                     p.WriteString(webKey);
                     p.WriteByte(1);
-                    session.Send(p);
+                    Player.Send(p);
                 }
 
                 // Log de auditoria
                 _smp.message_pool.getInstance().push(new message(
-                    $"[WebAuth] Chave gerada para UID={session.UserInfo.uid}: {webKey}",
+                    $"[WebAuth] Chave gerada para UID={Player.UserInfo.uid}: {webKey}",
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
             }
             catch (exception e)
@@ -49,7 +49,7 @@ namespace Pangya_GameServer.Handles
                 p.init_plain(0x1AD);
                 p.WriteString(""); // Chave vazia
                 p.WriteByte(0);  // Falha
-                session.Send(p);
+                Player.Send(p);
             }
         }
     }

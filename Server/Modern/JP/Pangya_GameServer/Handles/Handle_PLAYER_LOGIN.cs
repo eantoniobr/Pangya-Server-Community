@@ -1,13 +1,13 @@
 ﻿using Pangya_GameServer.Feature;
 using Pangya_GameServer.Flags;
+using Pangya_GameServer.Handles.Packets;
 using Pangya_GameServer.Models;
 using Pangya_GameServer.PacketFunc;
 using Pangya_GameServer.Repository;
 using Pangya_GameServer.Server;
 using Pangya_GameServer.Session;
-
 using PangyaAPI.Network;
-using PangyaAPI.Network.Core;
+using PangyaAPI.Network.Handle;
 using PangyaAPI.Network.Models;
 using PangyaAPI.Network.Repository;
 using PangyaAPI.Utilities;
@@ -16,9 +16,9 @@ using snmdb;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_LOGIN : IPacketHandler<Player>
+    public class Handle_PLAYER_LOGIN : HandleBase<Player, Packet_PLAYER_LOGIN>
     {
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
             Packet p = null;
 
@@ -31,68 +31,69 @@ namespace Pangya_GameServer.Handles
                 string macAddress = string.Empty; // TODO: preencher se você medir MAC do client
 
                 // --- Ler packet ---
-                ReadLoginPacket(session, pkt, out uint ntreevUID, out ushort command,
-                                out kol.keys[0], out clientVersion, out bool hasClientVersion,
-                                out packetVersion, out macAddress, out bool hasMac, out kol.keys[1], out bool hasAuthKeyGame);
+                //nao usamos mais
+                //ReadLoginPacket(Player, PacketResult, out uint ntreevUID, out ushort command,
+                //                out kol.keys[0], out clientVersion, out bool hasClientVersion,
+                //                out packetVersion, out macAddress, out bool hasMac, out kol.keys[1], out bool hasAuthKeyGame);
 
                 bool hasAuthKeyLogin = !string.IsNullOrEmpty(kol.keys[0]);
 
-                session.ResetHandShake(); // Reseta o handshake para evitar problemas de sincronização
+                Player.ResetHandShake(); // Reseta o handshake para evitar problemas de sincronização
 
                 // --- Validações básicas do pacote e do cliente ---
-                if (!ValidateLoginPacket(session, hasClientVersion, clientVersion, packetVersion, hasAuthKeyLogin, kol.keys[0], hasMac, macAddress, hasAuthKeyGame, kol.keys[1]))
+                if (!ValidateLoginPacket(PacketResult.HasClientVersion, clientVersion, packetVersion, hasAuthKeyLogin, kol.keys[0], PacketResult.HasMAC, PacketResult.MacAddress, PacketResult.HasGKey, kol.keys[1]))
                 {
-                    _smp.message_pool.getInstance().push(new message("[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID=" + (session.UserInfo.uid) + $", UserID= {session.UserInfo.id}, AuthKey[1]= {kol.keys[0]},  AuthKey[2]= {kol.keys[1]}, NtreevUID= {ntreevUID}, CVersion= {clientVersion}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
-                    session.Authorized = false;
-                    SendLoginAck(session, eLoginAck.ACK_INVALID_VERSION);
+                    _smp.message_pool.getInstance().push(new message("[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID=" + (Player.UserInfo.uid) + $", UserID= {Player.UserInfo.id}, AuthKey[1]= {kol.keys[0]},  AuthKey[2]= {kol.keys[1]}, NtreevUID= {PacketResult.Command}, CVersion= {clientVersion}]", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    Player.Authorized = false;
+                    SendLoginAck(eLoginAck.ACK_INVALID_VERSION);
                     return;
                 }
 
                 // --- Ban checks (IP / MAC) ---
-                if (GameServer.getInstance().haveBanList(session.GetIP(), macAddress))
-                    throw new exception($"PLAYER[UID={session.UserInfo.uid}, IP={session.GetIP()}, MAC={macAddress}] blocked by banlist.");
+                if (GameServer.getInstance().haveBanList(Player.GetIP(), macAddress))
+                    throw new exception($"PLAYER[UID={Player.UserInfo.uid}, IP={Player.GetIP()}, MAC={macAddress}] blocked by banlist.");
 
                 // --- sanity: id non-empty ---
-                if (string.IsNullOrEmpty(session.UserInfo.id))
+                if (string.IsNullOrEmpty(Player.UserInfo.id))
                 {
                     _smp.message_pool.getInstance().push(new message(
-                        $"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={session.UserInfo.uid}, IP={session.GetIP()}] invalid id: {session.UserInfo.id}",
+                        $"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={Player.UserInfo.uid}, IP={Player.GetIP()}] invalid id: {Player.UserInfo.id}",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                    session.Authorized = false;
-                    SendLoginAck(session, eLoginAck.ACK_INVALID_VERSION);
+                    Player.Authorized = false;
+                    SendLoginAck(eLoginAck.ACK_INVALID_VERSION);
                     return;
                 }
 
-                // --- Retrieve player info from DB ---
-                var cmdPi = new CmdPlayerInfo(session.UserInfo.uid); // waiter
+                // --- Retrieve Player info from DB ---
+                var cmdPi = new CmdPlayerInfo(Player.UserInfo.uid); // waiter
                 NormalManagerDB.getInstance().add(0, cmdPi);
                 if (cmdPi.getException().getCodeError() != 0) throw cmdPi.getException();
 
-                session.UserInfo.Set(cmdPi.getInfo());
+                Player.UserInfo.Set(cmdPi.getInfo());
 
-                if (session.UserInfo.uid <= 0)
+                if (Player.UserInfo.uid <= 0)
                 {
-                    _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={session.UserInfo.uid}] not found in DB", type_msg.CL_FILE_LOG_AND_CONSOLE));
-                    session.Authorized = false;
-                    SendLoginAck(session, eLoginAck.ACK_INVALID_ID);
+                    _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={Player.UserInfo.uid}] not found in DB", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    Player.Authorized = false;
+                    SendLoginAck(eLoginAck.ACK_INVALID_ID);
                     return;
                 }
 
                 // --- Anti-hack: verify client-supplied ID matches DB ID ---
-                if (!string.Equals(cmdPi.getInfo().id, session.UserInfo.id, StringComparison.Ordinal))
+                if (!string.Equals(cmdPi.getInfo().id, Player.UserInfo.id, StringComparison.Ordinal))
                 {
                     _smp.message_pool.getInstance().push(new message(
-                        $"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={session.UserInfo.uid}] client ID mismatch: client={session.UserInfo.id}, db={cmdPi.getInfo().id}",
+                        $"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={Player.UserInfo.uid}] client ID mismatch: client={Player.UserInfo.id}, db={cmdPi.getInfo().id}",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                    session.Authorized = false;
-                    SendLoginAck(session, eLoginAck.ACK_INVALID_ID);
+                    Player.Authorized = false;
+                    SendLoginAck(eLoginAck.ACK_INVALID_ID);
                     return;
                 }
 
                 // --- Account block checks (temporary / forever / all-ip) ---
-                CheckAccountBlock(session);
+                CheckAccountBlock();
 
                 // --- Packet version validation (after decrypt) ---
                 packetVersion = PacketVersion(packetVersion);
@@ -100,155 +101,123 @@ namespace Pangya_GameServer.Handles
                 if (!GameServer.getInstance().canSameIDLogin() && packetVersion != serverPacketVersion)
                 {
                     _smp.message_pool.getInstance().push(new message(
-                        $"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={session.UserInfo.uid}]. Client Packet Version not match. Server: {serverPacketVersion} != Client: {packetVersion}",
+                        $"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={Player.UserInfo.uid}]. Client Packet Version not match. Server: {serverPacketVersion} != Client: {packetVersion}",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                    session.Authorized = false;
-                    SendLoginAck(session, eLoginAck.ACK_INVALID_VERSION);
+                    Player.Authorized = false;
+                    SendLoginAck(eLoginAck.ACK_INVALID_VERSION);
                     return;
                 }
 
                 // --- AuthKey (login) check ---
-                var cmdAkli = new CmdAuthKeyLoginInfo((int)session.UserInfo.uid);
+                var cmdAkli = new CmdAuthKeyLoginInfo((int)Player.UserInfo.uid);
                 NormalManagerDB.getInstance().add(0, cmdAkli);
                 if (cmdAkli.getException().getCodeError() != 0) throw cmdAkli.getException();
 
                 // NOTE: security: previously code used bitwise & and inverted booleans -> fixed
                 if (!GameServer.getInstance().canSameIDLogin() && (!string.Equals(kol.keys[0], cmdAkli.getInfo().key, StringComparison.Ordinal) || cmdAkli.getInfo().valid == 0))
                 {
-                    _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={session.UserInfo.uid}]. LKey invalid or reused.", type_msg.CL_FILE_LOG_AND_CONSOLE));
-                    session.Authorized = false;
-                    SendLoginAck(session, eLoginAck.ACK_SECURITY_KEY);
+                    _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={Player.UserInfo.uid}]. LKey invalid or reused.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    Player.Authorized = false;
+                    SendLoginAck(eLoginAck.ACK_SECURITY_KEY);
                     return;
                 }
 
                 // --- AuthKey (game) check ---
-                var cmdAkgi = new CmdAuthKeyGameInfo(session.UserInfo.uid, (int)GameServer.getInstance().getUID());
+                var cmdAkgi = new CmdAuthKeyGameInfo(Player.UserInfo.uid, (int)GameServer.getInstance().getUID());
                 NormalManagerDB.getInstance().add(0, cmdAkgi);
                 if (cmdAkgi.getException().getCodeError() != 0) throw cmdAkgi.getException();
 
                 if (!GameServer.getInstance().canSameIDLogin() && (!string.Equals(kol.keys[1], cmdAkgi.getInfo().key, StringComparison.Ordinal) || cmdAkgi.getInfo().valid == 0))
                 {
-                    _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={session.UserInfo.uid}]. GKey invalid or reused.", type_msg.CL_FILE_LOG_AND_CONSOLE));
-                    session.Authorized = false;
-                    SendLoginAck(session, eLoginAck.ACK_SECURITY_KEY);
+                    _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Warning] PLAYER[UID={Player.UserInfo.uid}]. GKey invalid or reused.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    Player.Authorized = false;
+                    SendLoginAck(eLoginAck.ACK_SECURITY_KEY);
                     return;
                 }
 
                 // --- Client version checks (region/season/high/low) ---
                 var cvServer = ClientVersion.MakeVersion(GameServer.getInstance().m_si.version_client);
                 var cvClient = ClientVersion.MakeVersion(clientVersion);
-                EvaluateClientVersion(session, cvServer, cvClient);
+                EvaluateClientVersion(cvServer, cvClient);
 
                 // --- Member Info ---
-                var cmdMi = new CmdMemberInfo(session.UserInfo.uid);
+                var cmdMi = new CmdMemberInfo(Player.UserInfo.uid);
                 NormalManagerDB.getInstance().add(0, cmdMi);
                 if (cmdMi.getException().getCodeError() != 0) throw cmdMi.getException();
-                session.setMemberInfo(cmdMi.getInfo());
+                Player.setMemberInfo(cmdMi.getInfo());
 
                 // --- GM handling ---
-                session.UserInfo.Member.oid = session.ConnectionID;
-                session.UserInfo.Member.state_flag.visible = 1;
-                session.UserInfo.Member.state_flag.whisper = session.UserInfo.WhisperState;
-                session.UserInfo.Member.state_flag.channel = (byte)(session.UserInfo.WhisperState == 0 ? 1 : 0);
-                if (session.UserInfo.UserCapabilities.game_master)
+                Player.UserInfo.Member.oid = Player.ConnectionID;
+                Player.UserInfo.Member.state_flag.visible = 1;
+                Player.UserInfo.Member.state_flag.whisper = Player.UserInfo.WhisperState;
+                Player.UserInfo.Member.state_flag.channel = (byte)(Player.UserInfo.WhisperState == 0 ? 1 : 0);
+                if (Player.UserInfo.UserCapabilities.game_master)
                 {
-                    session.m_gi.setGMUID(session.UserInfo.uid);
-                    session.UserInfo.Member.state_flag.visible = session.m_gi.visible;
-                    session.UserInfo.Member.state_flag.whisper = session.m_gi.whisper;
-                    session.UserInfo.Member.state_flag.channel = session.m_gi.channel;
+                    Player.m_gi.setGMUID(Player.UserInfo.uid);
+                    Player.UserInfo.Member.state_flag.visible = Player.m_gi.visible;
+                    Player.UserInfo.Member.state_flag.whisper = Player.m_gi.whisper;
+                    Player.UserInfo.Member.state_flag.channel = Player.m_gi.channel;
 
                 }
 
                 // --- GS property checks (rookie, mantle) ---
-                if (GameServer.getInstance().m_si.propriedade.only_rookie && session.UserInfo.level >= 6)
-                    throw new exception($"PLAYER[UID={session.UserInfo.uid}, LEVEL={session.UserInfo.level}] not allowed (rookie-only GS).");
+                if (GameServer.getInstance().m_si.propriedade.only_rookie && Player.UserInfo.level >= 6)
+                    throw new exception($"PLAYER[UID={Player.UserInfo.uid}, LEVEL={Player.UserInfo.level}] not allowed (rookie-only GS).");
 
-                if (GameServer.getInstance().m_si.propriedade.mantle && !(session.UserInfo.UserCapabilities.mantle || session.UserInfo.UserCapabilities.game_master))
-                    throw new exception($"PLAYER[UID={session.UserInfo.uid}] lacks mantle capability.");
+                if (GameServer.getInstance().m_si.propriedade.mantle && !(Player.UserInfo.UserCapabilities.mantle || Player.UserInfo.UserCapabilities.game_master))
+                    throw new exception($"PLAYER[UID={Player.UserInfo.uid}] lacks mantle capability.");
 
-                // --- Overlap: if another session with same UID exists ---
-                var alreadyLogged = GameServer.getInstance().HasLoggedWithOuterSocket(session);
+                // --- Overlap: if another Player with same UID exists ---
+                var alreadyLogged = GameServer.getInstance().HasLoggedWithOuterSocket(Player);
                 if (alreadyLogged != null)
                 {
                     _smp.message_pool.getInstance().push(new message(
-                        $"[HANDLE_PLAYER_LOGIN][Error] existing session for UID={session.UserInfo.uid}, disconnecting existing.",
+                        $"[HANDLE_PLAYER_LOGIN][Error] existing Player for UID={Player.UserInfo.uid}, disconnecting existing.",
                         type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     GameServer.getInstance().Disconnect(alreadyLogged);
-                    //throw new exception($"Failed to disconnect existing session UID={alreadyLogged.getUID()}");
+                    //throw new exception($"Failed to disconnect existing Player UID={alreadyLogged.getUID()}");
                 }
 
-                // --- Merge block flags and authorize session ---
-                session.UserInfo.block_flag.m_flag.ullFlag |= GameServer.getInstance().m_si.flag.ullFlag;
-                session.Authorized = true;
+                // --- Merge block flags and authorize Player ---
+                Player.UserInfo.block_flag.m_flag.ullFlag |= GameServer.getInstance().m_si.flag.ullFlag;
+                Player.Authorized = true;
 
-                // --- DB registration: player logged into GS ---
-                NormalManagerDB.getInstance().add(5, new CmdRegisterLogon(session.UserInfo.uid, 0));
+                // --- DB registration: Player logged into GS ---
+                NormalManagerDB.getInstance().add(5, new CmdRegisterLogon(Player.UserInfo.uid, 0));
 
-                NormalManagerDB.getInstance().add(7, new CmdRegisterLogonServer(session.UserInfo.uid, GameServer.getInstance().m_si.uid));
+                NormalManagerDB.getInstance().add(7, new CmdRegisterLogonServer(Player.UserInfo.uid, GameServer.getInstance().m_si.uid));
 
-                _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Sucess] PLAYER[OID={session.ConnectionID}, UID={session.UserInfo.uid}, NICK={session.UserInfo.nickname}].", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Sucess] PLAYER[OID={Player.ConnectionID}, UID={Player.UserInfo.uid}, NICK={Player.UserInfo.nickname}].", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Papel shop init
-                sPapelShopSystem.getInstance().InitPlayerPapelShopInfo(session);
+                sPapelShopSystem.getInstance().InitPlayerPapelShopInfo(Player);
 
                 // Create login manager task to load all data
-                session.Load(); 
+                Player.Load(); 
                 // Anti-bot timestamp
-                session.TicketBot = Environment.TickCount;
+                Player.TicketBot = Environment.TickCount;
                 
-                session.Send(Handle_PACKET_RESPONSE.pacote044(GameServer.getInstance().m_si, eLoginAck.ACK_AUTO_RECONNECT, session));
+                Player.Send(HandlePacket_RESPONSE.pacote044(GameServer.getInstance().m_si, eLoginAck.ACK_AUTO_RECONNECT, Player));
             }
             catch (exception ex)
             {
                 _smp.message_pool.getInstance().push(new message($"[HANDLE_PLAYER_LOGIN][Error] {ex.getFullMessageError()}", type_msg.CL_FILE_LOG_AND_CONSOLE));
-                session.Authorized = false;
+                Player.Authorized = false;
 
                 // Generic error response
                 p = new Packet(0x44);
                 p.WriteUInt32(300);
-                session.Send(p);
-                // Disconnect session to be safe
-                GameServer.getInstance().Disconnect(session);
+                Player.Send(p);
+                // Disconnect Player to be safe
+                GameServer.getInstance().Disconnect(Player);
             }
 
         await Task.CompletedTask;
         }
 
-        /* ----------------------
-           Helper methods used above
-           ---------------------- */
-
-        private void ReadLoginPacket(Player session, Packet pkt,
-            out uint outNtreevUID, out ushort outCommand,
-            out string outLKey, out string outClientVersion, out bool outHasClientVersion,
-            out uint outPacketVersion, out string outMacAddress, out bool outHasMAC, out string outGKey, out bool outHasGKey)
-        {
-            outLKey = string.Empty;
-            outClientVersion = string.Empty;
-            outGKey = string.Empty;
-            outMacAddress = string.Empty;
-
-            session.UserInfo.id = pkt.ReadString();
-            session.UserInfo.uid = pkt.ReadUInt32();
-            outNtreevUID = pkt.ReadUInt32();
-            outCommand = pkt.ReadUInt16();
-
-            outLKey = pkt.ReadString();
-            outHasClientVersion = pkt.ReadPStr(out outClientVersion) ? true : false;
-
-            bool okPacketVersion = pkt.ReadUInt32(out outPacketVersion);
-            outPacketVersion = okPacketVersion ? outPacketVersion : 0;
-            outMacAddress = pkt.ReadString();
-            outGKey = pkt.ReadString();
-            outHasMAC = !string.IsNullOrEmpty(outMacAddress);
-            outHasGKey = !string.IsNullOrEmpty(outGKey);
-            session.MacAdress = outMacAddress;
-
-        }
-
-        private bool ValidateLoginPacket(Player session,
+        private bool ValidateLoginPacket(
             bool hasClientVersion, string cversion, uint packetVersion,
             bool hasAuthKeyLogin, string lkey, bool hasMacAddress, string mac,
             bool hasAuthKeyGame, string gkey)
@@ -256,103 +225,103 @@ namespace Pangya_GameServer.Handles
             // checks: patch present, uid present, auth keys exist, id length sanity
             if (packetVersion == 0)
             {
-                SendLoginAck(session, eLoginAck.ACK_INVALID_VERSION);
+                SendLoginAck(eLoginAck.ACK_INVALID_VERSION);
                 return false;
             }
 
-            if (session.UserInfo.uid == 0)
+            if (Player.UserInfo.uid == 0)
             {
-                SendLoginAck(session, eLoginAck.ACK_LOGIN_FAIL);
+                SendLoginAck(eLoginAck.ACK_LOGIN_FAIL);
                 return false;
             }
 
             if (!hasClientVersion || string.IsNullOrEmpty(cversion))
             {
-                SendLoginAck(session, eLoginAck.ACK_INVALID_VERSION);
+                SendLoginAck(eLoginAck.ACK_INVALID_VERSION);
                 return false;
             }
 
             if (!hasAuthKeyLogin || string.IsNullOrEmpty(lkey))
             {
-                SendLoginAck(session, eLoginAck.ACK_SECURITY_KEY);
+                SendLoginAck(eLoginAck.ACK_SECURITY_KEY);
                 return false;
             }
 
             if (!hasMacAddress || string.IsNullOrEmpty(mac))
             {
-                SendLoginAck(session, eLoginAck.ACK_BLOCKED_IP_ADDR);
+                SendLoginAck(eLoginAck.ACK_BLOCKED_IP_ADDR);
                 return false;
             }
 
             if (!hasAuthKeyGame || string.IsNullOrEmpty(gkey))
             {
-                SendLoginAck(session, eLoginAck.ACK_INVALID_VERSION);
+                SendLoginAck(eLoginAck.ACK_INVALID_VERSION);
                 return false;
             }
-            if (string.IsNullOrEmpty(session.UserInfo.id) || session.UserInfo.id.Length >= 0x40)
+            if (string.IsNullOrEmpty(Player.UserInfo.id) || Player.UserInfo.id.Length >= 0x40)
             {
-                SendLoginAck(session, eLoginAck.ACK_INVALID_ID);
+                SendLoginAck(eLoginAck.ACK_INVALID_ID);
                 return false;
             }
             return true;
         }
 
-        private void SendLoginAck(Player _session, eLoginAck ack)
+        private void SendLoginAck(eLoginAck ack)
         {
             using (var p = new Packet(0x44))
             {
                 p.WriteUInt32((byte)ack);
-                _session.Send(p);
+                Player.Send(p);
             }
 
-            GameServer.getInstance().Disconnect(_session);
+            GameServer.getInstance().Disconnect(Player);
         }
 
-        private async void CheckAccountBlock(Player _session)
+        private async void CheckAccountBlock()
         {
-            // Verifica aqui se a conta do player está bloqueada
-            if (_session.UserInfo.block_flag.m_id_state.ull_IDState != 0)
+            // Verifica aqui se a conta do Player está bloqueada
+            if (Player.UserInfo.block_flag.m_id_state.ull_IDState != 0)
             {
 
-                if (_session.UserInfo.block_flag.m_id_state.L_BLOCK_TEMPORARY && (_session.UserInfo.block_flag.m_id_state.block_time == -1 || _session.UserInfo.block_flag.m_id_state.block_time > 0))
+                if (Player.UserInfo.block_flag.m_id_state.L_BLOCK_TEMPORARY && (Player.UserInfo.block_flag.m_id_state.block_time == -1 || Player.UserInfo.block_flag.m_id_state.block_time > 0))
                 {
 
                     throw new exception("[HANDLE_PLAYER_LOGIN][Error] Bloqueado por tempo[Time="
-                            + (_session.UserInfo.block_flag.m_id_state.block_time == -1 ? ("indeterminado") : ((_session.UserInfo.block_flag.m_id_state.block_time / 60)
-                            + "min " + (_session.UserInfo.block_flag.m_id_state.block_time % 60) + "sec"))
-                            + "]. player [UID=" + (_session.UserInfo.uid) + ", ID=" + (_session.UserInfo.id) + "]");
+                            + (Player.UserInfo.block_flag.m_id_state.block_time == -1 ? ("indeterminado") : ((Player.UserInfo.block_flag.m_id_state.block_time / 60)
+                            + "min " + (Player.UserInfo.block_flag.m_id_state.block_time % 60) + "sec"))
+                            + "]. Player [UID=" + (Player.UserInfo.uid) + ", ID=" + (Player.UserInfo.id) + "]");
 
                 }
-                else if (_session.UserInfo.block_flag.m_id_state.L_BLOCK_FOREVER)
+                else if (Player.UserInfo.block_flag.m_id_state.L_BLOCK_FOREVER)
                 {
 
-                    throw new exception("[HANDLE_PLAYER_LOGIN][Error] Bloqueado permanente. player [UID=" + (_session.UserInfo.uid)
-                            + ", ID=" + (_session.UserInfo.id) + "]");
+                    throw new exception("[HANDLE_PLAYER_LOGIN][Error] Bloqueado permanente. Player [UID=" + (Player.UserInfo.uid)
+                            + ", ID=" + (Player.UserInfo.id) + "]");
                 }
 
-                else if (_session.UserInfo.block_flag.m_id_state.L_BLOCK_ALL_IP)
+                else if (Player.UserInfo.block_flag.m_id_state.L_BLOCK_ALL_IP)
                 {
 
-                    // Bloquea todos os IP que o player logar e da error de que a area dele foi bloqueada
+                    // Bloquea todos os IP que o Player logar e da error de que a area dele foi bloqueada
 
-                    // Add o ip do player para a lista de ip banidos
-                    NormalManagerDB.getInstance().add(9, new CmdInsertBlockIp(_session.GetIP(), _session.MacAdress));
+                    // Add o ip do Player para a lista de ip banidos
+                    NormalManagerDB.getInstance().add(9, new CmdInsertBlockIp(Player.GetIP(), Player.MacAdress));
 
                     // Resposta
-                    throw new exception("[HANDLE_PLAYER_LOGIN][Error] PLAYER[UID=" + (_session.UserInfo.uid) + ", IP=" + (_session.GetIP())
-                            + "] Block ALL IP que o player fizer login.");
+                    throw new exception("[HANDLE_PLAYER_LOGIN][Error] PLAYER[UID=" + (Player.UserInfo.uid) + ", IP=" + (Player.GetIP())
+                            + "] Block ALL IP que o Player fizer login.");
                 }
-                else if (_session.UserInfo.block_flag.m_id_state.L_BLOCK_MAC_ADDRESS)
+                else if (Player.UserInfo.block_flag.m_id_state.L_BLOCK_MAC_ADDRESS)
                 {
 
-                    // Bloquea o MAC Address que o player logar e da error de que a area dele foi bloqueada
+                    // Bloquea o MAC Address que o Player logar e da error de que a area dele foi bloqueada
 
-                    // Add o MAC Address do player para a lista de MAC Address banidos
-                    NormalManagerDB.getInstance().add(10, new CmdInsertBlockMac(_session.MacAdress));
+                    // Add o MAC Address do Player para a lista de MAC Address banidos
+                    NormalManagerDB.getInstance().add(10, new CmdInsertBlockMac(Player.MacAdress));
 
                     // Resposta
-                    throw new exception("[HANDLE_PLAYER_LOGIN][Error] PLAYER[UID=" + (_session.UserInfo.uid)
-                            + ", IP=" + (_session.GetIP()) + ", MAC=" + _session.MacAdress + "] Block MAC Address que o player fizer login.");
+                    throw new exception("[HANDLE_PLAYER_LOGIN][Error] PLAYER[UID=" + (Player.UserInfo.uid)
+                            + ", IP=" + (Player.GetIP()) + ", MAC=" + Player.MacAdress + "] Block MAC Address que o Player fizer login.");
 
                 }
             }
@@ -374,19 +343,19 @@ namespace Pangya_GameServer.Handles
         }
 
 
-        private void EvaluateClientVersion(Player session, ClientVersion serverVer, ClientVersion clientVer)
+        private void EvaluateClientVersion(ClientVersion serverVer, ClientVersion clientVer)
         {
             if (clientVer.flag == ClientVersion.COMPLETE_VERSION &&
                 string.Equals(clientVer.region, serverVer.region) &&
                 string.Equals(clientVer.season, serverVer.season))
             {
                 if (clientVer.high != serverVer.high || clientVer.low < serverVer.low)
-                    session.UserInfo.block_flag.m_flag.all_game = true;
+                    Player.UserInfo.block_flag.m_flag.all_game = true;
             }
             else
             {
                 if (clientVer.high != serverVer.high || clientVer.low < serverVer.low)
-                    session.UserInfo.block_flag.m_flag.all_game = true;
+                    Player.UserInfo.block_flag.m_flag.all_game = true;
             }
         } 
     }

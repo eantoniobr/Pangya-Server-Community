@@ -20,9 +20,9 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CLUB_WORK_SHOP_EVENT_COUNT : IPacketHandler<Player>
+    public class Handle_PLAYER_CLUB_WORK_SHOP_EVENT_COUNT : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             var p = new Packet();
             p.init_plain(0x24B); // packet id
@@ -31,7 +31,7 @@ namespace Pangya_GameServer.Handles
             {
                 p.WriteByte((byte)(i + 1));                // subcode (fixo) 
             }
-            _session.Send(p);
+            Player.Send(p);
 
         await Task.CompletedTask;
         }

@@ -23,49 +23,49 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_SEND_MAIL : IPacketHandler<Player>
+    public class Handle_PLAYER_SEND_MAIL : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
-            var m_ci = _session.GetChannel();
+            var m_ci = Player.GetChannel();
             try
             {
-                uint from_uid = _packet.ReadUInt32();
-                uint to_uid = _packet.ReadUInt32();
-                string to_nick = _packet.ReadString();
-                ushort unknown_opt = _packet.ReadUInt16();
-                string to_msg = _packet.ReadString();
-                ulong pang_price = _packet.ReadUInt64();
-                byte count_item = _packet.ReadByte();
+                uint from_uid = Packet.ReadUInt32();
+                uint to_uid = Packet.ReadUInt32();
+                string to_nick = Packet.ReadString();
+                ushort unknown_opt = Packet.ReadUInt16();
+                string to_msg = Packet.ReadString();
+                ulong pang_price = Packet.ReadUInt64();
+                byte count_item = Packet.ReadByte();
 
                 if (string.IsNullOrEmpty(to_nick))
-                    throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER[UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou contra o server[MESSAGE="
+                    throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER[UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou contra o server[MESSAGE="
                             + to_nick + "], vazio. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 1/*UNKNOWN ERROR*/));
 
                 if (!Tools.Sanitize(to_nick))
-                    throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER[UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou contra o server[MESSAGE="
+                    throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER[UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou contra o server[MESSAGE="
                             + to_nick + "], tentativa de inject. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 1/*UNKNOWN ERROR*/));
 
                 if (string.IsNullOrEmpty(to_msg))
-                    throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER[UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou contra o server[MESSAGE="
+                    throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER[UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou contra o server[MESSAGE="
                             + to_msg + "], vazio. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 1/*UNKNOWN ERROR*/));
 
                 if (!Tools.Sanitize(to_msg))
-                    throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER[UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou contra o server[MESSAGE="
+                    throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER[UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou contra o server[MESSAGE="
                             + to_msg + "], tentativa de inject. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 1/*UNKNOWN ERROR*/));
 
                 if (count_item > 0)
                 {
                     if (count_item > 4)
                     {
-                        throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou enviar um numero[value=" + (count_item) + "] de itens é maior que o permitido. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                        throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou enviar um numero[value=" + (count_item) + "] de itens é maior que o permitido. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                             150, 5100081));
                     }
 
                     if (pang_price != (ulong)(count_item * 500))
                     {
-                        throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou usar pang price[value_client=" + (count_item) + ", value_srv=" + (count_item * 500) + "] send message is wrong. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                        throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou usar pang price[value_client=" + (count_item) + ", value_srv=" + (count_item * 500) + "] send message is wrong. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                             153, 5100084));
                     }
 
@@ -75,12 +75,12 @@ namespace Pangya_GameServer.Handles
 
                     for (int i = 0; i < count_item; i++)
                     {
-                        aItem[i] = new EmailInfo.ItemGift().ToRead(_packet);
+                        aItem[i] = new EmailInfo.ItemGift().ToRead(Packet);
                     }
 
                     IFFCommon pBase = null;
 
-                    var r = _session.GetRoom();
+                    var r = Player.GetRoom();
 
                     for (var i = 0; i < count_item; ++i)
                     {
@@ -91,7 +91,7 @@ namespace Pangya_GameServer.Handles
                             && group != IFF_GROUP.ITEM
                             && group != IFF_GROUP.PART)
                         {
-                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas esse item nao pode ser enviado. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas esse item nao pode ser enviado. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                                 154, 5100085));
                         }
 
@@ -99,35 +99,35 @@ namespace Pangya_GameServer.Handles
 
                         if (pBase == null)
                         {
-                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas esse item nao tem no STRUCT IFF do server. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas esse item nao tem no STRUCT IFF do server. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                                 151, 5100082));
                         }
 
                         if (!pBase.Shop.flag_shop.can_send_mail_and_personal_shop)
                         {
-                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas esse item nao é permitido ser enviado por mail. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas esse item nao é permitido ser enviado por mail. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                                 152, 5100083));
                         }
 
                         if (!sIff.getInstance().IsCanOverlapped(pBase.ID) && ItemManager.ownerItem(to_uid, pBase.ID))
                         {
-                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error][Sucess] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (pBase.ID) + ", ID=" + (aItem[i].id) + "] que o outro PLAYER [UID=" + (to_uid) + "] ja tem esse item.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error][Sucess] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (pBase.ID) + ", ID=" + (aItem[i].id) + "] que o outro PLAYER [UID=" + (to_uid) + "] ja tem esse item.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                                 156, 5100087));
                         }
 
                         item = new stItem();
 
-                        var pWi = _session.Inventory.FindWarehouseItemByTypeid(aItem[i]._typeid);
+                        var pWi = Player.Inventory.FindWarehouseItemByTypeid(aItem[i]._typeid);
 
                         if (pWi == null)
                         {
-                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas ele nao tem esse item. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas ele nao tem esse item. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                                 157, 5100088));
                         }
 
-                        if (r != null && r.CheckPersonalShopItem(_session, (int)aItem[i].id))
+                        if (r != null && r.CheckPersonalShopItem(Player, (int)aItem[i].id))
                         {
-                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou enviar o item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas o item esta sendo vendido no Personal shop dele. Hacker ou Bug.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou enviar o item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas o item esta sendo vendido no Personal shop dele. Hacker ou Bug.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                 1010, 0x5201010));
                         }
 
@@ -135,13 +135,13 @@ namespace Pangya_GameServer.Handles
                         {
                             if (aItem[i].qntd > 99)
                             {
-                                throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas a quantidade[value=" + (aItem[i].qntd) + "] maior que 99. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                                throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas a quantidade[value=" + (aItem[i].qntd) + "] maior que 99. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                                     155, 5100086));
                             }
 
                             if (pWi.STDA_C_ITEM_QNTD < aItem[i].qntd)
                             {
-                                throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas ele nao tem quantidade[value=" + (pWi.STDA_C_ITEM_QNTD) + ", req=" + (aItem[i].qntd) + "] suficiente. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                                throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou enviar um item[TYPEID=" + (aItem[i]._typeid) + ", ID=" + (aItem[i].id) + "] para o PLAYER [UID=" + (to_uid) + "], mas ele nao tem quantidade[value=" + (pWi.STDA_C_ITEM_QNTD) + ", req=" + (aItem[i].qntd) + "] suficiente. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                                     158, 5100089));
                             }
                         }
@@ -159,17 +159,17 @@ namespace Pangya_GameServer.Handles
 
                     if (ItemManager.giveItem(v_item, _session, 1) <= 0)
                     {
-                        throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] nao conseguiu presentear o PLAYER [UID=" + (to_uid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                        throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] nao conseguiu presentear o PLAYER [UID=" + (to_uid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                             159, 5100090));
                     }
 
-                    _session.Send(Handle_PACKET_RESPONSE.pacote216(v_item));
+                    Player.Send(HandlePacket_RESPONSE.pacote216(v_item));
 
                     var msg_id = MailManager.SendMailWithItem(from_uid,
                         to_uid, to_msg, aItem,
                         count_item);
 
-                    _session.UserInfo.consomePang(pang_price);
+                    Player.UserInfo.consomePang(pang_price);
 
                     string log_itens = "";
                     foreach (var el in v_item)
@@ -181,47 +181,47 @@ namespace Pangya_GameServer.Handles
                         log_itens += "[TYPEID=" + (el._typeid) + ", ID=" + (el.id) + ", FLAG_TIME=" + ((ushort)el.flag_time) + ", QNTD=" + ((el.STDA_C_ITEM_TIME > 0 ? el.STDA_C_ITEM_TIME : el.STDA_C_ITEM_QNTD)) + ", QNTD_DEPOIS=" + (el.stat.qntd_dep) + "]";
                     }
 
-                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_SEND_MAIL][Sucess] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] enviou presente para o PLAYER [UID=" + (to_uid) + "] MailBox[Email_ID=" + (msg_id) + ", Message=" + to_msg + "] item(ns)[QNTD=" + (v_item.Count) + "] Item(ns){" + log_itens + "}", type_msg.CL_ONLY_FILE_LOG));
+                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_SEND_MAIL][Sucess] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] enviou presente para o PLAYER [UID=" + (to_uid) + "] MailBox[Email_ID=" + (msg_id) + ", Message=" + to_msg + "] item(ns)[QNTD=" + (v_item.Count) + "] Item(ns){" + log_itens + "}", type_msg.CL_ONLY_FILE_LOG));
 
                     p.init_plain(0xC8);
-                    p.WriteUInt64(_session.UserInfo.Statistics.pang);
+                    p.WriteUInt64(Player.UserInfo.Statistics.pang);
                     p.WriteUInt64(pang_price);
-                    _session.Send(p);
+                    Player.Send(p);
 
                     p.init_plain(0x213);
                     p.WriteUInt32(0);
-                    _session.Send(p);
+                    Player.Send(p);
                 }
                 else
                 {
                     if (pang_price != 100)
                     {
-                        throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (_session.UserInfo.uid) + ", ID: " + _session.UserInfo.id + " ] tentou usar pang price[value_client=" + (count_item) + ", value_srv=" + (100) + "] send message is wrong. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
+                        throw new exception("[Handle_PLAYER_SEND_MAIL][Error] PLAYER [UID=" + (Player.UserInfo.uid) + ", ID: " + Player.UserInfo.id + " ] tentou usar pang price[value_client=" + (count_item) + ", value_srv=" + (100) + "] send message is wrong. Bug ou Hacker", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MAIL_BOX_MANAGER,
                             153, 5100084));
                     }
 
                     var msg_id = MailManager.SendMail(from_uid,
                         to_uid, to_msg);
 
-                    _session.UserInfo.consomePang(pang_price);
+                    Player.UserInfo.consomePang(pang_price);
 
                     p.init_plain(0xC8);
-                    p.WriteUInt64(_session.UserInfo.Statistics.pang);
+                    p.WriteUInt64(Player.UserInfo.Statistics.pang);
                     p.WriteUInt64(pang_price);
-                    _session.Send(p);
+                    Player.Send(p);
 
                     p.init_plain(0x213);
                     p.WriteUInt32(0);
-                    _session.Send(p);
+                    Player.Send(p);
                 }
             }
             catch (exception e)
             {
-                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_SEND_MAIL][ErrorSystem] PLAYER[UID= " + _session.UserInfo.uid + ", ID: " + _session.UserInfo.id + " ] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_SEND_MAIL][ErrorSystem] PLAYER[UID= " + Player.UserInfo.uid + ", ID: " + Player.UserInfo.id + " ] " + e.getFullMessageError(), type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 p.init_plain(0x213);
                 p.WriteUInt32((ExceptionError.STDA_SOURCE_ERROR_DECODE_TYPE(e.getCodeError()) == STDA_ERROR_TYPE.CHANNEL) ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 0x5500300);
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

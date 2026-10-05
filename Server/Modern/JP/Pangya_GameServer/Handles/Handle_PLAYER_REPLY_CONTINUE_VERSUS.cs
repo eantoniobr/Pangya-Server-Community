@@ -9,16 +9,16 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_REPLY_CONTINUE_VERSUS : IPacketHandler<Player>
+    public class Handle_PLAYER_REPLY_CONTINUE_VERSUS : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         { 
             try
             {
-                var room = _session.GetGameRoom() ?? throw new exception("[Error] PLAYER[UID=" + _session.UserInfo.uid + "] tentou responder se quer continuar o versus ou nao na sala[NUMERO=" + _session.GetRoom()?.GetRoomId() + "], mas a sala nao tem nenhum jogo inicializado. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
+                var room = Player.GetGameRoom() ?? throw new exception("[Error] PLAYER[UID=" + Player.UserInfo.uid + "] tentou responder se quer continuar o versus ou nao na sala[NUMERO=" + Player.GetRoom()?.GetRoomId() + "], mas a sala nao tem nenhum jogo inicializado. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
                         1, 0x556001));
 
-                byte opt = _packet.ReadByte();
+                byte opt = Packet.ReadByte();
               
                 if (opt == 0)
                 {
@@ -40,7 +40,7 @@ namespace Pangya_GameServer.Handles
                 }
                 else
                 {
-                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_REPLY_CONTINUE_VERSUS][Error] PLAYER[UID=" + _session.UserInfo.uid + "] respondeu uma opcao invalida para continuar o versus na sala[NUMERO=" + _session.GetRoom()?.GetRoomId() + "]. Hacker ou Bug", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message("[Handle_PLAYER_REPLY_CONTINUE_VERSUS][Error] PLAYER[UID=" + Player.UserInfo.uid + "] respondeu uma opcao invalida para continuar o versus na sala[NUMERO=" + Player.GetRoom()?.GetRoomId() + "]. Hacker ou Bug", type_msg.CL_FILE_LOG_AND_CONSOLE));
                 }
             }
             catch (exception e)

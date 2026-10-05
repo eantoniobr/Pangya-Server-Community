@@ -4,9 +4,9 @@ using PangyaAPI.Network.Core;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_REQUEST_SERVER_TIME : IPacketHandler<Player>
+    public class Handle_REQUEST_SERVER_TIME : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet packet)
+        public override async Task Handle()
         {
             // Nota: O pacote 0xBA geralmente não precisa de corpo na requisição, 
             // é apenas um trigger do cliente para pedir o horário.
@@ -17,7 +17,7 @@ namespace Pangya_GameServer.Handles
                 // Escreve o SYSTEMTIME (16 bytes) 
                 response.WriteTime();
 
-                session.Send(response);
+                Player.Send(response);
             }
 
         await Task.CompletedTask;

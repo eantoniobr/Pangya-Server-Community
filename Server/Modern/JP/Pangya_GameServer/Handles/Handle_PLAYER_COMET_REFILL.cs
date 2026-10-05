@@ -7,20 +7,20 @@ using PangyaAPI.Network.Core;
 using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 
-public class Handle_PLAYER_COMET_REFILL : IPacketHandler<Player>
+public class Handle_PLAYER_COMET_REFILL : HandleBase<Player, Packet_EXAMPLE>
 {
-    public async Task Handle(Player _session, Packet _packet)
+    public override async Task Handle()
     {
         Packet p = new Packet();
         try
         {
-            uint item_typeid = _packet.ReadUInt32();
-            uint ball_typeid = _packet.ReadUInt32();
+            uint item_typeid = Packet.ReadUInt32();
+            uint ball_typeid = Packet.ReadUInt32();
 
             if (!sCometRefillSystem.getInstance().isLoad()) sCometRefillSystem.getInstance().load();
 
-            var pBall = _session.Inventory.FindWarehouseItemByTypeid(ball_typeid);
-            var pItem = _session.Inventory.FindWarehouseItemByTypeid(item_typeid);
+            var pBall = Player.Inventory.FindWarehouseItemByTypeid(ball_typeid);
+            var pItem = Player.Inventory.FindWarehouseItemByTypeid(item_typeid);
 
             if (pBall == null || pItem == null || pItem.STDA_C_ITEM_QNTD < 1)
                 throw new exception("Item ou bola faltando", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 1, 0x5600101));
@@ -41,7 +41,7 @@ public class Handle_PLAYER_COMET_REFILL : IPacketHandler<Player>
             p.WriteUInt32(pItem._typeid);
             p.WriteUInt32(pBall._typeid);
             p.WriteUInt16((ushort)pBall.STDA_C_ITEM_QNTD);
-            _session.Send(p);
+            Player.Send(p);
         }
         catch (exception e)
         {
@@ -49,7 +49,7 @@ public class Handle_PLAYER_COMET_REFILL : IPacketHandler<Player>
             p.init_plain(0x197);
             p.WriteByte(0);
             p.WriteZero(10);
-            _session.Send(p);
+            Player.Send(p);
         }
     }
 }

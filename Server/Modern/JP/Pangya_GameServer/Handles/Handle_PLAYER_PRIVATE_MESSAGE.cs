@@ -7,9 +7,9 @@ using PangyaAPI.Utilities.Log;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_PRIVATE_MESSAGE : IPacketHandler<Player>
+    public class Handle_PLAYER_PRIVATE_MESSAGE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
             try
             {  
@@ -30,14 +30,14 @@ namespace Pangya_GameServer.Handles
                 // Verificações de disponibilidade (Offline, Whisper Off, Away)
                 if (targetPlayer == null || !targetPlayer.Connected || targetPlayer.UserInfo.WhisperState != 1)
                 {
-                    SendWhisperError(session, targetNickname, 6); // 6 = Player Offline/Whisper Off
+                    SendWhisperError(Player, targetNickname, 6); // 6 = Player Offline/Whisper Off
                     return;
                 }
                  
-                NotifyGMsOfPrivateMessage(session, targetPlayer, messageContent);
+                NotifyGMsOfPrivateMessage(Player, targetPlayer, messageContent);
 
                 _smp.message_pool.getInstance().push(new message(
-                    $"[PM][Log] {session.UserInfo.nickname} -> {targetPlayer.UserInfo.nickname}: {messageContent}",
+                    $"[PM][Log] {Player.UserInfo.nickname} -> {targetPlayer.UserInfo.nickname}: {messageContent}",
                     type_msg.CL_FILE_LOG_AND_CONSOLE)); 
 
                 // Resposta para quem ENVIOU (Confirmação na aba de Whisper)
@@ -45,12 +45,12 @@ namespace Pangya_GameServer.Handles
                 pFrom.WriteByte(0); // Tipo 0: Enviado por mim
                 pFrom.WriteString(targetPlayer.UserInfo.nickname);
                 pFrom.WriteString(messageContent);
-                session.Send(pFrom);
+                Player.Send(pFrom);
 
                 // Envio para quem RECEBEU
                 var pTo = new Packet(0x84);
                 pTo.WriteByte(1); // Tipo 1: Recebido de alguém
-                pTo.WriteString(session.UserInfo.nickname);
+                pTo.WriteString(Player.UserInfo.nickname);
                 pTo.WriteString(messageContent);
                 targetPlayer.Send(pTo);
                  
@@ -61,7 +61,7 @@ namespace Pangya_GameServer.Handles
                     $"[PM][ErrorSystem] {e.getFullMessageError()}",
                     type_msg.CL_FILE_LOG_AND_CONSOLE));
 
-                SendWhisperError(session, "", 5); // Erro genérico
+                SendWhisperError(Player, "", 5); // Erro genérico
             }
 
         await Task.CompletedTask;
@@ -72,7 +72,7 @@ namespace Pangya_GameServer.Handles
             var p = new Packet(0x40);
             p.WriteByte(errorType);
             p.WriteString(nickname);
-            session.Send(p);
+            Player.Send(p);
         }
 
         private void NotifyGMsOfPrivateMessage(Player sender, Player receiver, string msg)

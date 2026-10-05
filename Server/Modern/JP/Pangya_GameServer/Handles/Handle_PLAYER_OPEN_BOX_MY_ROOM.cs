@@ -21,9 +21,9 @@ using static Pangya_GameServer.Models.DefineConstants;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_OPEN_BOX_MY_ROOM : IPacketHandler<Player>
+    public class Handle_PLAYER_OPEN_BOX_MY_ROOM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
@@ -34,31 +34,31 @@ namespace Pangya_GameServer.Handles
                     sBoxSystem.getInstance().load();
                 }
 
-                uint box_typeid = _packet.ReadUInt32();
+                uint box_typeid = Packet.ReadUInt32();
 
                 if (box_typeid == 0)
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (box_typeid) + "], mas o typeid é invalido(zero). Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (box_typeid) + "], mas o typeid é invalido(zero). Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         1, 0x6300201));
                 }
 
-                var pWi = _session.Inventory.FindWarehouseItemByTypeid(box_typeid);
+                var pWi = Player.Inventory.FindWarehouseItemByTypeid(box_typeid);
 
                 if (pWi == null)
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (box_typeid) + "], mas ele nao tem essa Box. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (box_typeid) + "], mas ele nao tem essa Box. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         2, 0x6300202));
                 }
 
                 if (pWi.STDA_C_ITEM_QNTD < 1)
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas ele nao tem quantidade suficiente da Box[value=" + (pWi.STDA_C_ITEM_QNTD) + ", Request=1]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas ele nao tem quantidade suficiente da Box[value=" + (pWi.STDA_C_ITEM_QNTD) + ", Request=1]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         3, 0x6300203));
                 }
 
                 if (sIff.getInstance().getItemGroupIdentify(pWi._typeid) != IFF_GROUP.ITEM)
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao é uma Box valida. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao é uma Box valida. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         4, 0x6300204));
                 }
 
@@ -66,7 +66,7 @@ namespace Pangya_GameServer.Handles
 
                 if (item_iff == null)
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao tem essa Box no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao tem essa Box no IFF_STRUCT do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         5, 0x6300205));
                 }
 
@@ -74,7 +74,7 @@ namespace Pangya_GameServer.Handles
 
                 if (box == null)
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao tem essa Box no Box System do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMyRoom][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao tem essa Box no Box System do Server. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         6, 0x6300206));
                 }
 
@@ -85,11 +85,11 @@ namespace Pangya_GameServer.Handles
                 ctx_box_item ctx_bi = null;
 
                 // ----------- Sortea ---------------
-                ctx_bi = sBoxSystem.getInstance().drawBox(_session, box);
+                ctx_bi = sBoxSystem.getInstance().drawBox(Player, box);
 
                 if (ctx_bi == null)
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu sortear um Box Item. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu sortear um Box Item. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         9, 0x6300209));
                 }
 
@@ -116,21 +116,21 @@ namespace Pangya_GameServer.Handles
                     bi.qntd = (uint)ctx_bi.qntd;
                 }
 
-                ItemManager.initItemFromBuyItem(_session.UserInfo,
+                ItemManager.initItemFromBuyItem(Player.UserInfo,
                     item, bi, false, 0, 0, 1);
 
                 if (item._typeid == 0)
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu inicializar o Item[TYPEID=" + (bi._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu inicializar o Item[TYPEID=" + (bi._typeid) + "]", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         11, 0x6300211));
                 }
 
                 // Verifica se já possui o item, o caddie item verifica se tem o caddie para depois verificar se tem o caddie item
-                if ((sIff.getInstance().IsCanOverlapped(item._typeid) && sIff.getInstance().getItemGroupIdentify(item._typeid) != IFF_GROUP.CAD_ITEM) || !_session.Inventory.ownerItem(item._typeid))
+                if ((sIff.getInstance().IsCanOverlapped(item._typeid) && sIff.getInstance().getItemGroupIdentify(item._typeid) != IFF_GROUP.CAD_ITEM) || !Player.Inventory.ownerItem(item._typeid))
                 {
                     if (ItemManager.isSetItem(item._typeid))
                     {
-                        var v_stItem = ItemManager.GetItemOfSetItem(_session,
+                        var v_stItem = ItemManager.GetItemOfSetItem(Player,
                             item._typeid, false, 1);
 
                         if (v_stItem.Any())
@@ -140,7 +140,7 @@ namespace Pangya_GameServer.Handles
                             // Verifica se pode ter mais de 1 item e se não ver se não tem o item
                             foreach (var el in v_stItem)
                             {
-                                if ((sIff.getInstance().IsCanOverlapped(el._typeid) && sIff.getInstance().getItemGroupIdentify(el._typeid) != IFF_GROUP.CAD_ITEM) || !_session.Inventory.ownerItem(el._typeid))
+                                if ((sIff.getInstance().IsCanOverlapped(el._typeid) && sIff.getInstance().getItemGroupIdentify(el._typeid) != IFF_GROUP.CAD_ITEM) || !Player.Inventory.ownerItem(el._typeid))
                                 {
                                     v_item.Add(new stItem(el));
                                 }
@@ -148,7 +148,7 @@ namespace Pangya_GameServer.Handles
                         }
                         else
                         {
-                            throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas SetItem que ele ganhou da box, nao tem Item[TYPEID=" + (bi._typeid) + "]. Bug.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                            throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas SetItem que ele ganhou da box, nao tem Item[TYPEID=" + (bi._typeid) + "]. Bug.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                                 12, 0x6300212));
                         }
                     }
@@ -160,12 +160,12 @@ namespace Pangya_GameServer.Handles
                 }
                 else if (sIff.getInstance().getItemGroupIdentify(item._typeid) == IFF_GROUP.CAD_ITEM)
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas o CaddieItem que ele ganhou, nao tem o caddie, Item[TYPEID=" + (bi._typeid) + "]. Bug.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas o CaddieItem que ele ganhou, nao tem o caddie, Item[TYPEID=" + (bi._typeid) + "]. Bug.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         13, 0x6300213));
                 }
                 else
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas ele ja tem o Item[TYPEID=" + (bi._typeid) + "]. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas ele ja tem o Item[TYPEID=" + (bi._typeid) + "]. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         14, 0x6300214));
                 }
 
@@ -182,13 +182,13 @@ namespace Pangya_GameServer.Handles
 
                 if (ItemManager.removeItem(stBox, _session) <= 0)
                 {
-                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu deletar Box. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas nao conseguiu deletar Box. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         10, 0x6300210));
                 }
 
                 string str = "";
 
-                // Coloca Item ganho no My Room do player
+                // Coloca Item ganho no My Room do Player
                 var rai = ItemManager.addItem(v_item,
                     _session, 0, 0);
 
@@ -207,7 +207,7 @@ namespace Pangya_GameServer.Handles
                         }
                     }
 
-                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas ele nao conseguiu adicionar os item(ns){" + str + "}. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Lobby::RequestOpenBoxMail][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou abrir Box[TYPEID=" + (pWi._typeid) + ", ID=" + (pWi.id) + "], mas ele nao conseguiu adicionar os item(ns){" + str + "}. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         15, 0x6300215));
                 }
                 else
@@ -230,7 +230,7 @@ namespace Pangya_GameServer.Handles
                 if (ctx_bi != null && ctx_bi.raridade > 0)
                 {
                     NormalManagerDB.getInstance().add(22,
-                         new CmdInsertBoxRareWinLog(_session.UserInfo.uid,
+                         new CmdInsertBoxRareWinLog(Player.UserInfo.uid,
                              box._typeid, ctx_bi),
                         null, null);
                 }
@@ -255,10 +255,10 @@ namespace Pangya_GameServer.Handles
                         p.WriteZero(16);
                     p.WriteString(el.ucc.IDX, 9);
 
-                    p.WriteUInt64(_session.UserInfo.Statistics.pang);
-                    p.WriteUInt64(_session.UserInfo.Cookie);
+                    p.WriteUInt64(Player.UserInfo.Statistics.pang);
+                    p.WriteUInt64(Player.UserInfo.Cookie);
 
-                    _session.Send(p);
+                    Player.Send(p);
                 }
 
                 // Resposta do Abrir Box My Room
@@ -279,7 +279,7 @@ namespace Pangya_GameServer.Handles
                     p.WriteZero(8); // Não sei o que é esses 8 Bytes ainda
                 }
 
-                _session.Send(p);
+                Player.Send(p);
 
             }
             catch (exception e)
@@ -292,7 +292,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteZero(12); // Box Typeid, Box Qntd e count de itens
 
-                _session.Send(p);
+                Player.Send(p);
             }
         } 
     }

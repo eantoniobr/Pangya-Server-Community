@@ -9,36 +9,36 @@ using PangyaAPI.Utilities;
 using PangyaAPI.Utilities.Log;
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_PLAYER_ADD_FRIEND : IPacketHandler<Player>
+    public class Handle_PLAYER_ADD_FRIEND : HandleBase<Player, Packet_EXAMPLE>
     {
         public const int FRIEND_LIST_LIMIT = 50;
 
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             var p = new Packet();
 
             try
             {
-                uint uid = _packet.ReadUInt32();
-                var nickname = _packet.ReadString();
+                uint uid = Packet.ReadUInt32();
+                var nickname = Packet.ReadString();
 
                 // Validações Iniciais
                 if (uid == 0)
-                    throw new exception($"[MessengerService::requestAddFriend][Error] player[UID={_session.UserInfo.uid}] tentou add Friend[UID={uid}], mas UID é inválido.",
+                    throw new exception($"[MessengerService::requestAddFriend][Error] player[UID={Player.UserInfo.uid}] tentou add Friend[UID={uid}], mas UID é inválido.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 1, 0x5200601));
 
                 if (string.IsNullOrEmpty(nickname))
-                    throw new exception($"[MessengerService::requestAddFriend][Error] player[UID={_session.UserInfo.uid}] tentou add Friend[UID={uid}], mas Nickname está vazio.",
+                    throw new exception($"[MessengerService::requestAddFriend][Error] player[UID={Player.UserInfo.uid}] tentou add Friend[UID={uid}], mas Nickname está vazio.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 2, 0x5200602));
 
-                var pFi = _session.UserInfo.m_friend_manager.findFriendInAllFriend(uid);
+                var pFi = Player.UserInfo.m_friend_manager.findFriendInAllFriend(uid);
 
                 if (pFi != null && pFi.flag._friend == 1)
-                    throw new exception($"[MessengerService::requestAddFriend] Player[UID={_session.UserInfo.uid}] já é amigo de UID={uid}.",
+                    throw new exception($"[MessengerService::requestAddFriend] Player[UID={Player.UserInfo.uid}] já é amigo de UID={uid}.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 3, 2));
 
-                if (_session.UserInfo.m_friend_manager.countFriend() >= FRIEND_LIST_LIMIT)
-                    throw new exception($"[MessengerService::requestAddFriend] Lista cheia para UID={_session.UserInfo.uid}.",
+                if (Player.UserInfo.m_friend_manager.countFriend() >= FRIEND_LIST_LIMIT)
+                    throw new exception($"[MessengerService::requestAddFriend] Lista cheia para UID={Player.UserInfo.uid}.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.MESSAGE_SERVER, 4, 0x5200603));
 
                 // Busca a sessão usando o Manager do ServerBase
@@ -69,19 +69,19 @@ namespace Pangya_MessengerServer.Handles
                     fi.level = (byte)s.UserInfo.level;
 
                     // Configura Info de quem adicionou (para o amigo que recebeu)
-                    fi2.uid = _session.UserInfo.uid;
+                    fi2.uid = Player.UserInfo.uid;
                     fi2.flag.ucFlag = (byte)((pFi == null) ? 1 : pFi.flag.ucFlag | 1);
                     fi2.apelido = "Friend";
-                    fi2.nickname = _session.UserInfo.nickname;
+                    fi2.nickname = Player.UserInfo.nickname;
                     fi2.state.online = 1;
-                    fi2.state.sex = _session.UserInfo.sex;
-                    fi2.level = (byte)_session.UserInfo.level;
+                    fi2.state.sex = Player.UserInfo.sex;
+                    fi2.level = (byte)Player.UserInfo.level;
 
                     // Atualiza DB e Cache (Async) 
-                    _session.UserInfo.m_friend_manager.requestAddFriend(fi);
+                    Player.UserInfo.m_friend_manager.requestAddFriend(fi);
                     s.UserInfo.m_friend_manager.requestAddFriend(fi2);
 
-                    _smp.message_pool.getInstance().push(new message($"[AddFriend][Log] {_session.UserInfo.uid} adicionou {s.UserInfo.uid} (Online)", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message($"[AddFriend][Log] {Player.UserInfo.uid} adicionou {s.UserInfo.uid} (Online)", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     // Resposta para quem enviou o convite (0x104)
                     p.init_plain(0x30);
@@ -94,14 +94,14 @@ namespace Pangya_MessengerServer.Handles
                     p.Write((byte)fi.level);
                     p.Write((byte)fi.state.ucState);
                     p.Write((byte)fi.flag.ucFlag);
-                    _session.Send(p);
+                    Player.Send(p);
 
                     // Notifica o amigo que foi adicionado (0x106)
                     p.init_plain(0x30);
                     p.Write((ushort)0x106);
                     p.WriteBytes(fi2.ToArray());
-                    p.WriteBytes(_session.UserInfo.m_cpi.ToArray());
-                    p.Write((byte)_session.UserInfo.m_state);
+                    p.WriteBytes(Player.UserInfo.m_cpi.ToArray());
+                    p.Write((byte)Player.UserInfo.m_state);
                     p.Write((byte)fi2.cUnknown_flag);
                     p.Write((byte)fi2.level);
                     p.Write((byte)fi2.state.ucState);
@@ -134,16 +134,16 @@ namespace Pangya_MessengerServer.Handles
                     fi.state.sex = pi.sex;
                     fi.level = (byte)pi.level;
 
-                    fi2.uid = _session.UserInfo.uid;
+                    fi2.uid = Player.UserInfo.uid;
                     fi2.flag.ucFlag = fi.flag.ucFlag;
-                    fi2.nickname = _session.UserInfo.nickname;
-                    fi2.state.sex = _session.UserInfo.sex;
-                    fi2.level = (byte)_session.UserInfo.level;
+                    fi2.nickname = Player.UserInfo.nickname;
+                    fi2.state.sex = Player.UserInfo.sex;
+                    fi2.level = (byte)Player.UserInfo.level;
 
-                    _session.UserInfo.m_friend_manager.requestAddFriend(fi);
+                    Player.UserInfo.m_friend_manager.requestAddFriend(fi);
                     fm.requestAddFriend(fi2);
 
-                    _smp.message_pool.getInstance().push(new message($"[AddFriend][Log] {_session.UserInfo.uid} adicionou {pi.uid} (Offline)", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                    _smp.message_pool.getInstance().push(new message($"[AddFriend][Log] {Player.UserInfo.uid} adicionou {pi.uid} (Offline)", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                     // Resposta Offline (0x104) com campos zerados (-1) pois não há canal/sala
                     p.init_plain(0x30);
@@ -160,7 +160,7 @@ namespace Pangya_MessengerServer.Handles
                     p.Write((byte)fi.level);
                     p.Write((byte)fi.state.ucState);
                     p.Write((byte)fi.flag.ucFlag);
-                    _session.Send(p);
+                    Player.Send(p);
                 }
             }
             catch (exception e)
@@ -172,7 +172,7 @@ namespace Pangya_MessengerServer.Handles
                 uint err = (ExceptionError.STDA_SOURCE_ERROR_DECODE(e.getCodeError()) == (uint)STDA_ERROR_TYPE.MESSAGE_SERVER)
                     ? ExceptionError.STDA_SYSTEM_ERROR_DECODE(e.getCodeError()) : 0x5200600;
                 p.Write((uint)err);
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

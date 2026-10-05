@@ -9,44 +9,44 @@ using PangyaAPI.Utilities.Models;
 
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_PLAYER_STATE : IPacketHandler<Player>
+    public class Handle_PLAYER_STATE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                var state = _packet.ReadByte();
+                var state = Packet.ReadByte();
 
                 // Só processa se o estado realmente mudou
-                if (session.UserInfo.m_state != state)
+                if (Player.UserInfo.m_state != state)
                 {
-                    session.UserInfo.m_state = state;
+                    Player.UserInfo.m_state = state;
 
                     // Monta o pacote 0x30 com sub 0x115 (Update State)
                     using (var p = new Packet(0x30))
                     {
                         p.WriteUInt16(0x115); // Sub packet Id
-                        p.WriteUInt32(session.UserInfo.uid);
-                        p.WriteUInt32(session.UserInfo.m_state);
+                        p.WriteUInt32(Player.UserInfo.uid);
+                        p.WriteUInt32(Player.UserInfo.m_state);
                         p.WriteByte(1); // Status OK
 
                         // Escreve as informações do canal/sala atual (ChannelPlayerInfo)
-                        p.WriteBytes(session.UserInfo.m_cpi.ToArray());
+                        p.WriteBytes(Player.UserInfo.m_cpi.ToArray());
 
                         // Envia para todos os amigos e membros da guilda que não estão bloqueados
                         var targets = MessengerServer.getInstance().FindAllFriend(
-                            session.UserInfo.m_friend_manager.getAllFriendAndGuildMember(true)
+                            Player.UserInfo.m_friend_manager.getAllFriendAndGuildMember(true)
                         );
 
                         if (targets != null && targets.Count > 0)
                         {
-                            MessengerServer.getInstance().FriendBroadcast(targets, session, p);
+                            MessengerServer.getInstance().FriendBroadcast(targets, Player, p);
                         } 
                     }
-                            MessengerServer.getInstance().SendUpdatedFriendList(session); 
+                            MessengerServer.getInstance().SendUpdatedFriendList(Player); 
 
                     // Log de estado no console
-                    LogState(session.UserInfo.uid, state);
+                    LogState(Player.UserInfo.uid, state);
                 }
             }
             catch (exception e)

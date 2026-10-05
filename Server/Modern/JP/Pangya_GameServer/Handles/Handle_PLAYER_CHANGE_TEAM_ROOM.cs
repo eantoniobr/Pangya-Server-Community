@@ -18,31 +18,31 @@ using System;
 using System.Threading.Tasks;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CHANGE_TEAM_ROOM : IPacketHandler<Player>
+    public class Handle_PLAYER_CHANGE_TEAM_ROOM : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         { 
             Packet p = new();
 
             try
             {
 
-                var r = (_session.GetRoom()) ?? throw new exception("[Lobby.Room::RequestChangePlayerTeamRoom][Error] PLAYER [UID=" + _session.UserInfo.uid + "] tentou trocar de team(time) na sala[NUMERO=" + (_session.UserInfo.Member.sala_numero) + "], mas a sala nao existe. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                var r = (Player.GetRoom()) ?? throw new exception("[Lobby.Room::RequestChangePlayerTeamRoom][Error] PLAYER [UID=" + Player.UserInfo.uid + "] tentou trocar de team(time) na sala[NUMERO=" + (Player.UserInfo.Member.sala_numero) + "], mas a sala nao existe. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         10, 0));
 
-                byte team = _packet.ReadByte();
+                byte team = Packet.ReadByte();
 
-                PlayerRoomInfo pPri = r.GetPlayerInfo(_session);
+                PlayerRoomInfo pPri = r.GetPlayerInfo(Player);
 
                 if (pPri == null)
                 {
-                    throw new exception("[Room::RequestChangeTeam] [Error] PLAYER[UID=" + _session.UserInfo.uid + "] tentou trocar o team(time) na sala[NUMERO=" + r.GetRoomId() + "], mas a sala nao tem o info do player. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
+                    throw new exception("[Room::RequestChangeTeam] [Error] PLAYER[UID=" + Player.UserInfo.uid + "] tentou trocar o team(time) na sala[NUMERO=" + r.GetRoomId() + "], mas a sala nao tem o info do Player. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
                         1505, 0));
                 }
 
                 if (r.TeamCount() < 2)
                 {
-                    throw new exception("[Room::RequestChangeTeam] [Error] PLAYER[UID=" + _session.UserInfo.uid + "] tentou trocar o team(time) na sala[NUMERO=" + r.GetRoomId() + "], mas a sala nao tem teans(times) suficiente. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
+                    throw new exception("[Room::RequestChangeTeam] [Error] PLAYER[UID=" + Player.UserInfo.uid + "] tentou trocar o team(time) na sala[NUMERO=" + r.GetRoomId() + "], mas a sala nao tem teans(times) suficiente. Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.ROOM,
                         1506, 0));
                 }
 
@@ -50,7 +50,7 @@ namespace Pangya_GameServer.Handles
                 try
                 {
 
-                    r.DeletePlayerTeam(_session, 3);
+                    r.DeletePlayerTeam(Player, 3);
 
                 }
                 catch (exception e)
@@ -60,16 +60,16 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // Add o Player ao (team)time
-                r.AddPlayerTeam(_session, team);
+                r.AddPlayerTeam(Player, team);
 
                 pPri.state_flag.team = team;
 
-                r.UpdatePlayerInfo(_session);
+                r.UpdatePlayerInfo(Player);
 
 
                 p = new Packet((ushort)0x7D);
 
-                p.WriteInt32(_session.ConnectionID);
+                p.WriteInt32(Player.ConnectionID);
 
                 p.WriteByte(team);
 

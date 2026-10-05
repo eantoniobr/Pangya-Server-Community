@@ -15,9 +15,9 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_DELETE_MAIL : IPacketHandler<Player>
+    public class Handle_PLAYER_DELETE_MAIL : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
             uint[] a_email_id = null;
@@ -25,36 +25,36 @@ namespace Pangya_GameServer.Handles
             try
             {
                 // 1. Leitura dos dados do pacote
-                int num_email = _packet.ReadInt32();
+                int num_email = Packet.ReadInt32();
                 uint pagina = 1;
 
                 // Lê o array de IDs de e-mail baseado na quantidade enviada
-                a_email_id = _packet.ReadUInt32(num_email);
-                pagina = _packet.ReadUInt32();
+                a_email_id = Packet.ReadUInt32(num_email);
+                pagina = Packet.ReadUInt32();
 
                 // 2. Validação da página
                 if ((int)pagina <= 0)
                 {
-                    throw new exception("[Handle_PLAYER_DELETE_MAIL][Error] PLAYER [UID=" + _session.UserInfo.uid + "] pediu para deletar email(s)[COUNT=" + num_email + "] da pagina(" + (int)pagina + "), mas a pagina é invalida.",
+                    throw new exception("[Handle_PLAYER_DELETE_MAIL][Error] PLAYER [UID=" + Player.UserInfo.uid + "] pediu para deletar email(s)[COUNT=" + num_email + "] da pagina(" + (int)pagina + "), mas a pagina é invalida.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 6, 0x791002));
                 }
 
                 // 3. Atualização no Banco de Dados (Deleção)
-                _session.UserInfo.MailBox.deleteEmail(a_email_id, (uint)num_email);
+                Player.UserInfo.MailBox.deleteEmail(a_email_id, (uint)num_email);
 
                 // 4. Busca a lista atualizada para a página solicitada
-                var mails = _session.UserInfo.MailBox.GetPage(pagina);
+                var mails = Player.UserInfo.MailBox.GetPage(pagina);
 
                 // 5. Envio da resposta via pacote 215
                 if (mails != null && mails.Any())
                 {
                     // Página ainda contém e-mails após a exclusão
-                    _session.Send(Handle_PACKET_RESPONSE.pacote215(mails, (int)pagina, (int)_session.UserInfo.MailBox.getTotalPages()));
+                    Player.Send(HandlePacket_RESPONSE.pacote215(mails, (int)pagina, (int)Player.UserInfo.MailBox.getTotalPages()));
                 }
                 else
                 {
                     // MailBox vazio ou página ficou sem e-mails
-                    _session.Send(Handle_PACKET_RESPONSE.pacote215(new List<MailBox>(), (int)pagina, 1));
+                    Player.Send(HandlePacket_RESPONSE.pacote215(new List<MailBox>(), (int)pagina, 1));
                 }
             }
             catch (exception e)
@@ -71,7 +71,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteUInt32(errorCode);
 
-                _session.Send(p);
+                Player.Send(p);
             }
             finally
             {

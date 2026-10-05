@@ -16,16 +16,16 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_OPEN_TICKET_REPORT_SCROLL : IPacketHandler<Player>
+    public class Handle_PLAYER_OPEN_TICKET_REPORT_SCROLL : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
             bool _upt_on_game = false;
             try
             {
-                int _ticket_scroll_item_id = _packet.ReadInt32();
-                int _ticket_scroll_id = _packet.ReadInt32();
+                int _ticket_scroll_item_id = Packet.ReadInt32();
+                int _ticket_scroll_id = Packet.ReadInt32();
 
                 if (_ticket_scroll_item_id < 0 || _ticket_scroll_id < 0)
                 {
@@ -33,7 +33,7 @@ namespace Pangya_GameServer.Handles
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE._ITEM_MANAGER, 2500, 0));
                 }
 
-                var pWi = _session.Inventory.FindWarehouseItemById(_ticket_scroll_item_id);
+                var pWi = Player.Inventory.FindWarehouseItemById(_ticket_scroll_item_id);
                 if (pWi == null)
                 {
                     throw new exception("[item_manager::openTicketReportScroll][Error] Player não tem o item.",
@@ -59,8 +59,8 @@ namespace Pangya_GameServer.Handles
                 if (trsi == null) throw new Exception("Dados do ticket retornaram nulos.");
 
                 // 1. Calcular EXP ANTES de remover o item
-                var playerStat = trsi.v_players.FirstOrDefault(_el => _el.uid == _session.UserInfo.uid);
-                int expToGain = (playerStat != null && playerStat.exp > 0) ? (int)playerStat.exp : 0;
+                var PlayerStat = trsi.v_Players.FirstOrDefault(_el => _el.uid == Player.UserInfo.uid);
+                int expToGain = (PlayerStat != null && PlayerStat.exp > 0) ? (int)PlayerStat.exp : 0;
 
                 // 2. Remover o Item
                 stItem itemRem = new stItem();
@@ -76,37 +76,37 @@ namespace Pangya_GameServer.Handles
                 }
 
                 // 3. Checar se o item estava expirado (UpdateItem)
-                var ui_it = _session.Inventory.FindUpdateItemById(_ticket_scroll_item_id);
+                var ui_it = Player.Inventory.FindUpdateItemById(_ticket_scroll_item_id);
 
                 // CORREÇÃO DO CRASH: Checar se ui_it não é nulo antes do Count
                 if (ui_it != null && ui_it.Count > 0)
                 {
                     // Se expirou, remove do mapa de updates
-                    _session.Inventory.UpdateItems.Remove(ui_it.First().Key);
+                    Player.Inventory.UpdateItems.Remove(ui_it.First().Key);
 
                     // Se expirou, damos a exp e paramos por aqui com erro de expiração
-                    if (expToGain > 0) _session.addExp(expToGain, _upt_on_game);
+                    if (expToGain > 0) Player.addExp(expToGain, _upt_on_game);
 
                     throw new exception("Item expirado, mas EXP concedida.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE._ITEM_MANAGER, 2504, 0));
                 }
 
                 // 4. Fluxo Normal (Sucesso)
-                _smp.message_pool.getInstance().push(new message("[item_manager::openTicketReportScroll][Log] Player " + _session.UserInfo.uid + " abriu ticket com sucesso.", type_msg.CL_FILE_LOG_AND_CONSOLE));
+                _smp.message_pool.getInstance().push(new message("[item_manager::openTicketReportScroll][Log] Player " + Player.UserInfo.uid + " abriu ticket com sucesso.", type_msg.CL_FILE_LOG_AND_CONSOLE));
 
                 // Envia pacote de resposta do Ticket
                 p = new Packet(0x11A);
-                p.WriteInt32(trsi.v_players.Count());
+                p.WriteInt32(trsi.v_Players.Count());
                 p.WriteTime(trsi.date);
-                foreach (var el in trsi.v_players)
+                foreach (var el in trsi.v_Players)
                 { p.WriteBytes(el.ToArray()); }
 
-                _session.Send(p);
+                Player.Send(p);
 
                 // 5. Adiciona EXP por ÚLTIMO (para o visual do Pangya não bugar)
                 if (expToGain > 0)
                 {
-                    _session.addExp(expToGain, _upt_on_game);
+                    Player.addExp(expToGain, _upt_on_game);
                 }
             }
             catch (exception e)
@@ -119,7 +119,7 @@ namespace Pangya_GameServer.Handles
                 p.WriteInt32(-1); // Error
                 p.WriteZero(16); // Date
 
-                _session.Send(p);
+                Player.Send(p);
             }
 
         await Task.CompletedTask;

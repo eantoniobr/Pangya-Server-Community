@@ -18,29 +18,29 @@ using System;
 using System.Threading.Tasks;
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_PLAYER_STATE_CHARACTER_LOUNGE : IPacketHandler<Player>
+    public class Handle_PLAYER_PLAYER_STATE_CHARACTER_LOUNGE : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                var r = _session.GetRoom() ?? throw new exception("[Error] sala[NUMERO=" + _session.UserInfo.Member.sala_numero + "] nao existe.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                var r = Player.GetRoom() ?? throw new exception("[Error] sala[NUMERO=" + Player.UserInfo.Member.sala_numero + "] nao existe.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         10, 0));
 
                 if (r.GetTipo() != ROOM_INFO_TYPE.LOUNGE)
                 {
-                    throw new exception("[Error] sala[NUMERO=" + _session.UserInfo.Member.sala_numero + "] nao é um lounge.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Error] sala[NUMERO=" + Player.UserInfo.Member.sala_numero + "] nao é um lounge.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         12, 0));
                 }
 
-                if (!_session.UserInfo.CharacterLoungeStates.TryGetValue(_session.Inventory.UserEquippedItem.CharacterEquiped.id, out StateCharacterLounge state))
+                if (!Player.UserInfo.CharacterLoungeStates.TryGetValue(Player.Inventory.UserEquippedItem.CharacterEquiped.id, out StateCharacterLounge state))
                 {
-                    throw new exception("[Error] sala[NUMERO=" + _session.UserInfo.Member.sala_numero + "] nao tem os estados do character na lounge.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
+                    throw new exception("[Error] sala[NUMERO=" + Player.UserInfo.Member.sala_numero + "] nao tem os estados do character na lounge.", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL,
                         13, 0));
                 }
 
                 Packet p = new(0x196);
-                p.WriteInt32(_session.ConnectionID);
+                p.WriteInt32(Player.ConnectionID);
                 p.WriteBytes(state.ToArray());
                 r.SendBroadCast(p);
             }

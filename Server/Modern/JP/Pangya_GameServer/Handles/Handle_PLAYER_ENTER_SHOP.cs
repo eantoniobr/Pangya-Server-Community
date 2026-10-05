@@ -14,22 +14,22 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_ENTER_SHOP : IPacketHandler<Player>
+    public class Handle_PLAYER_ENTER_SHOP : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
-            var m_ci = _session.GetChannel();
+            var m_ci = Player.GetChannel();
             try
             {
-                if (_session.UserInfo.block_flag.m_flag.buy_and_gift_shop)
+                if (Player.UserInfo.block_flag.m_flag.buy_and_gift_shop)
                 {
-                    throw new exception("[Lobby::RequestEnterShop][Error] PLAYER [UID=" + _session.UserInfo.uid
+                    throw new exception("[Lobby::RequestEnterShop][Error] PLAYER [UID=" + Player.UserInfo.uid
                             + "] tentou jogar no Papel Shop, mas ele nao pode. Hacker ou Bug", ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 3, 0x790002));
                 }
 
                 var p = new Packet(0x20E); 
                 p.WriteZero(8); 
-                _session.Send(p);
+                Player.Send(p);
             }
             catch (exception e)
             {

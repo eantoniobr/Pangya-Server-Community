@@ -17,10 +17,10 @@ namespace Pangya_GameServer.PacketFunc
     /// <summary>
     /// somente as respostas para o client
     /// </summary>
-    public class Handle_PACKET_RESPONSE
+    public class HandlePacket_RESPONSE
     {
         //////
-       static int MAX_BUFFER_PACKET = 1000;
+       static int MAX_BUFFERPacket = 1000;
           
         public static Packet pacote047(List<RoomInfo> v_element, int option)
         {
@@ -123,7 +123,7 @@ namespace Pangya_GameServer.PacketFunc
             int itensPorPacote = 20;
 
             // Divide a lista apenas se necessário
-            var splitList = (elements * 200 < (MAX_BUFFER_PACKET - 100))
+            var splitList = (elements * 200 < (MAX_BUFFERPacket - 100))
                 ? new List<List<TrophySpecialInfo>> { v_element } // Envia tudo em um pacote
                 : v_element.Select((item, index) => new { item, index })
                            .GroupBy(x => x.index / itensPorPacote)
@@ -1273,7 +1273,7 @@ namespace Pangya_GameServer.PacketFunc
                             }
                         }
                         break;
-                    case 7: // Player game
+                    case 7: // _session game
                             // Nada Aqui
                         {
                         }
@@ -1361,7 +1361,7 @@ namespace Pangya_GameServer.PacketFunc
                     int elementSize = (option & 0x100) != 0 ? Marshal.SizeOf(new PlayerRoomInfo()) : Marshal.SizeOf(new PlayerRoomInfoEx());
                     int maxPacket = Marshal.SizeOf(new PlayerRoomInfoEx());
                     int total = v_element.Count;
-                    int por_packet = (maxPacket - 100 > elementSize) ? (maxPacket - 100) / elementSize : 1;
+                    int porPacket = (maxPacket - 100 > elementSize) ? (maxPacket - 100) / elementSize : 1;
 
                     int index = 0;
 
@@ -1372,19 +1372,19 @@ namespace Pangya_GameServer.PacketFunc
                         p.WriteInt16(-1);
 
                         if ((option & 0xFF) == 0 || (option & 0xFF) == 5)
-                            p.WriteSByte((sbyte)Math.Min(por_packet, total - index));
+                            p.WriteSByte((sbyte)Math.Min(porPacket, total - index));
                         else if ((option & 0xFF) == 7)
                             p.WriteSByte((sbyte)total);
                         else if ((option & 0xFF) == 3 || (option & 0xFF) == 3)
                             p.WriteInt32(_session.ConnectionID);
 
-                        for (int i = 0; i < por_packet && index < total; i++, index++)
+                        for (int i = 0; i < porPacket && index < total; i++, index++)
                         {
-                            var _sessionRoom = v_element[index];
+                            var PlayerRoom = v_element[index];
                             if (elementSize == 348)
-                                p.WriteBytes(_sessionRoom.ToArray());
+                                p.WriteBytes(PlayerRoom.ToArray());
                             else
-                                p.WriteBytes(_sessionRoom.ToArrayEx());
+                                p.WriteBytes(PlayerRoom.ToArrayEx());
                         }
 
                         p.WriteByte(0);
@@ -1401,7 +1401,7 @@ namespace Pangya_GameServer.PacketFunc
 
                     try
                     {
-                        if (totalSize < MAX_BUFFER_PACKET - 100)//-> MAKE_END_SPLIT_PACKET nao tem, so no else, OK?
+                        if (totalSize < MAX_BUFFERPacket - 100)//-> MAKE_END_SPLITPacket nao tem, so no else, OK?
                         {
                             p.init_plain(0x48);
                             p.WriteSByte((sbyte)option);
@@ -1412,12 +1412,12 @@ namespace Pangya_GameServer.PacketFunc
                             else if ((option & 0xFF) == 3 || (option & 0xFF) == 3)
                                 p.WriteInt32(_session.ConnectionID);
 
-                            foreach (var _sessionRoom in v_element)
+                            foreach (var PlayerRoom in v_element)
                             {
                                 if (elementSize == 348)
-                                    p.WriteBytes(_sessionRoom.ToArray());
+                                    p.WriteBytes(PlayerRoom.ToArray());
                                 else
-                                    p.WriteBytes(_sessionRoom.ToArrayEx());
+                                    p.WriteBytes(PlayerRoom.ToArrayEx());
                             }
                             p.WriteByte(0);
                             return true;
@@ -1425,7 +1425,7 @@ namespace Pangya_GameServer.PacketFunc
                         else
                         {
                             int total = elements;
-                            int por_packet = ((MAX_BUFFER_PACKET - 100) > elementSize) ? (MAX_BUFFER_PACKET - 100) / elementSize : 1;
+                            int porPacket = ((MAX_BUFFERPacket - 100) > elementSize) ? (MAX_BUFFERPacket - 100) / elementSize : 1;
 
                             int index = 0;
 
@@ -1441,20 +1441,20 @@ namespace Pangya_GameServer.PacketFunc
                                 p.WriteInt16(-1);
 
                                 if ((option & 0xFF) == 0 || (option & 0xFF) == 5)
-                                    p.WriteSByte((sbyte)Math.Min(por_packet, total - index));
+                                    p.WriteSByte((sbyte)Math.Min(porPacket, total - index));
                                 else if ((option & 0xFF) == 3)
                                 {
                                     elementSize = 348;
                                     p.WriteInt32(_session.ConnectionID);
                                 }
 
-                                for (int i = 0; i < por_packet && index < total; i++, index++)
+                                for (int i = 0; i < porPacket && index < total; i++, index++)
                                 {
-                                    var _sessionRoom = v_element[index];
+                                    var PlayerRoom = v_element[index];
                                     if (elementSize == 348)
-                                        p.WriteBytes(_sessionRoom.ToArray());
+                                        p.WriteBytes(PlayerRoom.ToArray());
                                     else
-                                        p.WriteBytes(_sessionRoom.ToArrayEx());
+                                        p.WriteBytes(PlayerRoom.ToArrayEx());
                                 }
 
                                 p.WriteByte(0); // Final list de PlayerRoomInfo

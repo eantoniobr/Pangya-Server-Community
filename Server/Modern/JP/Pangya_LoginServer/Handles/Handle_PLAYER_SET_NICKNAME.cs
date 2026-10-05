@@ -10,19 +10,19 @@ using System;
 
 namespace Pangya_LoginServer.Handles
 {
-    public class Handle_PLAYER_SET_NICKNAME : IPacketHandler<Player>
+    public class Handle_PLAYER_SET_NICKNAME : HandleBase<Player, Packet_EXAMPLE>
     {
         /// <summary>
         /// Handler para definir o Nickname do jogador (0x06)
         /// </summary>
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             string wnick = "";
 
             try
             {
-                wnick = _packet.ReadString();
-                uint uid = _session.UserInfo.uid;
+                wnick = Packet.ReadString();
+                uint uid = Player.UserInfo.uid;
 
                 // 1. Persistência no Banco (Async)
                 // Salva o nick escolhido e marca como primeiro login realizado
@@ -30,7 +30,7 @@ namespace Pangya_LoginServer.Handles
                 CommandDB.AddFirstLogin(uid, 1);
 
                 // Atualiza o nickname na sessão atual para evitar dessincronização
-                _session.UserInfo.nickname = wnick;
+                Player.UserInfo.nickname = wnick;
 
                 // 2. Fluxo de Direcionamento (Regra de Negócio Pangya)
                 // Verifica se o jogador já possui o primeiro Set de Personagem (Hana/Nuri)
@@ -39,22 +39,22 @@ namespace Pangya_LoginServer.Handles
                 if (!hasFirstSet)
                 {
                     // Se não tem personagem, envia pacote 0xD9 (Seleção Inicial)
-                    _session.Send(Handle_PACKET_RESPONSE.pacote001(_session, 0xD9));
+                    Player.Send(Handle_PACKET_RESPONSE.pacote001(Player, 0xD9));
                 }
                 else
                 {
                     // Se já está tudo pronto, finaliza o processo de login com sucesso
                     // Aqui você chama seu método global de Login Success
-                    await Handle_PLAYER_LOGIN.SUCCESS_LOGIN(_session);
+                    await Handle_PLAYER_LOGIN.SUCCESS_LOGIN(Player);
                 }
             }
             catch (Exception e)
             {
                 // Em caso de erro grave, envia o pacote 0x0E com status de erro (geralmente 1 ou conforme seu Enum)
-                _session.Send(Handle_PACKET_RESPONSE.pacote00E(_session, wnick, (int)NICK_CHECK.UNKNOWN_ERROR, 0));
+                Player.Send(Handle_PACKET_RESPONSE.pacote00E(Player, wnick, (int)NICK_CHECK.UNKNOWN_ERROR, 0));
 
                 _smp.message_pool.getInstance().push(new message(
-                    $"[Handle_PLAYER_SET_NICKNAME] Erro ao definir nick '{wnick}' para UID {_session.UserInfo.uid}: {e.Message}",
+                    $"[Handle_PLAYER_SET_NICKNAME] Erro ao definir nick '{wnick}' para UID {Player.UserInfo.uid}: {e.Message}",
                     type_msg.CL_ONLY_CONSOLE)
                 );
             }

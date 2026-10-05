@@ -9,13 +9,13 @@ using PangyaAPI.Utilities.Models;
 
 namespace Pangya_MessengerServer.Handles
 {
-    public class Handle_FRIEND_GUILD_LIST : IPacketHandler<Player>
+    public class Handle_FRIEND_GUILD_LIST : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
-                MessengerServer.getInstance().SendUpdatedFriendList(session);
+                MessengerServer.getInstance().SendUpdatedFriendList(Player);
             }
             catch (exception e)
             {

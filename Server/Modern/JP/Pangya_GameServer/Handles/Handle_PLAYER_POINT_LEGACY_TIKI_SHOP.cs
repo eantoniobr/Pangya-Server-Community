@@ -12,18 +12,18 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_POINT_LEGACY_TIKI_SHOP : IPacketHandler<Player>
+    public class Handle_PLAYER_POINT_LEGACY_TIKI_SHOP : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             Packet p = new Packet();
 
             try
             {
                 // 1. Verificação de Bloqueio
-                if (_session.UserInfo.block_flag.m_flag.legacy_tiki_shop)
+                if (Player.UserInfo.block_flag.m_flag.legacy_tiki_shop)
                 {
-                    throw new exception("[Handle_PLAYER_POINT_LEGACY_TIKI_SHOP][Error] PLAYER [UID=" + _session.UserInfo.uid + "] está bloqueado no Legacy Tiki Shop.",
+                    throw new exception("[Handle_PLAYER_POINT_LEGACY_TIKI_SHOP][Error] PLAYER [UID=" + Player.UserInfo.uid + "] está bloqueado no Legacy Tiki Shop.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.CHANNEL, 4000, 1));
                 }
 
@@ -34,10 +34,10 @@ namespace Pangya_GameServer.Handles
                 p.WriteUInt32(0);
 
                 // Quantidade de pontos da Legacy Tiki Shop (convertido para uint)
-                p.WriteUInt32((uint)_session.UserInfo.PointShopLegacy);
+                p.WriteUInt32((uint)Player.UserInfo.PointShopLegacy);
 
                 // 3. Envio da resposta
-                _session.Send(p);
+                Player.Send(p);
             }
             catch (exception e)
             {
@@ -53,7 +53,7 @@ namespace Pangya_GameServer.Handles
 
                 p.WriteUInt32(errorCode);
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }

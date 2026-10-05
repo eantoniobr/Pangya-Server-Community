@@ -6,17 +6,17 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_OPEN_PAPEL_SHOP : IPacketHandler<Player>
+    public class Handle_PLAYER_OPEN_PAPEL_SHOP : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player session, Packet pkt)
+        public override async Task Handle()
         {
             Packet p = new Packet(0x10B);
 
             try
             { 
                 p.WriteUInt32(0);
-                p.WriteInt64(session.UserInfo.Member.PapelShop.limit_count); 
-                session.Send(p);
+                p.WriteInt64(Player.UserInfo.Member.PapelShop.limit_count); 
+                Player.Send(p);
             }
             catch (Exception e)
             {
@@ -27,7 +27,7 @@ namespace Pangya_GameServer.Handles
                 p.WriteInt64(-1);
                 p.WriteUInt32(0x5800100); // Erro padrão do sistema
 
-                session.Send(p);
+                Player.Send(p);
             }
 
         await Task.CompletedTask;

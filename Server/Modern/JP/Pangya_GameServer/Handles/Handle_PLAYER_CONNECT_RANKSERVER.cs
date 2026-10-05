@@ -11,16 +11,16 @@ using System.Threading.Tasks;
 
 namespace Pangya_GameServer.Handles
 {
-    public class Handle_PLAYER_CONNECT_RANKSERVER : IPacketHandler<Player>
+    public class Handle_PLAYER_CONNECT_RANKSERVER : HandleBase<Player, Packet_EXAMPLE>
     {
-        public async Task Handle(Player _session, Packet _packet)
+        public override async Task Handle()
         {
             try
             {
                 // 1. Validação de bloqueio
-                if (_session.UserInfo.block_flag.m_flag.rank_server)
+                if (Player.UserInfo.block_flag.m_flag.rank_server)
                 {
-                    throw new exception($"[Handle][UID={_session.UserInfo.uid}] Jogador bloqueado para Rank Server.",
+                    throw new exception($"[Handle][UID={Player.UserInfo.uid}] Jogador bloqueado para Rank Server.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 7010, 0));
                 }
 
@@ -30,7 +30,7 @@ namespace Pangya_GameServer.Handles
                 // 3. Verifica disponibilidade
                 if (serverList == null || serverList.Count == 0)
                 {
-                    throw new exception($"[Handle][UID={_session.UserInfo.uid}] Requisitou Rank Server, mas nenhum está online no DB.",
+                    throw new exception($"[Handle][UID={Player.UserInfo.uid}] Requisitou Rank Server, mas nenhum está online no DB.",
                         ExceptionError.STDA_MAKE_ERROR_TYPE(STDA_ERROR_TYPE.GAME_SERVER, 7011, 0));
                 }
 
@@ -39,7 +39,7 @@ namespace Pangya_GameServer.Handles
                 p.WriteString(serverList[0].ip);
                 p.WriteInt32(serverList[0].port);
 
-                _session.Send(p);
+                Player.Send(p);
             }
             catch (exception e)
             {
@@ -50,7 +50,7 @@ namespace Pangya_GameServer.Handles
                 p.WriteUInt16(0); // String IP vazia
                 p.WriteUInt32(0); // Port zero
 
-                _session.Send(p);
+                Player.Send(p);
             }
         }
     }
