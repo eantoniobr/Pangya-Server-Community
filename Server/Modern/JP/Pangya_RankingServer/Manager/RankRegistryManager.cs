@@ -794,7 +794,7 @@ namespace Pangya_RankingServer.Manager
                 try
                 {
                     // Tenta ler o diretório do log no arquivo .ini
-                    var ini = new IniHandle("server.ini");
+                    var ini = new IniHandle("Log.ini");
                     string tmp_dir = ini.ReadString("LOG", "DIR");
 
                     if (!string.IsNullOrWhiteSpace(tmp_dir))
